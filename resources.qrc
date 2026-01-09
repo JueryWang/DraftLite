@@ -1,0 +1,6 @@
+<RCC>
+	<qresource prefix="/">
+		<file>plugins/WebViewer.qml</file>
+		<file>plugins/PopUpHint.qml</file>
+	</qresource>
+</RCC>

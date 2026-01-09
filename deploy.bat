@@ -1,0 +1,1 @@
+C:\Users\WG\Documents\lib\Qt\6.7.3\msvc2022_64\bin\windeployqt6.exe --qmldir "C:/Program Files/WG Automation/plugins/qml" --no-plugins --qml --no-translations "WG-Cut.exe"
