@@ -8,7 +8,6 @@ RingDetector::RingDetector(const std::vector<EntityVGPU*> entities)
 
 std::vector<EntRingConnection*> RingDetector::RingDetect(const std::vector<EntityVGPU*> entities)
 {
-
 	std::vector<std::list<RingNode*>> ringGroups;
 	std::set<RingNode*> nodeToDelete;
 
@@ -166,4 +165,10 @@ std::vector<EntRingConnection*> RingDetector::RingDetect(const std::vector<Entit
 	}
 
 	return res;
+}
+
+void RingDetector::RepairRing(EntRingConnection* ring)
+{
+	
+
 }

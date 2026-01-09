@@ -22,4 +22,7 @@ public:
     ~RingDetector();
 
 	static std::vector<EntRingConnection*> RingDetect(const std::vector<EntityVGPU*> entities);
+
+    //针对conponent有变更的ring,尝试修复顺序关系
+    static void RepairRing(EntRingConnection* ring);
 };

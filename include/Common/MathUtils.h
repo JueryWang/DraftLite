@@ -304,13 +304,13 @@ namespace CNCSYS
 			return angle;
 		}
 
-		static GeomDirection GetDirection(const glm::vec3& center, const glm::vec3& start, const glm::vec3& end)
+		static GeomDirection GetDirection(const glm::vec3& mid, const glm::vec3& start, const glm::vec3& end)
 		{
-			glm::vec3 v1 = start - center;
-			glm::vec3 v2 = end - center;
+			glm::vec3 v1 = mid - start;
+			glm::vec3 v2 = end - mid;
 
 			glm::vec3 cross = glm::cross(v1, v2);
-			float len1 = glm::distance(center, start);
+			float len1 = glm::distance(mid, start);
 			float len2 = glm::distance(start, end);
 			float MaxLen = std::max(len1, len2);
 
@@ -467,18 +467,6 @@ namespace CNCSYS
 			}
 
 			return std::tuple<glm::vec3, float, float, float>(center, angleStart, angleEnd, radius);
-		}
-
-		static GeomDirection GetDirectionThroughMidium(const glm::vec3& mid, const glm::vec3& start, glm::vec3& end)
-		{
-			glm::vec3 center;
-			float angleStart;
-			float angleEnd;
-			float radius;
-
-			std::tie(center, angleStart, angleEnd, radius) = CalculateCircleByThreePoints(start, mid, end);
-
-			return GetDirection(center, start, end);
 		}
 
 		static glm::vec3 CatmullRomInterpolate(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, double t, double tau = 0.5)

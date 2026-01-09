@@ -520,6 +520,21 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 		char buffer[256];
 		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
 		{
+			std::sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			s += buffer;
+			if (createRecord)
+			{
+				Path2D* path = new Path2D({ Mstatus->toolPos,start }, true);
+				path->SetTransformation(glm::mat4(1.0f));
+				sketch->AddPath(path);
+				GCodeRecord rec(std::string(buffer), this, 0, transformedMatrix, Mstatus->ncstep);
+				rec.attachedPath = path;
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
+
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
 			std::sprintf(buffer, "N%03d G00 Z%f\n", Mstatus->ncstep++, Mstatus->Zup);
 			s += buffer;
 			if (createRecord)
@@ -630,6 +645,20 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 		glm::vec3 start = transformedMatrix * glm::vec4(splineSamples[0], 1.0f);
 		glm::vec3 end = transformedMatrix * glm::vec4(splineSamples[splineSamples.size() - 1], 1.0f);
 
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			std::sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			section += buffer;
+			if (createRecord)
+			{
+				Path2D* path = new Path2D({ Mstatus->toolPos,start }, true);
+				path->SetTransformation(glm::mat4(1.0f));
+				sketch->AddPath(path);
+				GCodeRecord rec(std::string(buffer), this, 0, glm::mat4(1.0f), Mstatus->ncstep);
+				rec.attachedPath = path;
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
 		glm::vec3 transformed;
 		int step = 10;
 
@@ -690,6 +719,8 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 			GCodeRecord rec(std::string(buffer), this, splineSamples.size() - 1, transformedMatrix, Mstatus->ncstep);
 			GCodeController::GetController()->AddRecord(rec);
 		}
+
+		Mstatus->toolPos = start;
 	}
 
 	return section;

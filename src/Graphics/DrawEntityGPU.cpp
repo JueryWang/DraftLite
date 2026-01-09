@@ -397,16 +397,11 @@ namespace CNCSYS
 		centroidPoint = new Point2DGPU(centroid);
 		centroidPoint->isVisible = false;
 
-		glm::vec3 v1v2 = conponents[0]->GetTransformedNodes().back() - conponents[0]->GetTransformedNodes()[0];
-		glm::vec3 v2v3 = conponents[1]->GetTransformedNodes().back() - conponents[1]->GetTransformedNodes()[0];
-		if (glm::cross(v1v2, v2v3).z > 0)
-		{
-			direction = GeomDirection::CCW;
-		}
-		else
-		{
-			direction = GeomDirection::CW;
-		}
+		startPoint = conponents[0]->GetTransformedNodes()[0];
+		endPoint = conponents.back()->GetTransformedNodes()[0];
+		glm::vec3 midPoint = conponents[conponents.size() / 2]->GetTransformedNodes()[0];
+		direction = MathUtils::GetDirection(midPoint, startPoint, endPoint);
+
 		ringId = EntRingConnection::counter++;
 	}
 
@@ -441,7 +436,7 @@ namespace CNCSYS
 		else if (index == targetEntity->indexRange.second)
 		{
 			//终止点,该Entity不计入起始
-			int nextIndex = find - conponents.begin();
+			int nextIndex = find - conponents.begin() + 1;
 			for (int i = nextIndex; i < conponents.size(); i++)
 			{
 				reordered.push_back(conponents[i]);
@@ -510,7 +505,11 @@ namespace CNCSYS
 
 		for (EntityVGPU* ent : conponents)
 		{
-			s += ent->GenNcSection(Mstatus, createRecord, sketch);
+			if (ent->createGCode)
+			{
+
+				s += ent->GenNcSection(Mstatus, createRecord, sketch);
+			}
 		}
 
 		Mstatus->toolPos = conponents[conponents.size() - 1]->GetTransformedNodes().back();

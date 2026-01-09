@@ -307,6 +307,7 @@ namespace CNCSYS
 							}
 							m_currentSketch->UpdateGCode();
 						});
+
 				}
 				if (static_cast<uint64_t>(operationState & ModalState::EntityRotate))
 				{
