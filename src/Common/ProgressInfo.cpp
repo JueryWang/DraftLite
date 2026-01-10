@@ -53,7 +53,7 @@ void InitPLConfig()
 		{"HeartbeatCount","gvlHMI.udiHeartbeatCount"},							//心跳包检测
 		{"IndexSubArea","gvlHMI.stCommandGearChamferMachine.iIndexSubArea"},	//绘图区显示信号
 		{"PageInit","gvlHMI.stCommandGearChamferMachine.xPageInit"},			//初始化界面
-		{"ChangeSlice","gvlHMI.stIOGearChamferMachine.xPCChange"},				//PLC请求多任务切图
+		{"ChangeSlice","gvlHMI.stIOGearChamferMachine.xPCChange"},				//PLC请求多计划切图
 		{"ChangeSliceDone","gvlHMI.xPCChangeDone"},								//切图PC完成信号
 		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"}   //设备自动运行中
 	};
@@ -62,26 +62,45 @@ void InitPLConfig()
 
 	screen_resolution_x = g_settings->value("Screen/Width").toInt();
 	screen_resolution_y = g_settings->value("Screen/Height").toInt();
-	if (g_settings->value("Screen/CanvasWidthRatio").toFloat() != 0)
+	if (g_settings->value("Layout/DrawPanelWidthFactor").toFloat() != 0)
 	{
-		canvas_panel_width_ratio = g_settings->value("Screen/CanvasWidthRatio").toFloat();
+		canvas_panel_width_ratio = g_settings->value("Layout/DrawPanelWidthFactor").toFloat();
 	}
-	if (g_settings->value("Screen/CanvasHeightRatio").toFloat() != 0)
+	if (g_settings->value("Layout/DrawPanelWidthFactor").toFloat() != 0)
 	{
-		canvas_panel_height_ratio = g_settings->value("Screen/CanvasHeightRatio").toFloat();
+		gcode_panel_width_ratio = g_settings->value("Layout/DrawPanelWidthFactor").toFloat();
 	}
-	if (g_settings->value("Screen/GCodeEditWidthRatio").toFloat() != 0)
+	if (g_settings->value("Layout/GCodeEditorHeightFactor").toFloat() != 0)
 	{
-		gcode_panel_width_ratio = g_settings->value("Screen/GCodeEditWidthRatio").toFloat();
+		gcode_panel_height_ratio = g_settings->value("Layout/GCodeEditorHeightFactor").toFloat();
 	}
-	if (g_settings->value("Screen/GCodeEditHeightRatio").toFloat() != 0)
+	if (g_settings->value("Layout/DrawPanelHeightFactor").toFloat() != 0)
 	{
-		gcode_panel_height_ratio = g_settings->value("Screen/GCodeEditHeightRatio").toFloat();
+		canvas_panel_height_ratio = g_settings->value("Layout/DrawPanelHeightFactor").toFloat();
 	}
-	if (g_settings->value("Screen/MoveHeightRatio").toFloat() != 0)
+	if (g_settings->value("Layout/BlankHeightFactor").toFloat() != 0)
 	{
-		move_height_ratio = g_settings->value("Screen/MoveHeightRatio").toFloat();
+		blank_height_ratio = g_settings->value("Layout/BlankHeightFactor").toFloat();
 	}
+	if (g_settings->value("Layout/TaskWindowPanelWidthFactor").toFloat() != 0)
+	{
+		taskpanel_width_ratio = g_settings->value("Layout/TaskWindowPanelWidthFactor").toFloat();
+	}
+	if (g_settings->value("Layout/TaskWindowPanelHeightFactor").toFloat() != 0)
+	{
+		taskpanel_height_ratio = g_settings->value("Layout/TaskWindowPanelHeightFactor").toFloat() / blank_height_ratio;
+	}
+	if (g_settings->value("Layout/ToDoCanvasWidthFactor").toFloat() != 0)
+	{
+		todoCanvas_width_ratio = g_settings->value("Layout/ToDoCanvasWidthFactor").toFloat();
+	}
+	if (g_settings->value("Layout/ToDoCanvasHeightFactor").toFloat() != 0)
+	{
+		todoCanvas_height_ratio = g_settings->value("Layout/ToDoCanvasHeightFactor").toFloat();
+	}
+	g_plcUrl = g_settings->value("PLC/URL").toString();
+	g_plcVarCnfigExcelUrl = g_settings->value("PLC/VarConfig").toString();
+	g_plcSearchRootNode = g_settings->value("PLC/ParseVarRoot").toString();
 
 	g_plcUrl = g_settings->value("PLC/URL").toString();
 	g_plcVarCnfigExcelUrl = g_settings->value("PLC/VarConfig").toString();

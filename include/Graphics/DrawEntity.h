@@ -268,6 +268,7 @@ namespace CNCSYS
 		void Move(const glm::vec3& offset);
 		void ResetTransformation();
 		glm::vec3 GetProcessStartPoint();
+
 	public:
 		std::vector<EntRingConnection*> rings;
 		AABB bbox;

@@ -351,7 +351,7 @@ std::string Arc2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRecord
 		char buffer[256];
 		if (direction == GeomDirection::CCW)
 		{
-			std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
+			std::sprintf(buffer, "N%03d G03 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
 			s += buffer;
 			if (createRecord)
 			{
@@ -361,7 +361,7 @@ std::string Arc2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRecord
 		}
 		else
 		{
-			std::sprintf(buffer, "N%03d G03 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
+			std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
 			s += buffer;
 			if (createRecord)
 			{
@@ -391,9 +391,14 @@ std::string Arc2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, S
 		float I = (center - start).x;
 		float J = (center - start).y;
 
+		//if (start != Mstatus->toolPos)
+		//{
+		//	sprintf(buffer,"",Mstatus->ncstep++,);
+		//}
+
 		if (direction == GeomDirection::CCW)
 		{
-			std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
+			std::sprintf(buffer, "N%03d G03 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
 			section += buffer;
 			if (createRecord)
 			{
@@ -403,7 +408,7 @@ std::string Arc2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, S
 		}
 		else
 		{
-			std::sprintf(buffer, "N%03d G03 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
+			std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
 			section += buffer;
 			if (createRecord)
 			{

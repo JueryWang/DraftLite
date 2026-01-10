@@ -251,7 +251,7 @@ void GCodeEditor::onEditingFinished()
 	if (g_opcuaClient && AutoSendFTP)
 	{
 		SCT_SEQUENCE_TASK* updateGCode = new SCT_SEQUENCE_TASK();
-		QString title = QString::fromStdString(g_mainWindow->GetSketch()->source);
+		QString title = QString::fromLocal8Bit(g_mainWindow->GetSketch()->source.c_str());
 		QStringList parts = title.split("/");
 		QString fileName = parts.last();
 		updateGCode->params.updateRemoteFtp = new TaskUpdateRemoteFtpParam();
@@ -259,7 +259,7 @@ void GCodeEditor::onEditingFinished()
 		QFileInfo fileInfo(TriimedfileName);
 		QString suffix = fileInfo.suffix(); // 结果："txt"
 		fileName = fileInfo.baseName() + ".cnc";
-		updateGCode->params.updateRemoteFtp->fileUrl = "Share_files_anonymity/" + fileName.trimmed().toStdString();
+		updateGCode->params.updateRemoteFtp->fileUrl = "Share_files_anonymity/" + fileName.trimmed().toLocal8Bit();
 		updateGCode->type = SCT_TASK_TYPE::UPDATE_FTP_GCODE;
 		ScadaScheduler::GetInstance()->AddTask(updateGCode);
 

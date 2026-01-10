@@ -74,10 +74,6 @@ namespace CNCSYS
 				comp->ringParent = ring;
 				AddEntity(comp);
 			}
-			if (ring->centroidPoint)
-			{
-				this->AddEntity(ring->centroidPoint);
-			}
 			ring->groupParent = group;
 		}
 	}

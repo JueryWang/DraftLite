@@ -118,7 +118,7 @@ TaskListWindow::TaskListWindow()
 
 	toolBar->setParent(this);
 	toolBar->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-	this->setWindowTitle("任务");
+	this->setWindowTitle("计划");
 	QVBoxLayout* vlay = new QVBoxLayout();
 	vlay->setContentsMargins(10, 10, 10, 10);
 	addNewBtn = new QPushButton("+");
@@ -167,7 +167,7 @@ void TaskListWindow::AddNewPlan()
 	}
 	else
 	{
-		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更任务!"));
+		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更计划!"));
 	}
 }
 
@@ -248,7 +248,7 @@ void TaskListWindow::OnItemMoveUp()
 	}
 	else
 	{
-		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更任务!"));
+		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更计划!"));
 	}
 }
 void TaskListWindow::OnItemMoveDown()
@@ -283,75 +283,81 @@ void TaskListWindow::OnItemMoveDown()
 	}
 	else
 	{
-		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更任务!"));
+		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更计划!"));
 	}
 }
 void TaskListWindow::OnItemTop()
 {
 	if (CheckChangeAvailable())
 	{
-		for (int i = (items.size() - 1); i >= 0; i--)
+		if (items.size())
 		{
-			ToDoListItemWidget* itemWidget = items[i]->attachedWidget;
-			bool checked = itemWidget->checked->isChecked();
-			if (i != 0 && itemWidget && checked)
+			for (int i = (items.size() - 1); i >= 0; i--)
 			{
-				QListWidgetItem* itemA = taskLists->item(items[i]->attachedWidget->row);
-				QListWidgetItem* itemB = taskLists->item(items[0]->attachedWidget->row);
+				ToDoListItemWidget* itemWidget = items[i]->attachedWidget;
+				bool checked = itemWidget->checked->isChecked();
+				if (i != 0 && itemWidget && checked)
+				{
+					QListWidgetItem* itemA = taskLists->item(items[i]->attachedWidget->row);
+					QListWidgetItem* itemB = taskLists->item(items[0]->attachedWidget->row);
 
-				ItemWrapper* wA = (ItemWrapper*)taskLists->itemWidget(itemA);
-				ItemWrapper* wB = (ItemWrapper*)taskLists->itemWidget(itemB);
+					ItemWrapper* wA = (ItemWrapper*)taskLists->itemWidget(itemA);
+					ItemWrapper* wB = (ItemWrapper*)taskLists->itemWidget(itemB);
 
-				if (wA) wA->item->setParent(nullptr);
-				if (wB) wB->item->setParent(nullptr);
+					if (wA) wA->item->setParent(nullptr);
+					if (wB) wB->item->setParent(nullptr);
 
-				ItemWrapper* newA = new ItemWrapper(wB->item);
-				ItemWrapper* newB = new ItemWrapper(wA->item);
+					ItemWrapper* newA = new ItemWrapper(wB->item);
+					ItemWrapper* newB = new ItemWrapper(wA->item);
 
-				taskLists->setItemWidget(itemA, newA);
-				taskLists->setItemWidget(itemB, newB);
-				std::swap(items[i]->attachedWidget->row, items[0]->attachedWidget->row);
-				std::swap(items[i], items[0]);
+					taskLists->setItemWidget(itemA, newA);
+					taskLists->setItemWidget(itemB, newB);
+					std::swap(items[i]->attachedWidget->row, items[0]->attachedWidget->row);
+					std::swap(items[i], items[0]);
+				}
 			}
 		}
 	}
 	else
 	{
-		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更任务!"));
+		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更计划!"));
 	}
 }
 void TaskListWindow::OnItemBottom()
 {
 	if (CheckChangeAvailable())
 	{
-		for (int i = 0; i < items.size() - 1; i++)
+		if (items.size())
 		{
-			ToDoListItemWidget* itemWidget = items[i]->attachedWidget;
-			bool checked = itemWidget->checked->isChecked();
-			if (i != (items.size() - 1) && itemWidget && checked)
+			for (int i = 0; i < items.size() - 1; i++)
 			{
-				QListWidgetItem* itemA = taskLists->item(items[i]->attachedWidget->row);
-				QListWidgetItem* itemB = taskLists->item(items.back()->attachedWidget->row);
+				ToDoListItemWidget* itemWidget = items[i]->attachedWidget;
+				bool checked = itemWidget->checked->isChecked();
+				if (i != (items.size() - 1) && itemWidget && checked)
+				{
+					QListWidgetItem* itemA = taskLists->item(items[i]->attachedWidget->row);
+					QListWidgetItem* itemB = taskLists->item(items.back()->attachedWidget->row);
 
-				ItemWrapper* wA = (ItemWrapper*)taskLists->itemWidget(itemA);
-				ItemWrapper* wB = (ItemWrapper*)taskLists->itemWidget(itemB);
+					ItemWrapper* wA = (ItemWrapper*)taskLists->itemWidget(itemA);
+					ItemWrapper* wB = (ItemWrapper*)taskLists->itemWidget(itemB);
 
-				if (wA) wA->item->setParent(nullptr);
-				if (wB) wB->item->setParent(nullptr);
+					if (wA) wA->item->setParent(nullptr);
+					if (wB) wB->item->setParent(nullptr);
 
-				ItemWrapper* newA = new ItemWrapper(wB->item);
-				ItemWrapper* newB = new ItemWrapper(wA->item);
+					ItemWrapper* newA = new ItemWrapper(wB->item);
+					ItemWrapper* newB = new ItemWrapper(wA->item);
 
-				taskLists->setItemWidget(itemA, newA);
-				taskLists->setItemWidget(itemB, newB);
-				std::swap(items[i]->attachedWidget->row, items.back()->attachedWidget->row);
-				std::swap(items[i], items.back());
+					taskLists->setItemWidget(itemA, newA);
+					taskLists->setItemWidget(itemB, newB);
+					std::swap(items[i]->attachedWidget->row, items.back()->attachedWidget->row);
+					std::swap(items[i], items.back());
+				}
 			}
 		}
 	}
 	else
 	{
-		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更任务!"));
+		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更计划!"));
 	}
 }
 void TaskListWindow::OnDeleteItem()
@@ -380,7 +386,7 @@ void TaskListWindow::OnDeleteItem()
 	}
 	else
 	{
-		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更任务!"));
+		QMessageBox::critical(NULL, tr("错误"), tr("轴启动中无法再变更计划!"));
 	}
 }
 

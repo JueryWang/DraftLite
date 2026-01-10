@@ -13,7 +13,7 @@ namespace CNCSYS
 	glm::vec4 g_whiteColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec4 g_redColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	glm::vec4 g_greenColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	glm::vec4 g_darkGreen = glm::vec4(0.11f, 0.56f, 0.11f, 1.0f);
+	glm::vec4 g_darkGreen = glm::vec4(0.06f, 0.28f, 0.06f, 1.0f);
 	glm::vec4 g_yellowColor = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	glm::vec4 g_highlightColor = glm::vec4(171.0f / 255.0f, 228.0f / 255.0f, 243.0f / 255.0f, 1.0f);
 	float g_lineWidth = 2.0f;

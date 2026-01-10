@@ -32,7 +32,7 @@ std::vector<glm::vec3> Path2D::GetTransformedNodes()
 	res.reserve(tracks.size());
 	for (const PathNode& pnode : tracks)
 	{
-		res.push_back(worldModelMatrix * glm::vec4(pnode.Node, 1.0f));
+		res.push_back(glm::vec4(pnode.Node, 1.0f));
 	}
 	return res;
 }

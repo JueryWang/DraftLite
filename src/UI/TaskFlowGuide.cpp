@@ -27,7 +27,7 @@ TaskFlowGuide::TaskFlowGuide(QWidget* parent) : QWidget(parent)
 	QLabel* labelFolder = new QLabel();
 	labelFolder->setPixmap(QPixmap(ICOPATH(folder.png)).scaled(40, 40, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 	layout->addWidget(labelFolder, 0, Qt::AlignCenter);
-	QLabel* labelHint = new QLabel("任务");
+	QLabel* labelHint = new QLabel("计划");
 	layout->addWidget(labelHint, 0, Qt::AlignCenter);
 	this->setLayout(layout);
 	layout->setContentsMargins(0, 0, 0, 0);

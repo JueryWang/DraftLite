@@ -209,22 +209,51 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 		std::string file = dxfFile.toLocal8Bit().constData();
 		processor.SetCompleteCallback([&]()
 			{
-				this->setWindowTitle(dxfFile);
-				auto groups = this->ovWindow->mainWindow->mSketchGPU.get()->GetEntityGroups();
-				for (EntGroup* group : groups)
+				if (this->ovWindow->mainWindow->mSketchGPU.get()->GetEntities().size())
 				{
-					for (EntRingConnection* ring : group->rings)
+					this->setWindowTitle(dxfFile);
+					auto groups = this->ovWindow->mainWindow->mSketchGPU.get()->GetEntityGroups();
+
+					for (EntGroup* group : groups)
 					{
-						if (ring->direction == GeomDirection::CCW)
+						glm::vec3 leftBottom = glm::vec3(FLT_MAX,FLT_MAX,0.0f);
+						for (EntRingConnection* ring : group->rings)
 						{
-							ring->Reverse();
-							ring->direction = GeomDirection::CW;
+							if (ring->direction == GeomDirection::CCW)
+							{
+								ring->Reverse();
+								ring->direction = GeomDirection::CW;
+							}
+							//寻找最左边点锚点
+							EntityVGPU* leftBoundEnt = nullptr;
+							int index = 0;
+							for (EntityVGPU* ent : ring->conponents)
+							{
+								auto transformedNodes = ent->GetTransformedNodes();
+								glm::vec3 start = ent->GetStart();
+								if (start.x < leftBottom.x)
+								{
+									leftBoundEnt = ent;
+									leftBottom.x = start.x;
+									leftBottom.y = start.y;
+								}
+								else if (start.y < leftBottom.y)
+								{
+									leftBoundEnt = ent;
+									leftBottom.y = start.y;
+								}
+							}
+							if (leftBoundEnt != nullptr)
+							{
+								ring->SetStartPoint(leftBoundEnt, 0);
+								this->ovWindow->mainWindow->mSketchGPU.get()->SetOrigin(leftBoundEnt->GetStart());
+							}
 						}
 					}
+					std::string NcProgram = this->ovWindow->mainWindow->mSketchGPU.get()->ToNcProgram();
+					GCodeEditor::GetInstance()->setText(QString::fromStdString(NcProgram));
+					//Anchor::GetInstance()->ReAssignDataSize(GCodeEditor::GetInstance()->lines());
 				}
-				std::string NcProgram = this->ovWindow->mainWindow->mSketchGPU.get()->ToNcProgram();
-				GCodeEditor::GetInstance()->setText(QString::fromStdString(NcProgram));
-				//Anchor::GetInstance()->ReAssignDataSize(GCodeEditor::GetInstance()->lines());
 			});
 		processor.read(file);
 	}
@@ -251,7 +280,7 @@ void MenuLayerTop::OnImportDwg()
 		("DWG文件(*.dwg);;所有文件")
 	);
 
-	QDir tempDir("tmp");
+	QDir tempDir("temp");
 	if (!tempDir.exists())
 	{
 		tempDir.mkpath(".");
@@ -259,10 +288,10 @@ void MenuLayerTop::OnImportDwg()
 	if (!fileName.isEmpty())
 	{
 		QString dwgFileName = SplitFileFromPath(fileName);
-		copyFileToDir(fileName,"./tmp");
+		copyFileToDir(fileName,"./temp");
 
 		QProcess dwg2dxf;
-		dwg2dxf.setWorkingDirectory(QDir::currentPath() + "/tmp");
+		dwg2dxf.setWorkingDirectory(QDir::currentPath() + "/temp");
 		dwg2dxf.setProgram(QDir::currentPath()+"/dwg2dxf.exe");
 		dwg2dxf.setArguments({dwgFileName});
 		dwg2dxf.start();
@@ -272,7 +301,7 @@ void MenuLayerTop::OnImportDwg()
 		}
 	}
 	QString dxfFile = FileNameFromPath(fileName) + ".dxf";
-	ImportDxf(QDir::currentPath() + "/tmp/" + dxfFile);
+	ImportDxf(QDir::currentPath() + "/temp/" + dxfFile);
 	this->ovWindow->mainWindow->mSketchGPU.get()->source = fileName.toStdString();
 }
 void MenuLayerTop::OnExportNC()

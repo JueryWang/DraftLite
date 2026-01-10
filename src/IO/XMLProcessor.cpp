@@ -170,6 +170,19 @@ void XMLProcessor::SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch
 	{
 		writer.writeAttribute("id", QString("Default Layer"));
 	}
+
+	auto groups = sketch->GetEntityGroups();
+	for (EntGroup* group : groups)
+	{
+		for (EntRingConnection* ring : group->rings)
+		{
+			for (EntityVGPU* ent : ring->conponents)
+			{
+				
+			}
+		}
+	}
+
 	for (CraftParamConfig& config : sketch->attachedConfig)
 	{
 		writer.writeStartElement("CraftParams");

@@ -59,6 +59,7 @@ namespace CNCSYS
 		this->isSelected = false;
 		this->isHover = false;
 		this->ringId = other->ringId;
+		this->createGCode = other->createGCode;
 	}
 
 	void EntityVGPU::SetHighLight(bool flag)

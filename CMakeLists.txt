@@ -9,7 +9,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:NOREF")
 
-
 set(Qt6_ROOT "C:/Users/Admin/Documents/lib/Qt/6.7.3/msvc2022_64")
 
 set(QML_IMPORT_PATH "${Qt6_ROOT}/plugins/qml" CACHE STRING "QML module path")
@@ -239,6 +238,11 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/Auth"
 file(GLOB DLL_DEPENDS "${CMAKE_SOURCE_DIR}/bin/*.dll")
 file(GLOB EXE_DEPENDS "${CMAKE_SOURCE_DIR}/bin/*.exe")
 
+set(Copy_Externals
+    "${CMAKE_SOURCE_DIR}/bin/dwg2dxf.exe"
+    "${CMAKE_SOURCE_DIR}/bin/libredwg-0.dll"
+)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>
@@ -256,6 +260,7 @@ add_custom_command(TARGET ${PROJECT_NAME}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Resources  $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>/Resources
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/plugins  $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>/plugins
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/qml  $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>/qml
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Copy_Externals}  $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/config.ini ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/config.ini
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL_DEPENDS} $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXE_DEPENDS} $<1:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>

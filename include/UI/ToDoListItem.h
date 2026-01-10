@@ -7,6 +7,7 @@
 #include <QListWidgetItem>
 #include <QContextMenuEvent>
 #include <QCheckBox>
+#include <QProxyStyle>
 
 namespace CNCSYS
 {

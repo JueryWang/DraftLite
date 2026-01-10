@@ -293,6 +293,18 @@ namespace CNCSYS
 						}
 						selectedItems.clear();
 						});
+					QAction* excludeNC = menu.addAction("排除路径");
+					connect(excludeNC, &QAction::triggered, [this]() {
+						for (EntityVGPU* ent : selectedItems)
+						{
+							ent->createGCode = false;
+							ent->isSelected = false;
+							ent->SetHighLight(false);
+							ent->attribColor = g_darkGreen;
+							ent->ResetColor();
+							m_currentSketch->UpdateGCode(true);
+						}
+						});
 					QAction* eraseSelect = menu.addAction("删除所选");
 					connect(eraseSelect, &QAction::triggered, [this]() {
 							EraseSelectedEntitys();
@@ -307,7 +319,6 @@ namespace CNCSYS
 							}
 							m_currentSketch->UpdateGCode();
 						});
-
 				}
 				if (static_cast<uint64_t>(operationState & ModalState::EntityRotate))
 				{
@@ -936,7 +947,7 @@ namespace CNCSYS
 	{
 		glm::vec3 capturePos = ocsSys->GetOCSPosWithPixelPos(glm::vec2(mousePos.x(), mousePos.y()));
 
-		float percision = ocsSys->canvasRange->MinRange() * 0.005f;
+		float percision = ocsSys->canvasRange->MinRange() * 0.05f;
 		if (captureType == CaptureMode::Entity)
 		{
 			EntityVGPU* ent = m_currentSketch.get()->QueryNearsetEntity(capturePos, percision);

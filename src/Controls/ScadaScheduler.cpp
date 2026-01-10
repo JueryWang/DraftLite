@@ -150,7 +150,7 @@ void ScadaScheduler::handleTaskRequest()
 		{
 			g_GCodeHandleMutex.lock();
 			QString content = GCodeEditor::GetInstance()->text();
-			FtpClient::UploadFile(content, QString::fromStdString(task->params.updateRemoteFtp->fileUrl));
+			FtpClient::UploadFile(content, QString::fromLocal8Bit(task->params.updateRemoteFtp->fileUrl));
 			g_GCodeHandleMutex.unlock();
 			break;
 		}

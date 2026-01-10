@@ -17,7 +17,6 @@ struct FtpFile {
 	size_t size;	//内容长度
 };
 
-
 std::string extractFTPFileName(const QString& _file)
 {
 	QStringList parts = _file.split("/");

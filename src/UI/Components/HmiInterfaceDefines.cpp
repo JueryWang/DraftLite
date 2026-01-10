@@ -6,11 +6,16 @@
 #include <iostream>
 int screen_resolution_x = 0;
 int screen_resolution_y = 0;
-float canvas_panel_width_ratio = 0.48;
-float canvas_panel_height_ratio = 0.70;
-float gcode_panel_width_ratio = 0.45;
-float gcode_panel_height_ratio = 0.63;
+float blank_height_ratio = 0.58;
+float canvas_panel_width_ratio = 0.40;
+float canvas_panel_height_ratio = 0.60;
+float gcode_panel_width_ratio = 0.58;
+float gcode_panel_height_ratio = 0.50;
 float move_height_ratio = 0.1625;
+float taskpanel_width_ratio = 0.315;
+float taskpanel_height_ratio = 0.74;
+float todoCanvas_width_ratio = 0.053;
+float todoCanvas_height_ratio;
 
 QMap<QString, QString> global_font_mp;
 

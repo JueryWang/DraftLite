@@ -52,12 +52,31 @@ ToDoListItemWidget::ToDoListItemWidget(const QString& _fileSource, TaskListWindo
 	UploadFileToFTP(sketch->source, content);
 
 	checked = new QCheckBox();
-	checked->hide();
-	checked->setFixedSize(20, 20);
+	checked->setFixedSize(40, 40);
+	checked->setStyleSheet(
+		"QCheckBox::indicator {"
+		"    width: 20px;"
+		"    height: 20px;"
+		"    border: 1px solid #777777;" // 关键：手动画个框
+		"    border-radius: 3px;"
+		"    background-color: white;"
+		"}"
+		"QCheckBox::indicator:unchecked {"
+		"    background-color: white;"
+		"}"
+		"QCheckBox::indicator:checked {"
+		"    background-color: #2196F3;" // 选中时的背景色
+		"    image: url(Resources/icon/check.png);"
+		"}"
+	);
+	checked->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	
 	canvas = new QLabel();
-	canvas->setPixmap(QPixmap::fromImage(sketchImage));
 	canvas->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	canvas->setPixmap(QPixmap::fromImage(sketchImage));
+	checked->hide();
 
+	hlay->setSpacing(0);
 	hlay->addWidget(checked);
 	hlay->addWidget(canvas);
 
@@ -73,7 +92,7 @@ ToDoListItemWidget::ToDoListItemWidget(const QString& _fileSource, TaskListWindo
 	QFont font = QFont(global_font_mp["Comic"], 16);
 	planCounterLabel->setFont(font);
 
-	hlay->addSpacing(50);
+	//hlay->addSpacing(50);
 	hlay->addWidget(planCounterLabel);
 	hlay->setContentsMargins(5, 0, 5, 0);
 	this->setLayout(hlay);
