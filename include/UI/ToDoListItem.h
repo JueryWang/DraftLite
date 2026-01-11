@@ -20,6 +20,7 @@ class TaskListWindow;
 class ToDoListItemWidget : public QWidget
 {
 public:
+	ToDoListItemWidget(std::shared_ptr<CNCSYS::SketchGPU> sketch, TaskListWindow* parent = nullptr);
 	ToDoListItemWidget(const QString& fileSource,TaskListWindow* parent = nullptr);
 	~ToDoListItemWidget();
 	void AddCounter();
@@ -41,7 +42,7 @@ public:
 	QImage sketchImage;
 	QString fileSource;
 	std::string ftpUploadSource;
-	int row;
+	int row = 0;
 	int counter = 0;
 };
 

@@ -70,8 +70,6 @@ OPClient::~OPClient()
 UA_StatusCode OPClient::ConnectToServer(const char* url)
 {
 	this->url = url;
-	if (client != nullptr)
-		return true;
 
 	if (client != nullptr)
 	{
@@ -109,7 +107,7 @@ UA_StatusCode OPClient::ConnectToServer(const char* url)
 
 	this->url = url;
 
-	return (status == UA_STATUSCODE_GOOD);
+	return status;
 }
 
 void OPClient::ReadBackPLC_ProtoOpcUA(const std::vector<PLCParam_ProtocalOpc*>& addresses)
@@ -518,7 +516,7 @@ void OPClient::InitDirTable(int ns, const std::string& directory)
 
 bool OPClient::Reconnect()
 {
-	UA_StatusCode retval = UA_Client_connect(client, this->url.c_str());
+	UA_StatusCode retval = ConnectToServer(this->url.c_str());
 	if (retval == UA_STATUSCODE_GOOD)
 	{
 		ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::OPC_CONNECT, true);
@@ -530,7 +528,7 @@ bool OPClient::Reconnect()
 
 void OPClient::ReconnectWithHint()
 {
-	UA_StatusCode retval = UA_Client_connect(client, this->url.c_str());
+	UA_StatusCode retval = ConnectToServer(this->url.c_str());
 	if (retval == UA_STATUSCODE_GOOD)
 	{
 		ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::OPC_CONNECT, true);

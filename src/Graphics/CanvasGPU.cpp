@@ -821,7 +821,7 @@ namespace CNCSYS
 		static bool dragEntity = false;
 		if (!static_cast<uint64_t>(operationState & (ModalState::CreatePoint | ModalState::CreateLine | ModalState::CreatePolyline | ModalState::CreateCircle
 			| ModalState::CreateArc | ModalState::CreateRectangle | ModalState::CreateSpline | ModalState::EntityRotate | ModalState::EntityScale
-			| ModalState::EntityMirror | ModalState::EntityMove | ModalState::MeasureDimension)))
+			| ModalState::EntityMirror | ModalState::EntityMove | ModalState::MeasureDimension)) && captureType != CaptureMode::Point)
 		{
 			QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
 			switch (event->type())
@@ -1450,6 +1450,7 @@ namespace CNCSYS
 
 	void CanvasGPU::SetScene(std::shared_ptr<SketchGPU> sketch, OCSGPU* ocs)
 	{
+		ocsSys->SetSketch(sketch);
 		g_mainWindow->SetSketch(sketch);
 		frontWidget->SetOCSystem(ocs);
 		toolAnchor->SetCoordinateSystem(ocs);
@@ -1832,7 +1833,7 @@ namespace CNCSYS
 			{
 				ent->color = g_darkGreen;
 				ent->Paint(g_lineShader, ocs, RenderMode::Line);
-				ent->color = g_greenColor;
+				ent->ResetColor();
 			}
 			glReadPixels(0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, m_windowbuf);
 			glfwSwapBuffers(m_window.get());

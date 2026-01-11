@@ -15,6 +15,94 @@
 #include <QFileInfo>
 #include <QMenu>
 
+ToDoListItemWidget::ToDoListItemWidget(std::shared_ptr<CNCSYS::SketchGPU> _sketch, TaskListWindow* parent) : sketch(_sketch)
+{
+	this->setAttribute(Qt::WA_DeleteOnClose, false);
+	this->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+	parentListWindow = parent;
+	QHBoxLayout* hlay = new QHBoxLayout();
+	hlay->setSpacing(10);
+
+	ocsSys = new OCSGPU(sketch);
+	ocsSys->SetFitRatio(0.85f);
+
+	sketchImage = g_canvasInstance->GrabImage(sketch.get(), ocsSys, 200, 200);
+	std::string content = sketch.get()->ToNcProgram();
+	UploadFileToFTP(sketch->source, content);
+
+	checked = new QCheckBox();
+	checked->setFixedSize(40, 40);
+	checked->setStyleSheet(
+		"QCheckBox::indicator {"
+		"    width: 20px;"
+		"    height: 20px;"
+		"    border: 1px solid #777777;" // 关键：手动画个框
+		"    border-radius: 3px;"
+		"    background-color: white;"
+		"}"
+		"QCheckBox::indicator:unchecked {"
+		"    background-color: white;"
+		"}"
+		"QCheckBox::indicator:checked {"
+		"    background-color: #2196F3;" // 选中时的背景色
+		"    image: url(Resources/icon/check.png);"
+		"}"
+	);
+	checked->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+	canvas = new QLabel();
+	canvas->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	canvas->setPixmap(QPixmap::fromImage(sketchImage));
+	checked->hide();
+
+	hlay->setSpacing(0);
+	hlay->addWidget(checked);
+	hlay->addWidget(canvas);
+
+	QFileInfo fileInfo(QString::fromLocal8Bit(sketch.get()->source.c_str()));
+	fileNameLabel = new QLabel(fileInfo.fileName());
+	fileNameLabel->setWordWrap(false);
+	fileNameLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+	fileNameLabel->setToolTip(fileNameLabel->text());
+	fileNameLabel->setTextInteractionFlags(Qt::NoTextInteraction);
+	hlay->addWidget(fileNameLabel);
+
+	planCounterLabel = new QLabel("0");
+	QFont font = QFont(global_font_mp["Comic"], 16);
+	planCounterLabel->setFont(font);
+
+	//hlay->addSpacing(50);
+	hlay->addWidget(planCounterLabel);
+	hlay->setContentsMargins(5, 0, 5, 0);
+	this->setLayout(hlay);
+
+	connect(checked, &QCheckBox::clicked, [](bool isChecked)
+		{
+			int checkCount = 0;
+			TaskListWindow* window = TaskListWindow::GetInstance();
+			for (ToDoListItem* item : window->items)
+			{
+				if (item->attachedWidget->checked->isChecked())
+				{
+					checkCount++;
+				}
+			}
+
+			if (checkCount >= 2)
+			{
+				window->toolBar->btnItemMoveUp->setEnabled(false);
+				window->toolBar->btnItemMoveDown->setEnabled(false);
+			}
+			else
+			{
+				window->toolBar->btnItemMoveUp->setEnabled(true);
+				window->toolBar->btnItemMoveDown->setEnabled(true);
+			}
+		});
+
+	ftpUploadSource = extractFTPFileName(fileSource);
+}
+
 ToDoListItemWidget::ToDoListItemWidget(const QString& _fileSource, TaskListWindow* parent) : fileSource(_fileSource)
 {
 	this->setAttribute(Qt::WA_DeleteOnClose, false);

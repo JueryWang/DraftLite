@@ -86,7 +86,7 @@ static bool copyFileToDir(const QString& srcFilePath, const QString& destDirPath
 	qDebug() << "文件拷贝成功：" << srcFilePath << "→" << destFilePath;
 	return true;
 }
-static void CompressProject(const QString& sourceDir, const QString& targetProj)
+static bool CompressProject(const QString& sourceDir, const QString& targetProj)
 {
 	QString dirName = SplitFileFromPath(targetProj);
 	QFileInfo sourceInfo(sourceDir);
@@ -109,11 +109,42 @@ static void CompressProject(const QString& sourceDir, const QString& targetProj)
 	tar.start();
 	pigz.start();
 
-	tar.waitForFinished();
-	pigz.waitForFinished();
+	if (!tar.waitForFinished())
+	{
+		QMessageBox::information(nullptr, QString("错误"), QString("无法打开指定文件,请检查文件是否在使用中"));
+		return false;
+	}
+	else
+	{
+		int exitCode = tar.exitCode();
+		QByteArray stderrData = tar.readAllStandardError();
+		if (exitCode)
+		{
+			QMessageBox::warning(nullptr, QString("警告"), QString("解析工程文件执行出错:%1").arg(QString::fromLocal8Bit(stderrData)));
+			return false;
+		}
+	}
+
+	if (!pigz.waitForFinished())
+	{
+		QMessageBox::information(nullptr, QString("错误"), QString("无法打开指定文件,请检查文件是否在使用中"));
+		return false;
+	}
+	else
+	{
+		int exitCode = pigz.exitCode();
+		QByteArray stderrData = pigz.readAllStandardError();
+		if (exitCode)
+		{
+			QMessageBox::warning(nullptr, QString("警告"), QString("解析工程文件执行出错:%1").arg(QString::fromLocal8Bit(stderrData)));
+			return false;
+		}
+	}
+
+	return true;
 }
 
-static void DecompressProject(const QString& sourceProj, const QString& targetDir)
+static bool DecompressProject(const QString& sourceProj, const QString& targetDir)
 {
 	QProcess tar;
 
@@ -121,5 +152,18 @@ static void DecompressProject(const QString& sourceProj, const QString& targetDi
 	tar.setArguments({ "-xf",sourceProj ,"-C", targetDir });
 
 	tar.start();
-	tar.waitForFinished();
+	if (!tar.waitForFinished())
+	{
+		QMessageBox::warning(nullptr, QString("警告"), QString("工程文件解压失败,请检查是否被其他程序占用"));
+		return false;
+	}
+	int exitCode = tar.exitCode();
+	QByteArray stderrData = tar.readAllStandardError();
+	if (exitCode)
+	{
+		QMessageBox::warning(nullptr, QString("警告"), QString("解析工程文件执行出错:%1").arg(QString::fromLocal8Bit(stderrData)));
+		return false;
+	}
+
+	return true;
 }

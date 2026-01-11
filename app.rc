@@ -31,12 +31,12 @@ BEGIN
         BLOCK "080404b0"
         BEGIN
             VALUE "CompanyName", "瓦格自动化科技有限公司"
-            VALUE "FileDescription", "齿轮倒角机"
+            VALUE "FileDescription", "石材切割机"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "WG -Cut"
             VALUE "LegalCopyright", "Copyright (C) 2025 瓦格自动化科技有限公司. All rights reserved."
             VALUE "OriginalFilename", "WG-Cut.exe"
-            VALUE "ProductName", "枕头涂胶机"
+            VALUE "ProductName", "石材切割机"
             VALUE "ProductVersion", "1.0.0.0"
             VALUE "Publisher", "WJH"
         END

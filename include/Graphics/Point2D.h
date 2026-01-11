@@ -12,6 +12,7 @@ public:
         ar& point;
         ar& worldModelMatrix;
         ar& isVisible;
+        ar& createGCode;
         ar& ringId;
     }
 

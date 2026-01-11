@@ -30,9 +30,9 @@ find_package(open62541 REQUIRED)
 #find_package(orocos_kdl REQUIRED)
 #find_package(Eigen3 REQUIRED)
 find_package(CURL REQUIRED)
-find_package(QT NAMES Qt5 Qt6 COMPONENTS OpenGL Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Sql REQUIRED)
+find_package(QT NAMES Qt5 Qt6 COMPONENTS OpenGL Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Sql Xml REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Sql Xml)
 
 include_directories(include)
 include_directories(${Qt${QT_VERSION_MAJOR}_INCLUDE_DIRS})
@@ -298,6 +298,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::QuickLayouts
     Qt${QT_VERSION_MAJOR}::QuickWidgets
     Qt${QT_VERSION_MAJOR}::Sql
+    Qt${QT_VERSION_MAJOR}::Xml
     ${AUTH_LIB}
     ${OPENGL_LIBS}
     ${DXF_LIB}

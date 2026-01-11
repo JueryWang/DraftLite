@@ -16,6 +16,7 @@ public:
         ar& endAngle;
         ar& worldModelMatrix;
         ar& isVisible;
+        ar& createGCode;
         ar& ringId;
     }
 

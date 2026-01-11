@@ -14,6 +14,7 @@ public:
         ar& knots;
         ar& worldModelMatrix;
         ar& isVisible;
+        ar& createGCode;
         ar& ringId;
     }
 

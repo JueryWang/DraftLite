@@ -60,6 +60,11 @@ namespace CNCSYS
 		this->isHover = false;
 		this->ringId = other->ringId;
 		this->createGCode = other->createGCode;
+		if (!this->createGCode)
+		{
+			this->attribColor = g_darkGreen;
+			this->ResetColor();
+		}
 	}
 
 	void EntityVGPU::SetHighLight(bool flag)

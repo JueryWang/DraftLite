@@ -102,6 +102,7 @@ void TaskListWindow::AddTaskItem(ToDoListItem* item, ToDoListItemWidget* itemWid
 	{
 		item->attachedWidget->checked->hide();
 	}
+	itemWidget->row = items.size();
 	taskLists->addItem(item);
 	//壳,避免移动时ToDoListItemWidget被自动销毁
 	ItemWrapper* wrapper = new ItemWrapper(itemWidget);

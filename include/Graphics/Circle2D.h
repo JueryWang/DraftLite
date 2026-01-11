@@ -12,6 +12,7 @@ public:
         ar& radius;
         ar& worldModelMatrix;
         ar& isVisible;
+        ar& createGCode;
         ar& ringId;
     }
 

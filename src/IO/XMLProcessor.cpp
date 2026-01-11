@@ -17,6 +17,8 @@
 #include <QUUID>
 #include <QProcess>
 #include <QApplication>
+#include <QMap>
+#include <algorithm>
 
 using namespace CNCSYS;
 /*
@@ -75,6 +77,7 @@ void XMLProcessor::SaveProject(const QString& Filename)
 			}
 
 			writer.writeAttribute("id", QString("Default Layer"));
+			SaveScene(writer, sketch, tempPath,true);
 			writer.writeEndElement();
 
 			writer.writeEndElement();
@@ -116,71 +119,98 @@ void XMLProcessor::SaveProject(const QString& Filename)
 void XMLProcessor::ReadProject(const QString& FileName)
 {
 	QString tempDir = QApplication::applicationDirPath() + "/temp";
-	DecompressProject(FileName, tempDir);
-	QString pureName = SplitFileFromPath(FileName);
-	QString conpressedPath = tempDir + "/" + pureName;
-	TaskListWindow::GetInstance()->ClearItems();
-
-	QFile file(conpressedPath + "/" + pureName);
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+	if (DecompressProject(FileName, tempDir))
 	{
-		return;
-	}
+		QString pureName = SplitFileFromPath(FileName);
+		QString conpressedPath = tempDir + "/" + pureName;
+		TaskListWindow::GetInstance()->ClearItems();
 
-	QXmlStreamReader reader(&file);
-	while (!reader.atEnd())
-	{
-		QXmlStreamReader::TokenType token = reader.readNext();
-		if (token == QXmlStreamReader::StartElement && reader.name() == QString("Scene"))
+		QFile file(conpressedPath + "/" + pureName);
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		{
-			ParseScene(reader, conpressedPath);
+			return;
 		}
 
-		// 跳过空白节点
-		if (token == QXmlStreamReader::Characters && reader.isWhitespace())
-		{
-			continue;
+		QDomDocument doc;
+		QString errorMsg;
+		int errorLine, errorCol;
+		// 加载 XML 到 DomDocument（处理编码，这里是 UTF-8）
+		if (!doc.setContent(&file, &errorMsg, &errorLine, &errorCol)) {
+			qDebug() << "XML Parse Error - Line:" << errorLine << ", Col:" << errorCol << ":" << errorMsg;
+			file.close();
+			return;
+		}
+		file.close();
+
+		QDomElement rootElem = doc.documentElement();
+		if (rootElem.tagName() != "Project") {
+			qDebug() << "Invalid XML root node (expected 'Project')";
+			return;
+		}
+
+		QDomElement layersElem = rootElem.firstChildElement("Layers");
+		if (!layersElem.isNull()) {
+			// 遍历 Layers 下的所有 Scene 节点
+			QDomElement sceneElem = layersElem.firstChildElement("Scene");
+			while (!sceneElem.isNull()) {
+				ParseScene(sceneElem);
+				sceneElem = sceneElem.nextSiblingElement("Scene"); // 下一个同级别 Scene
+			}
 		}
 	}
 }
 
 
-void XMLProcessor::SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch, const QString& TempDir)
+void XMLProcessor::SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch, const QString& TempDir, bool defaultLayer)
 {
-	writer.writeStartElement("Scene");
-	std::vector<EntityVGPU*> entities = sketch->GetEntities();
-	if (sketch->source.size())
+	if (!defaultLayer)
 	{
-		QString filename = SplitFileFromPath(QString::fromLocal8Bit(sketch->source.c_str()));
-		writer.writeAttribute("Source", filename);
-		QFile::copy(QString::fromLocal8Bit(sketch->source.c_str()), TempDir + "/" + filename);
-	}
-	std::vector<SketchGPU*> taskSketches = TaskListWindow::GetInstance()->GetAllTaskSketches();
-	bool findInTask = false;
-	for (int i = 0; i < taskSketches.size(); i++)
-	{
-		if (taskSketches[i] == sketch)
+		writer.writeStartElement("Scene");
+		std::vector<EntityVGPU*> entities = sketch->GetEntities();
+		if (sketch->source.size())
 		{
-			writer.writeAttribute("id", QString("Layer#%1").arg(i));
-			findInTask = true;
-			break;
+			QString filename = SplitFileFromPath(QString::fromLocal8Bit(sketch->source.c_str()));
+			writer.writeAttribute("Source", filename);
+			QFile::copy(QString::fromLocal8Bit(sketch->source.c_str()), TempDir + "/" + filename);
 		}
-	}
-	if (!findInTask)
-	{
-		writer.writeAttribute("id", QString("Default Layer"));
+		std::vector<SketchGPU*> taskSketches = TaskListWindow::GetInstance()->GetAllTaskSketches();
+		bool findInTask = false;
+		for (int i = 0; i < taskSketches.size(); i++)
+		{
+			if (taskSketches[i] == sketch)
+			{
+				writer.writeAttribute("id", QString("Layer#%1").arg(i));
+				findInTask = true;
+				break;
+			}
+		}
+		if (!findInTask)
+		{
+			writer.writeAttribute("id", QString("Default Layer"));
+		}
 	}
 
 	auto groups = sketch->GetEntityGroups();
+	
+	int groupId = 0;
 	for (EntGroup* group : groups)
 	{
+		int ringId = 0;
 		for (EntRingConnection* ring : group->rings)
 		{
 			for (EntityVGPU* ent : ring->conponents)
 			{
-				
+				writer.writeStartElement("Entity");
+				writer.writeAttribute("GroupId",QString::number(groupId));
+				writer.writeAttribute("RingId", QString::number(ringId));
+				writer.writeTextElement("type", QString::number(static_cast<int>(ent->GetType())));
+				std::string serilize = serilize_to_string(ent);
+				writer.writeTextElement("content", QString::fromStdString(serilize));
+				writer.writeEndElement();
 			}
+			ringId++;
 		}
+		groupId++;
 	}
 
 	for (CraftParamConfig& config : sketch->attachedConfig)
@@ -255,191 +285,160 @@ void XMLProcessor::SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch
 		writer.writeTextElement("remark", config.remark);
 		writer.writeEndElement();
 	}
+	if (!defaultLayer)
+	{
+		writer.writeEndElement();
+	}
 
-	writer.writeEndElement();
 }
 
-void XMLProcessor::ParseScene(QXmlStreamReader& reader, const QString& projPath)
+std::shared_ptr<CNCSYS::SketchGPU> XMLProcessor::ParseScene(const QDomElement& sceneElem)
 {
-	if (reader.name() != QString("Scene") || reader.tokenType() != QXmlStreamReader::StartElement)
+	QString fileSource = sceneElem.attribute("Source");
+	QString layerId = sceneElem.attribute("id");
+
+	std::shared_ptr<CNCSYS::SketchGPU> createdSketch;
+	if (layerId != "Default Layer")
 	{
-		reader.skipCurrentElement();
-		return;
+		createdSketch.reset(new SketchGPU());
+	}
+	else
+	{
+		createdSketch = g_canvasInstance->GetSketchShared();
 	}
 
-	QXmlStreamAttributes attrs = reader.attributes();
-
-
-	QString layerId;
-	if (attrs.hasAttribute("id"))
-	{
-		layerId = attrs.value("id").toString();
-
+	createdSketch->source = fileSource.toLocal8Bit();
+	std::vector< EntityParseInfo> parsedEntities;
+	// 遍历 Scene 下的所有 Entity 节点
+	QDomElement entityElem = sceneElem.firstChildElement("Entity");
+	while (!entityElem.isNull()) {
+		parsedEntities.push_back(ParseEntity(entityElem));
+		entityElem = entityElem.nextSiblingElement("Entity"); // 下一个同级别 Entity
 	}
-	CNCSYS::SketchGPU* createdSketch = nullptr;
-	if (attrs.hasAttribute("Source"))
+	std::vector<EntGroup*> parsedGroups;
+	for (EntityParseInfo& parsedInfo : parsedEntities)
 	{
-		QString fileSource = projPath + "/" + attrs.value("Source").toString();
-		if (layerId != "Default Layer")
+		bool findGroup = false;
+		bool findRing = false;
+		for (EntGroup* group : parsedGroups)
 		{
-			if (!fileSource.isEmpty())
+			if (group->groupId == parsedInfo.groupId)
 			{
-				ToDoListItem* itemNew = new ToDoListItem();
-				ToDoListItemWidget* itemWidget = new ToDoListItemWidget(fileSource, TaskListWindow::GetInstance());
-				createdSketch = itemWidget->sketch.get();
-				TaskListWindow::GetInstance()->AddTaskItem(itemNew, itemWidget);
-				itemWidget->fileSource = attrs.value("Source").toString();
-			}
+				findGroup = true;
 
-		}
-		if (layerId == "Default Layer")
-		{
-			if (!fileSource.isEmpty())
-			{
-				DXFProcessor processor(g_canvasInstance->GetSketchShared());
-				processor.read(fileSource.toStdString());
-				g_canvasInstance->UpdateOCS();
-				g_canvasInstance->GetSketchShared()->UpdateGCode(true);
-			}
-		}
-	}
-
-	CraftConfigItems configItems;
-	while (!reader.atEnd())
-	{
-		QXmlStreamReader::TokenType token = reader.readNext();
-		if (token == QXmlStreamReader::EndElement && reader.name() == QString("Scene"))
-		{
-			break;
-		}
-
-		if (token == QXmlStreamReader::StartElement && reader.name() == QString("CraftParams")) {
-			CraftParamConfig config;
-			AtomicVarType varType;
-			while (!(reader.readNextStartElement() == false && reader.name() == QString("CraftParams"))) {
-				// 如果读到了子元素的开始标签
-				if (reader.isStartElement()) {
-					QString name = reader.name().toString();
-					QString text = reader.readElementText();
-
-					if (name == "alias")
+				for (EntRingConnection* ring : group->rings)
+				{
+					if (ring->ringId == parsedInfo.ringId)
 					{
-						config.alias = text.toStdString();
-					}
-					else if (name == "type")
-					{
-						varType = static_cast<AtomicVarType>(text.toInt());
-					}
-					else if (name == "address")
-					{
-						std::string address = text.toStdString();
-						for (auto& pair : g_PLCVariables)
-						{
-							PLCParam_ProtocalOpc* opcInfo = static_cast<PLCParam_ProtocalOpc*>(pair.second);
-							if (opcInfo != NULL)
-							{
-								if (strcmp(opcInfo->identifier, address.c_str()) == 0)
-								{
-									config.plcInfo = opcInfo;
-								}
-							}
-						}
-					}
-					else if (name == "value")
-					{
-						switch (varType)
-						{
-						case AtomicVarType::BOOL:
-						{
-							if (text == "True")
-							{
-								config.preSetVal = true;
-							}
-							else if (text == "False")
-							{
-								config.preSetVal = false;
-							}
-							break;
-						}
-						case AtomicVarType::WORD:
-						{
-							uint16_t value;
-							if (stringToUint16(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::DWORD:
-						{
-							uint32_t value;
-							if (stringToUint32(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::LWORD:
-						{
-							uint64_t value;
-							if (stringToUint64(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::INT:
-						{
-							int16_t value;
-							if (stringToInt16(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::DINT:
-						{
-							int32_t value;
-							if (stringToInt32(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::LINT:
-						{
-							int64_t value;
-							if (stringToInt64(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::REAL:
-						{
-							double value;
-							if (stringToDouble(text, value))
-							{
-								config.preSetVal = value;
-							}
-							break;
-						}
-						case AtomicVarType::STRING:
-						{
-							config.preSetVal = text.toStdString();
-							break;
-						}
-						}
+						findRing = true;
+						ring->conponents.push_back(parsedInfo.ent);
 					}
 				}
-
-				if (reader.atEnd()) break;
+				if (!findRing)
+				{
+					EntRingConnection* ring = new EntRingConnection({ parsedInfo.ent });
+					ring->ringId = parsedInfo.ringId;
+					group->AddRingConnection(ring);
+				}
 			}
-			configItems.push_back(config);
+		}
+		if (!findGroup)
+		{
+			EntRingConnection* ring = new EntRingConnection({ parsedInfo.ent });
+			ring->ringId = parsedInfo.ringId;
+			EntGroup* group = new EntGroup();
+			group->AddRingConnection(ring);
+			group->groupId = parsedInfo.groupId;
+			parsedGroups.push_back(group);
 		}
 	}
-	if (createdSketch)
+
+	for (EntGroup* group : parsedGroups)
 	{
-		createdSketch->attachedConfig = configItems;
+		std::sort(group->rings.begin(), group->rings.end(), [](EntRingConnection* a, EntRingConnection* b) {return a->ringId < b->ringId; });
 	}
+	std::sort(parsedGroups.begin(), parsedGroups.end(), [](EntGroup* a, EntGroup* b) {return a->groupId < b->groupId; });
+
+	for (EntGroup* group : parsedGroups)
+	{
+		createdSketch->AddEntityGroup(group);
+	}
+	
+	if (layerId != "Default Layer")
+	{
+		ToDoListItem* itemNew = new ToDoListItem();
+		ToDoListItemWidget* itemWidget = new ToDoListItemWidget(createdSketch, TaskListWindow::GetInstance());
+		TaskListWindow::GetInstance()->AddTaskItem(itemNew, itemWidget);
+	}
+	else
+	{
+		g_canvasInstance->SetScene(createdSketch,g_canvasInstance->GetOCSSystem());
+	}
+
+	return createdSketch;
+}
+
+
+EntityParseInfo XMLProcessor::ParseEntity(const QDomElement& entityElem)
+{
+	EntityParseInfo info;
+	int groupId = entityElem.attribute("GroupId").toInt();
+	int ringId = entityElem.attribute("RingId").toInt();
+	int type = entityElem.firstChildElement("type").text().toInt();
+	std::string content = entityElem.firstChildElement("content").text().toStdString();
+	EntityType EntType = static_cast<EntityType>(type);
+	switch (EntType)
+	{
+		case EntityType::Point:
+		{
+			Point2DGPU* newPoint = new Point2DGPU();
+			Point2DGPU revoked_point = deserilize_from_string<Point2DGPU>(content);
+			newPoint->Copy(&revoked_point);
+			info.ent = newPoint;
+			break;
+		}
+		case EntityType::Line:
+		{
+			Line2DGPU* newLine = new Line2DGPU();
+			Line2DGPU revoked_line = deserilize_from_string<Line2DGPU>(content);
+   			newLine->Copy(&revoked_line);
+			info.ent = newLine;
+			break;
+		}
+		case EntityType::Circle:
+		{
+			Circle2DGPU* newCircle = new Circle2DGPU();
+			Circle2DGPU revoked_circle = deserilize_from_string<Circle2DGPU>(content);
+			newCircle->Copy(&revoked_circle);
+			info.ent = newCircle;
+			break;
+		}
+		case EntityType::Polyline:
+		{
+			Polyline2DGPU* newPoly = new Polyline2DGPU();
+			Polyline2DGPU reoked_poly = deserilize_from_string<Polyline2DGPU>(content);
+			newPoly->Copy(&reoked_poly);
+			info.ent = newPoly;
+			break;
+		}
+		case EntityType::Arc:
+		{
+			Arc2DGPU* newArc = new Arc2DGPU();
+			Arc2DGPU reovked_arc = deserilize_from_string<Arc2DGPU>(content);
+			newArc->Copy(&reovked_arc);
+			info.ent = newArc;
+			break;
+		}
+		case EntityType::Spline:
+		{
+			Arc2DGPU* newSpline = new Arc2DGPU();
+			Arc2DGPU revoked_spline = deserilize_from_string<Arc2DGPU>(content);
+			newSpline->Copy(&revoked_spline);
+			info.ent = newSpline;
+			break;
+		}
+	}
+	info.groupId = groupId;
+	info.ringId = ringId;
+	return info;
 }

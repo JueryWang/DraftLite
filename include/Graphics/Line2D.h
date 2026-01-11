@@ -13,6 +13,7 @@ public:
         ar& end;
         ar& worldModelMatrix;
         ar& isVisible;
+        ar& createGCode;
         ar& ringId;
     }
     Line2DGPU();

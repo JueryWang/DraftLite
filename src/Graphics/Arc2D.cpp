@@ -50,7 +50,7 @@ Arc2DGPU::~Arc2DGPU()
 void Arc2DGPU::Copy(Arc2DGPU* other)
 {
 	this->EntityVGPU::Copy(other);
-	this->SetParameter(other->center, this->startAngle, this->endAngle, this->radius);
+	this->SetParameter(other->center, other->startAngle, other->endAngle, other->radius);
 }
 
 void Arc2DGPU::UpdatePaintData()

@@ -274,6 +274,7 @@ namespace CNCSYS
 		AABB bbox;
 		glm::mat4 transform;
 		int processOrder = 0;
+		int groupId;
 	};
 
 	class EntityVCPU : public QGraphicsItem

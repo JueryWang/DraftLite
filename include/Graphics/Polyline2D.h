@@ -14,6 +14,7 @@ public:
         ar& worldModelMatrix;
         ar& isVisible;
         ar& isClosed;
+        ar& createGCode;
         ar& ringId;
     }
 
