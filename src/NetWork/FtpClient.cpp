@@ -1,12 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "NetWork/FtpClient.h"
+#include "Common/ProgressInfo.h"
 #include <sys/stat.h>
 #include <QFile>
 #include <QDir>
 #include <QDebug>
 #include <iostream>
 #include <QString>
-
 QString FtpClient::ftpUrl;
 QProcess FtpClient::curlCommander;
 
@@ -77,6 +77,7 @@ void FtpClient::UploadFile(const QString& content, const QString& ftpFileDir)
 		curl_easy_reset(curl);
 		curl_easy_setopt(curl, CURLOPT_URL, ftp_upload_url);
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, file_read_callback);
 		curl_easy_setopt(curl, CURLOPT_READDATA, local_file);
 		curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)file_info.st_size);

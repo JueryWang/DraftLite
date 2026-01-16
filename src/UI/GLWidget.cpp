@@ -74,9 +74,9 @@ namespace CNCSYS
 			if (firstShow)
 			{
 				m_updateTimer.start(0);
-				m_context->window->updateGL();
 				try
 				{
+					m_context->window->updateGL();
 					QMetaObject::invokeMethod(this, "repaint");
 				}
 				catch (...)
@@ -88,9 +88,9 @@ namespace CNCSYS
 
 			if (this->isVisible())
 			{
-				m_context->window->updateGL();
 				try
 				{
+					m_context->window->updateGL();
 					QMetaObject::invokeMethod(this, "repaint");
 				}
 				catch (...)

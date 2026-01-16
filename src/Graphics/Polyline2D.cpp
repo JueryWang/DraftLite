@@ -258,13 +258,7 @@ void Polyline2DGPU::Reverse()
 		direction = GeomDirection::CW;
 	}
 
-	if (vao > 0 && vbo > 0)
-	{
-		glBindVertexArray(vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, polylineBulgedSamples.size() * sizeof(glm::vec3), polylineBulgedSamples.data(), GL_STATIC_DRAW);
-	}
+	UpdatePaintData();
 }
 
 glm::vec3 Polyline2DGPU::Evaluate(float t)
@@ -598,6 +592,17 @@ std::string Polyline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createR
 		char buffer[256];
 		int index = 0;
 
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			s += buffer;
+			if (createRecord)
+			{
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
+
 		for (glm::vec3& pos : nodes)
 		{
 			if (index >= bulges.size() || bulges[index] == 0 || index == nodes.size())
@@ -663,9 +668,21 @@ std::string Polyline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createReco
 		char buffer[256];
 		glm::mat4 transformedMatrix = MathUtils::scaledMatrix(this->worldModelMatrix, { Mstatus->zoom,Mstatus->zoom ,Mstatus->zoom }, Mstatus->wcsAnchor);
 		transformedMatrix = MathUtils::tranlatedMatrix(transformedMatrix, -Mstatus->wcsAnchor);
+		glm::vec3 start = transformedMatrix * glm::vec4(nodes[0], 1.0f);
+		glm::vec3 end = transformedMatrix * glm::vec4(nodes[nodes.size() - 1], 1.0f);
+
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			section += buffer;
+			if (createRecord)
+			{
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
 
 		int index = 0;
-
 		for (glm::vec3& pos : nodes)
 		{
 			if (index >= bulges.size() || bulges[index] == 0 || index == nodes.size())
@@ -713,6 +730,7 @@ std::string Polyline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createReco
 			section += buffer;
 			index++;
 		}
+		Mstatus->toolPos = end;
 	}
 	return section;
 }

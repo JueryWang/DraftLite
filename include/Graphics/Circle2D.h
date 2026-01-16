@@ -50,4 +50,5 @@ public:
     std::vector<glm::vec3> circleSamples;
     glm::vec3 center;
     float radius = 0;
+    bool reversed = false;
 };

@@ -237,13 +237,7 @@ void Arc2DGPU::Reverse()
 		direction = GeomDirection::CW;
 	}
 
-	if (vao > 0 && vbo > 0)
-	{
-		glBindVertexArray(vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, arcSamples.size() * sizeof(glm::vec3), arcSamples.data(), GL_STATIC_DRAW);
-	}
+	UpdatePaintData();
 }
 
 glm::vec3 Arc2DGPU::Evaluate(float t)
@@ -349,6 +343,17 @@ std::string Arc2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRecord
 		float I = (center - start).x;
 		float J = (center - start).y;
 		char buffer[256];
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			s += buffer;
+			if (createRecord)
+			{
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
+
 		if (direction == GeomDirection::CCW)
 		{
 			std::sprintf(buffer, "N%03d G03 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
@@ -391,10 +396,16 @@ std::string Arc2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, S
 		float I = (center - start).x;
 		float J = (center - start).y;
 
-		//if (start != Mstatus->toolPos)
-		//{
-		//	sprintf(buffer,"",Mstatus->ncstep++,);
-		//}
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			sprintf(buffer,"N%03d G00 X%f Y%f\n",Mstatus->ncstep++,start.x,start.y);
+			section += buffer;
+			if (createRecord)
+			{
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
 
 		if (direction == GeomDirection::CCW)
 		{
@@ -416,6 +427,8 @@ std::string Arc2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, S
 				GCodeController::GetController()->AddRecord(rec);
 			}
 		}
+
+		Mstatus->toolPos = end;
 	}
 	return section;
 }

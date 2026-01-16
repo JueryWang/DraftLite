@@ -85,7 +85,7 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		//connect(closeBtn, &QToolButton::clicked, []()
 		//	{
 		//		PLC_TYPE_BOOL busy;
-		//		ReadPLC_OPCUA(g_VarNodePathDict["AutoBusy"].c_str(), &busy, AtomicVarType::BOOL);
+		//		ReadPLC_OPCUA(g_ConfigableKeys["AutoBusy"].c_str(), &busy, AtomicVarType::BOOL);
 		//		if (busy)
 		//		{
 		//			QMessageBox::warning(nullptr, "警告", "设备正在自动运行中,请先关闭后退出!");
@@ -211,45 +211,20 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 			{
 				if (this->ovWindow->mainWindow->mSketchGPU.get()->GetEntities().size())
 				{
-					this->setWindowTitle(dxfFile);
 					auto groups = this->ovWindow->mainWindow->mSketchGPU.get()->GetEntityGroups();
-
 					for (EntGroup* group : groups)
 					{
-						glm::vec3 leftBottom = glm::vec3(FLT_MAX,FLT_MAX,0.0f);
 						for (EntRingConnection* ring : group->rings)
 						{
-							if (ring->direction == GeomDirection::CCW)
+							if (ring->direction == GeomDirection::CW)
 							{
 								ring->Reverse();
-								ring->direction = GeomDirection::CW;
-							}
-							//寻找最左边点锚点
-							EntityVGPU* leftBoundEnt = nullptr;
-							int index = 0;
-							for (EntityVGPU* ent : ring->conponents)
-							{
-								auto transformedNodes = ent->GetTransformedNodes();
-								glm::vec3 start = ent->GetStart();
-								if (start.x < leftBottom.x)
-								{
-									leftBoundEnt = ent;
-									leftBottom.x = start.x;
-									leftBottom.y = start.y;
-								}
-								else if (start.y < leftBottom.y)
-								{
-									leftBoundEnt = ent;
-									leftBottom.y = start.y;
-								}
-							}
-							if (leftBoundEnt != nullptr)
-							{
-								ring->SetStartPoint(leftBoundEnt, 0);
-								this->ovWindow->mainWindow->mSketchGPU.get()->SetOrigin(leftBoundEnt->GetStart());
+								ring->direction = GeomDirection::CCW;
 							}
 						}
 					}
+					this->ovWindow->mainWindow->mSketchGPU.get()->SetOrigin(this->ovWindow->mainWindow->mSketchGPU->attachedOCS->objectRange->getMin());
+					this->setWindowTitle(dxfFile);
 					std::string NcProgram = this->ovWindow->mainWindow->mSketchGPU.get()->ToNcProgram();
 					GCodeEditor::GetInstance()->setText(QString::fromStdString(NcProgram));
 					//Anchor::GetInstance()->ReAssignDataSize(GCodeEditor::GetInstance()->lines());
@@ -299,7 +274,20 @@ void MenuLayerTop::OnImportDwg()
 			QMessageBox::information(nullptr,tr("错误"),tr("dwg格式有错误"));
 			return;
 		}
+		else
+		{
+			int exitCode = dwg2dxf.exitCode();
+			QByteArray stderrData = dwg2dxf.readAllStandardError();
+			QString command = QDir::currentPath() + "/dwg2dxf.exe" + " ./temp/" + dwgFileName;
+			system(command.toLocal8Bit());
+			if (exitCode)
+			{
+				QMessageBox::warning(nullptr, QString("警告"), QString("dwg文件解析出错:%1").arg(QString::fromLocal8Bit(stderrData)));
+			}
+		}
+
 	}
+
 	QString dxfFile = FileNameFromPath(fileName) + ".dxf";
 	ImportDxf(QDir::currentPath() + "/temp/" + dxfFile);
 	this->ovWindow->mainWindow->mSketchGPU.get()->source = fileName.toStdString();

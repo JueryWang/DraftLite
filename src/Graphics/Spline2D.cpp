@@ -228,13 +228,7 @@ void Spline2DGPU::Reverse()
 		direction = GeomDirection::CW;
 	}
 
-	if (vao > 0 && vbo > 0)
-	{
-		glBindVertexArray(vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, splineSamples.size() * sizeof(glm::vec3), splineSamples.data(), GL_STATIC_DRAW);
-	}
+	UpdatePaintData();
 }
 
 glm::vec3 Spline2DGPU::Evaluate(float t)
@@ -524,11 +518,7 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 			s += buffer;
 			if (createRecord)
 			{
-				Path2D* path = new Path2D({ Mstatus->toolPos,start }, true);
-				path->SetTransformation(glm::mat4(1.0f));
-				sketch->AddPath(path);
-				GCodeRecord rec(std::string(buffer), this, 0, transformedMatrix, Mstatus->ncstep);
-				rec.attachedPath = path;
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
 		}
@@ -651,12 +641,8 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 			section += buffer;
 			if (createRecord)
 			{
-				//Path2D* path = new Path2D({ Mstatus->toolPos,start }, true);
-				//path->SetTransformation(glm::mat4(1.0f));
-				//sketch->AddPath(path);
-				//GCodeRecord rec(std::string(buffer), this, 0, transformedMatrix, Mstatus->ncstep);
-				//rec.attachedPath = path;
-				//GCodeController::GetController()->AddRecord(rec);
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
 			}
 		}
 		glm::vec3 transformed;

@@ -16,7 +16,7 @@ namespace CNCSYS
 		OCSGPU(std::shared_ptr<SketchGPU> SK);
 		~OCSGPU();
 
-		void SetSketch(std::shared_ptr<SketchGPU> SK) { sketch = SK; }
+		void SetSketch(std::shared_ptr<SketchGPU> SK);
 		void SetCanvasSizae(int width, int height);
 		void ComputeScaleFitToCanvas();
 		void FitToZero();

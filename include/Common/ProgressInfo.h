@@ -3,6 +3,7 @@
 #include "Graphics/AABB.h"
 #include "Controls/GlobalPLCVars.h"
 #include <Auth/dongle/D8.h>
+#include <mutex>
 #include <QMainWindow>
 #include <QSettings>
 #include <map>
@@ -28,10 +29,12 @@ struct SimulateStatus
 	double zoom;
 	double Zup;
 	double Zdown;
+	PLC_TYPE_LREAL toolRadius = 0.0f;   //刀具半径补偿
+	PLC_TYPE_LREAL toolDistance = 0.0f; //进刀距离
 	double velocity = 100;
 	double acceleration = 1000;
 	double deceleartion = -1000;
-	double jerk;
+	double jerk = 0.0f;
 	double XAxisStart = 0.0;
 	double YAxisStart = 0.0;
 	double ZAxisStart = 0.0;
@@ -102,6 +105,14 @@ struct SimulateStatus
 		}
 		return *this;
 	}
+
+	void SetToolRadius(PLC_TYPE_LREAL radius);
+	PLC_TYPE_LREAL GetToolRadius();
+
+	void SetToolDistance(PLC_TYPE_LREAL distance);
+	PLC_TYPE_LREAL GetToolDistance();
+private:
+	std::mutex mutex;
 };
 
 struct GCodeRecord
@@ -136,13 +147,14 @@ extern QSettings* g_settings;
 extern QString g_plcSearchRootNode;
 extern QString g_plcUrl;
 extern QString g_plcVarCnfigExcelUrl;
-extern std::map<std::string, std::string> g_VarNodePathDict;
+extern std::map<std::string, std::string> g_ConfigableKeys;
 extern std::map<std::string, std::string> g_ConfigableKeys;
 extern std::vector<std::string> g_preRegKeys;
 extern D8 g_dogKey;
 extern AuthInfo g_authInfo;
 extern char DevicePath[MAX_PATH];
-
+extern GeomDirection g_defaultDir;
+extern GeomDirection g_defaultDirReverse;
 
 void InitPLConfig();
 void InitLogger();

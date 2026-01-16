@@ -25,8 +25,9 @@ private:
 	ScadaNode* monitorIndexPage = nullptr;
 	ScadaNode* monitorUploadFTP = nullptr;
 	ScadaNode* monitorHeartBeat = nullptr;
-	ScadaNode* monitorChangeSlice = nullptr;
 	ScadaNode* monitorAutoBusy = nullptr;
+	ScadaNode* monitorToolRadius = nullptr;
+	ScadaNode* monitorToolDistance = nullptr;
 
 	QTimer heartBeatDetectTimer;
 };

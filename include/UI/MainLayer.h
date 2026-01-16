@@ -24,7 +24,7 @@ public:
 	QWidget* GetWebView() { return webView; }
 	void loadQssTheme();
 	CNCSYS::SketchGPU* GetSketch() { return mSketchGPU.get(); }
-	void SetSketch(std::shared_ptr<CNCSYS::SketchGPU> sketch) { mSketchGPU = sketch; }
+	std::shared_ptr<CNCSYS::SketchGPU> GetSketchShared() { return mSketchGPU; }
 
 	QSize GetWindowSize();
 	void AutoSaveScene();
@@ -36,6 +36,7 @@ protected:
 
 private:
 	bool renderByGPU = true;
+	//画布默认的Sketch和OCS,不可修改
 	std::shared_ptr<CNCSYS::SketchGPU> mSketchGPU;
 	std::shared_ptr<CNCSYS::SketchGPU> mSketchCPU;
 	OCSGPU* mOCSGPU;

@@ -91,7 +91,7 @@ QWidget* HmiTemplateWebViewer::GetWidget()
 	if (quickWidget)
 	{
 		quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
-		quickWidget->setSource(QUrl("qrc:/plugins/WebViewer.qml"));
+		quickWidget->setSource(QUrl("./plugins/WebViewer.qml"));
 		quickWidget->hide();
 	}
 

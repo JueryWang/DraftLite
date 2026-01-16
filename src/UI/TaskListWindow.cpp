@@ -3,8 +3,14 @@
 #include "UI/Components/HmiInterfaceDefines.h"
 #include "IO/DxfProcessor.h"
 #include "UI/SizeDefines.h"
+#include "UI/GLWidget.h"
 #include "Graphics/Sketch.h"
+#include "Graphics/Canvas.h"
+#include "Common/OpenGLContext.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
+#include "Common/ProgressInfo.h"
+#include "UI/MainLayer.h"
+#include <iostream>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QVBoxLayout>
@@ -175,9 +181,16 @@ void TaskListWindow::AddNewPlan()
 bool TaskListWindow::CheckChangeAvailable()
 {
 	PLC_TYPE_BOOL isRunning = false;
-	ReadPLC_OPCUA(g_VarNodePathDict["AutoBusy"].c_str(), &isRunning, AtomicVarType::BOOL);
+	ReadPLC_OPCUA(g_ConfigableKeys["AutoBusy"].c_str(), &isRunning, AtomicVarType::BOOL);
 
 	return !isRunning;
+}
+
+void TaskListWindow::SetCurrent(int number)
+{
+	currentRequestNumber = number;
+	QString fileName = QString::fromLocal8Bit(items[currentRequestNumber]->attachedWidget->sketch->source);
+	this->setWindowTitle(QString("当前任务: 第%1项 - %2").arg(number).arg(fileName));
 }
 
 std::vector<SketchGPU*> TaskListWindow::GetAllTaskSketches()
@@ -369,6 +382,7 @@ void TaskListWindow::OnDeleteItem()
 		{
 			ToDoListItemWidget* itemWidget = items[i]->attachedWidget;
 			bool checked = itemWidget->checked->isChecked();
+			std::cout << items[i]->attachedWidget->ocsSys << std::endl;
 			if (itemWidget && checked)
 			{
 				QListWidgetItem* listItem = taskLists->takeItem(taskLists->row(items[i]));
@@ -383,6 +397,16 @@ void TaskListWindow::OnDeleteItem()
 		for (int i = 0; i < items.size(); i++)
 		{
 			items[i]->attachedWidget->row = i;
+		}
+		if (items.size() > 0)
+		{
+			EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(items[0]->attachedWidget->sketch, items[0]->attachedWidget->ocsSys);
+			QApplication::postEvent(g_canvasInstance->GetFrontWidget(), evSetScene, Qt::HighEventPriority);
+		}
+		else
+		{
+			EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(g_mainWindow->GetSketchShared(), g_mainWindow->GetSketch()->attachedOCS);
+			QApplication::postEvent(g_canvasInstance->GetFrontWidget(), evSetScene, Qt::HighEventPriority);
 		}
 	}
 	else

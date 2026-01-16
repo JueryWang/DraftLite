@@ -44,6 +44,7 @@ public:
 	void ClearItems();
 	void AddNewPlan();
 	bool CheckChangeAvailable();
+	void SetCurrent(int number);
 	std::vector <SketchGPU*> GetAllTaskSketches();
 	ToDoListItemWidget* CurrentItemWidget() const { return items[currentRequestNumber]->attachedWidget; }
 

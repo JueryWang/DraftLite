@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <string>
 #include <Windows.h>
+#include <UI/Components/HmiTemplateSectionConfiger.h>
 #include <DbgHelp.h>
 #pragma comment(lib, "Dbghelp.lib")
 using namespace CNCSYS;
@@ -79,9 +80,9 @@ LONG WINAPI CrashHandler(EXCEPTION_POINTERS* pException) {
 int main(int argc, char* argv[])
 {
 	SetUnhandledExceptionFilter(CrashHandler);
+	QtWebEngineQuick::initialize();
 
 	QApplication app(argc, argv);
-
 	QString appDir = QCoreApplication::applicationDirPath();
 	QString webEngineResPath = appDir + "/plugins/qml";
 
@@ -104,7 +105,6 @@ int main(int argc, char* argv[])
 	}
 
 
-	QtWebEngineQuick::initialize();
 	InitUIEnvironment();
 	InitProgressContext();
 
@@ -115,6 +115,12 @@ int main(int argc, char* argv[])
 
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
+
+	//HmiTemplateMonitorTool* monitor = new HmiTemplateMonitorTool();
+	//monitor->show();
+
+	SectionConfigItems* sectionConfig = new SectionConfigItems();
+	sectionConfig->show();
 
 	ScadaScheduler::GetInstance()->Start();
 

@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QDir>
-
+#include <QMessageBox>
 static QString SplitFileFromPath(const QString& path)
 {
 	QFileInfo fileInfo(path);
@@ -79,7 +79,7 @@ static bool copyFileToDir(const QString& srcFilePath, const QString& destDirPath
 	// 4. 执行拷贝（默认不覆盖，若要覆盖需先删除目标文件）
 	bool success = srcFile.copy(destFilePath);
 	if (!success) {
-		qDebug() << "文件拷贝失败：" << srcFile.errorString();
+		QMessageBox::warning(nullptr,"文件操作错误",QString("文件拷贝失败：%1").arg(srcFile.errorString()));
 		return false;
 	}
 

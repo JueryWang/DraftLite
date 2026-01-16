@@ -225,6 +225,7 @@ namespace CNCSYS
 			}
 		}
 
+		void RepairStart();
 		void SetStartPoint(EntityVGPU* targetEntity, int index);
 		void SetEndPoint(EntityVGPU* targetEntity, int index);
 		std::string ToNcInstruction(SimulateStatus* Mstatus, bool createRecord = false, SketchGPU* sketch = nullptr);

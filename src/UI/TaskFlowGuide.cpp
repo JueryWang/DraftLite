@@ -91,6 +91,7 @@ bool TaskFlowGuide::eventFilter(QObject* obj, QEvent* event)
 		TaskListWindow* taskList = TaskListWindow::GetInstance();
 		taskList->setVisible(!taskList->isVisible());
 		taskList->raise();
+		taskList->setWindowTitle(tr("计划"));
 		taskList->setGeometry(0, screen_resolution_y - taskList->height() - 30, taskList->width(), taskList->height());
 		break;
 	}

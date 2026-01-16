@@ -30,15 +30,16 @@ QString g_plcUrl;
 QString g_plcVarCnfigExcelUrl;
 QString g_plcSearchRootNode;
 std::vector<std::string> g_preRegKeys;
-std::map<std::string, std::string> g_VarNodePathDict;
 std::map<std::string, std::string> g_ConfigableKeys;
 std::string g_ftpDir = "Share_files_anonymity";
+GeomDirection g_defaultDir = GeomDirection::CCW;
+GeomDirection g_defaultDirReverse = GeomDirection::CW;
 D8 g_dogKey;
 AuthInfo g_authInfo;
 
 void InitPLConfig()
 {
-	g_VarNodePathDict =
+	g_ConfigableKeys =
 	{
 		{"ActVelocityCNC","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.fActVelocityCNC"},
 		{"CurrentRowCNC","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.iCurrentRowCNC"},
@@ -55,7 +56,11 @@ void InitPLConfig()
 		{"PageInit","gvlHMI.stCommandGearChamferMachine.xPageInit"},			//初始化界面
 		{"ChangeSlice","gvlHMI.stIOGearChamferMachine.xPCChange"},				//PLC请求多计划切图
 		{"ChangeSliceDone","gvlHMI.xPCChangeDone"},								//切图PC完成信号
-		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"}   //设备自动运行中
+		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"},   //设备自动运行中
+		{"ToolRadius","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
+		{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
+		{"AxisX","gvlGlobalData.stStatusCADWork.stCoordAxis.fPositionAxisX"},
+		{"AxisY","gvlHMI.stStatusGearChamferMachine.stStatusAxisZ1.fActPosition"}
 	};
 
 	g_settings = new QSettings(QDir::currentPath() + "/config.ini", QSettings::IniFormat);
@@ -148,6 +153,12 @@ void InitLogger()
 
 int InitProgressContext()
 {
+	QDir tempDir("./temp");
+	// 递归删除整个 temp 目录（包括所有内容和目录本身）
+	tempDir.removeRecursively();
+	QDir currentDir = QDir::current();
+	currentDir.mkdir("temp");
+
 	bool success = CheckAuth();
 	if (!success)
 	{
@@ -259,4 +270,26 @@ int CheckAuth(bool popUpMsg)
 	return ret;
 }
 
+void SimulateStatus::SetToolRadius(PLC_TYPE_LREAL radius)
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	toolRadius = radius;
+}
 
+PLC_TYPE_LREAL SimulateStatus::GetToolRadius()
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	return toolRadius;
+}
+
+void SimulateStatus::SetToolDistance(PLC_TYPE_LREAL distance)
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	toolDistance = distance;
+}
+
+PLC_TYPE_LREAL SimulateStatus::GetToolDistance()
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	return toolDistance;
+}

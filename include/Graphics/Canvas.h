@@ -155,7 +155,6 @@ namespace CNCSYS
 
 		ModalDrawEvent* modalEv = nullptr;
 		Anchor* toolAnchor = nullptr;
-		CanvasGuide* guide = nullptr;
 		QRect guideRegion = QRect(50, 10, 100, 60);
 
 		std::pair<EntityPoint*, EntityPoint*> measurement;//测量标注

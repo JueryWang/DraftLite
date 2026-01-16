@@ -10,7 +10,7 @@ namespace CNCSYS
 {
 	OCSGPU::OCSGPU(std::shared_ptr<SketchGPU> sketch) : sketch(sketch)
 	{
-
+		sketch.get()->attachedOCS = this;
 	}
 	OCSGPU::~OCSGPU()
 	{
@@ -18,6 +18,12 @@ namespace CNCSYS
 		delete camera;
 		delete objectRange;
 		delete canvasRange;
+	}
+
+	void OCSGPU::SetSketch(std::shared_ptr<SketchGPU> SK)
+	{ 
+		sketch = SK; 
+		SK.get()->attachedOCS = this; 
 	}
 
 	void OCSGPU::SetCanvasSizae(int width, int height)

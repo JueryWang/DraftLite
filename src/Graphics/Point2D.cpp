@@ -78,6 +78,7 @@ void Point2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 		{
 			color = g_yellowColor;
 		}
+		glPointSize(3);
 		shader->use();
 		shader->setMat4("model", worldModelMatrix);
 		shader->setVec4("PaintColor", color);

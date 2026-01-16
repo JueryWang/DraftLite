@@ -257,6 +257,7 @@ std::string Line2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRecor
 
 		glm::vec3 start = transformedMatrix * glm::vec4(this->start, 1.0f);
 		glm::vec3 end = transformedMatrix * glm::vec4(this->end, 1.0f);
+		
 		char buffer[256];
 
 		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
@@ -307,10 +308,20 @@ std::string Line2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, 
 	{
 		glm::mat4 transformedMatrix = MathUtils::scaledMatrix(this->worldModelMatrix, { Mstatus->zoom,Mstatus->zoom,Mstatus->zoom }, Mstatus->wcsAnchor);
 		transformedMatrix = MathUtils::tranlatedMatrix(transformedMatrix, -Mstatus->wcsAnchor);
-
-		char buffer[256];
 		glm::vec3 start = transformedMatrix * glm::vec4(this->start, 1.0f);
 		glm::vec3 end = transformedMatrix * glm::vec4(this->end, 1.0f);
+
+		char buffer[256];
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			section += buffer;
+			if (createRecord)
+			{
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
 		std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, end.x, end.y);
 		section += buffer;
 
@@ -319,6 +330,7 @@ std::string Line2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, 
 			GCodeRecord rec(std::string(buffer), this, 1, transformedMatrix, Mstatus->ncstep);
 			GCodeController::GetController()->AddRecord(rec);
 		}
+		Mstatus->toolPos = end;
 	}
 	return section;
 }

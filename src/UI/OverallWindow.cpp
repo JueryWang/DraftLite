@@ -45,13 +45,13 @@ OverallWindow::OverallWindow()
 	this->setLayout(hbox);
 	this->showMaximized();
 	monitorIndexPage = new ScadaNode();
-	monitorIndexPage->BindParam(g_VarNodePathDict["IndexTargetMainArea"]);
+	monitorIndexPage->BindParam(g_ConfigableKeys["IndexTargetMainArea"]);
 	monitorIndexPage->updateCallback = [&]()
 		{
 			PLC_TYPE_INT curVal = monitorIndexPage->GetInt();
 
 			PLC_TYPE_INT SubNavIndex;
-			ReadPLC_OPCUA(g_VarNodePathDict["IndexSubArea"].c_str(), &SubNavIndex, AtomicVarType::INT);
+			ReadPLC_OPCUA(g_ConfigableKeys["IndexSubArea"].c_str(), &SubNavIndex, AtomicVarType::INT);
 
 			if (curVal == 3 && SubNavIndex == 1)
 			{
@@ -67,7 +67,7 @@ OverallWindow::OverallWindow()
 			monitorIndexPage->lastValue.lastInt = curVal;
 		};
 	monitorUploadFTP = new ScadaNode();
-	monitorUploadFTP->BindParam(g_VarNodePathDict["PCFileFTP"]);
+	monitorUploadFTP->BindParam(g_ConfigableKeys["PCFileFTP"]);
 	monitorUploadFTP->updateCallback = [&]()
 		{
 			PLC_TYPE_BOOL ifRequestFile = monitorUploadFTP->GetBool();
@@ -79,7 +79,7 @@ OverallWindow::OverallWindow()
 					std::string ftpFilePath = "../FTP/" + taskList->items[taskList->currentRequestNumber]->attachedWidget->ftpUploadSource;
 					PLC_TYPE_STRING newSliceFileName = (PLC_TYPE_STRING)malloc(256);
 					strcpy_s(newSliceFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
-					WritePLC_OPCUA(g_VarNodePathDict["WorkFileName"].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
+					WritePLC_OPCUA(g_ConfigableKeys["WorkFileName"].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
 					ToDoListItemWidget* widget = taskList->CurrentItemWidget();
 					taskList->taskLists->setCurrentRow(taskList->currentRequestNumber);
 					EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(widget->sketch, widget->ocsSys);
@@ -88,13 +88,13 @@ OverallWindow::OverallWindow()
 					taskList->CurrentItemWidget()->AddCounter();
 					taskList->currentRequestNumber = (taskList->currentRequestNumber + 1) % (taskList->items.size());
 					PLC_TYPE_BOOL uploadDone = true;
-					WritePLC_OPCUA(g_VarNodePathDict["PCFileFTPDone"].c_str(), &uploadDone, AtomicVarType::BOOL);
+					WritePLC_OPCUA(g_ConfigableKeys["PCFileFTPDone"].c_str(), &uploadDone, AtomicVarType::BOOL);
 				}
 			}
 			monitorUploadFTP->lastValue.lastBool = ifRequestFile;
 		};
 	monitorHeartBeat = new ScadaNode();
-	monitorHeartBeat->BindParam(g_VarNodePathDict["HeartbeatCount"]);
+	monitorHeartBeat->BindParam(g_ConfigableKeys["HeartbeatCount"]);
 	monitorHeartBeat->SetUpdateRate(5 * 1000);
 	monitorHeartBeat->updateCallback = [&]()
 		{
@@ -122,37 +122,8 @@ OverallWindow::OverallWindow()
 			}
 		};
 
-	monitorChangeSlice = new ScadaNode();
-	monitorChangeSlice->BindParam(g_VarNodePathDict["ChangeSlice"]);
-	monitorChangeSlice->lastValue.lastBool = false;
-	monitorChangeSlice->updateCallback = [&]()
-		{
-			static TaskListWindow* taskList = TaskListWindow::GetInstance();
-			PLC_TYPE_BOOL ifRequestChangeSlice = monitorChangeSlice->GetBool();
-			if (ifRequestChangeSlice && !(ifRequestChangeSlice == monitorChangeSlice->lastValue.lastBool))
-			{
-				if (taskList->items.size() > 0)
-				{
-					std::string ftpFilePath = "../FTP/" + taskList->items[taskList->currentRequestNumber]->attachedWidget->ftpUploadSource;
-					PLC_TYPE_STRING newSliceFileName = (PLC_TYPE_STRING)malloc(256);
-					strcpy_s(newSliceFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
-					WritePLC_OPCUA(g_VarNodePathDict["WorkFileName"].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
-					ToDoListItemWidget* widget = taskList->CurrentItemWidget();
-					taskList->taskLists->setCurrentRow(taskList->currentRequestNumber);
-					EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(widget->sketch, widget->ocsSys);
-					QApplication::postEvent(g_canvasInstance->GetFrontWidget(), evSetScene, Qt::HighEventPriority);
-					free(newSliceFileName);
-					taskList->CurrentItemWidget()->AddCounter();
-					taskList->currentRequestNumber = (taskList->currentRequestNumber + 1) % (taskList->items.size());
-					PLC_TYPE_BOOL changeSliceDone = true;
-					WritePLC_OPCUA(g_VarNodePathDict["ChangeSliceDone"].c_str(), &changeSliceDone, AtomicVarType::BOOL);
-				}
-			}
-			monitorChangeSlice->lastValue.lastBool = ifRequestChangeSlice;
-		};
-
 	monitorAutoBusy = new ScadaNode();
-	monitorAutoBusy->BindParam(g_VarNodePathDict["AutoBusy"]);
+	monitorAutoBusy->BindParam(g_ConfigableKeys["AutoBusy"]);
 	monitorAutoBusy->lastValue.lastBool = false;
 	monitorAutoBusy->updateCallback = [&]()
 		{
@@ -175,11 +146,40 @@ OverallWindow::OverallWindow()
 	{
 		mainWindow->GetCanvasPanel()->hide();
 	}
+
+
+	monitorToolRadius = new ScadaNode();
+	monitorToolRadius->BindParam(g_ConfigableKeys["ToolRadius"]);
+	monitorToolRadius->lastValue.lastLReal = 0.0f;
+	monitorToolRadius->updateCallback = [&]()
+	{
+			PLC_TYPE_LREAL radius = monitorToolRadius->GetLreal();
+			if (!(radius == monitorToolRadius->lastValue.lastLReal))
+			{
+				g_MScontext.SetToolRadius(radius);
+				monitorToolRadius->lastValue.lastLReal = radius;
+			}
+	};
+	
+	monitorToolDistance = new ScadaNode();
+	monitorToolDistance->BindParam(g_ConfigableKeys["RemainDistance"]);
+	monitorToolDistance->lastValue.lastLReal = 0.0f;
+	monitorToolDistance->updateCallback = [&]()
+	{
+			PLC_TYPE_LREAL distance = monitorToolDistance->GetLreal();
+			if (!(distance == monitorToolDistance->lastValue.lastLReal))
+			{
+				g_MScontext.SetToolDistance(distance);
+				monitorToolDistance->lastValue.lastLReal = distance;
+			}
+	};
+
 	ScadaScheduler::GetInstance()->AddNode(monitorIndexPage);
 	ScadaScheduler::GetInstance()->AddNode(monitorUploadFTP);
 	ScadaScheduler::GetInstance()->AddNode(monitorHeartBeat);
-	ScadaScheduler::GetInstance()->AddNode(monitorChangeSlice);
 	ScadaScheduler::GetInstance()->AddNode(monitorAutoBusy);
+	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
+	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
 }
 
 OverallWindow::~OverallWindow()

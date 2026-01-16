@@ -199,13 +199,7 @@ void Circle2DGPU::Reverse()
 		direction = GeomDirection::CW;
 	}
 
-	if (vao > 0 && vbo > 0)
-	{
-		glBindVertexArray(vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, circleSamples.size() * sizeof(glm::vec3), circleSamples.data(), GL_STATIC_DRAW);
-	}
+	UpdatePaintData();
 }
 
 glm::vec3 Circle2DGPU::Evaluate(float t)
@@ -289,19 +283,24 @@ std::string Circle2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 		glm::vec3 end = this->center + glm::vec3(0, radius, 0.0f);
 		end = transformedMatrix * glm::vec4(end, 1.0f);
 
+
 		float I = (center - start).x;
 		float J = (center - start).y;
 
 		char buffer[256];
 		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
 		{
-			std::sprintf(buffer, "N%03d G00 Z%f\n", Mstatus->ncstep++, Mstatus->Zup);
+			sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
 			s += buffer;
 			if (createRecord)
 			{
 				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+		}
+
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
 			std::sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
 			s += buffer;
 			if (createRecord)
@@ -353,6 +352,17 @@ std::string Circle2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 		float I = (center - start).x;
 		float J = (center - start).y;
 
+		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
+		{
+			sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+			section += buffer;
+			if (createRecord)
+			{
+				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+		}
+
 		std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
 		section += buffer;
 		if (createRecord)
@@ -360,6 +370,8 @@ std::string Circle2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 			GCodeRecord rec(std::string(buffer), this, circleSamples.size() - 1, transformedMatrix, Mstatus->ncstep);
 			GCodeController::GetController()->AddRecord(rec);
 		}
+
+		Mstatus->toolPos = end;
 	}
 
 	return section;

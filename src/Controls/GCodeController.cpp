@@ -72,6 +72,13 @@ void GCodeController::AddRecord(GCodeRecord& rec)
 
 void GCodeController::CleanCache()
 {
+	for (GCodeRecord& rec : records)
+	{
+		if (rec.attachedEntity != nullptr)
+		{
+			rec.attachedEntity->SetHighLight(false);
+		}
+	}
 	records.clear();
 	lastHighlightEntity = nullptr;
 }

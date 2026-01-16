@@ -422,35 +422,75 @@ namespace CNCSYS
 		contour.clear();
 	}
 
-	void EntRingConnection::SetStartPoint(EntityVGPU* targetEntity, int index)
+	void EntRingConnection::RepairStart()
 	{
-		auto find = std::find(conponents.begin(), conponents.end(), targetEntity);
-		std::vector<EntityVGPU*> reordered;
-		if (index == targetEntity->indexRange.first)
+		int res = 0;
+		int falseTotal = 0;
+		int firstTruePos = -1;
+		int secondTruePos = -1;
+
+		for (int i = 0; i < this->conponents.size(); i++)
 		{
-			//起始点,该Entity计入起始
-			int findIndex = find - conponents.begin();
-			for (int i = findIndex; i < conponents.size(); i++)
+			conponents[i]->ringParent = this;
+			if (this->conponents[i]->createGCode == false)
 			{
-				reordered.push_back(conponents[i]);
-			}
-			for (int i = 0; i < findIndex; i++)
-			{
-				reordered.push_back(conponents[i]);
+				falseTotal++;
 			}
 		}
-		else if (index == targetEntity->indexRange.second)
+
+		int falseCount = 0;
+		for (int i = 0; i < this->conponents.size(); i++)
 		{
-			//终止点,该Entity不计入起始
-			int nextIndex = find - conponents.begin() + 1;
-			for (int i = nextIndex; i < conponents.size(); i++)
+			if (conponents[i]->createGCode == false)
 			{
-				reordered.push_back(conponents[i]);
+				falseCount++;
 			}
-			for (int i = 0; i < nextIndex; i++)
+			else
 			{
-				reordered.push_back(conponents[i]);
+				if (falseCount <= falseTotal && (firstTruePos == -1))
+				{
+					firstTruePos = i;
+				}
+				else if(secondTruePos == -1)
+				{
+					secondTruePos = i;
+					break;
+				}
 			}
+		}
+
+		if (conponents[0]->createGCode == false)
+		{
+			res = firstTruePos;
+		}
+		else
+		{
+			res = secondTruePos;
+		}
+
+		if (res >= 0)
+		{
+			this->SetStartPoint(this->conponents[res], 0);
+		}
+	}
+
+	void EntRingConnection::SetStartPoint(EntityVGPU* targetEntity, int index)
+	{
+		if (index >= 0)
+		{
+			startPoint = targetEntity->GetTransformedNodes()[index];
+		}
+		auto find = std::find(conponents.begin(), conponents.end(), targetEntity);
+		std::vector<EntityVGPU*> reordered;
+		//起始点,该Entity计入起始
+		int findIndex = find - conponents.begin();
+		for (int i = findIndex; i < conponents.size(); i++)
+		{
+			reordered.push_back(conponents[i]);
+		}
+		for (int i = 0; i < findIndex; i++)
+		{
+			reordered.push_back(conponents[i]);
 		}
 		conponents = reordered;
 		EntityPoint endPoint;
@@ -462,6 +502,10 @@ namespace CNCSYS
 
 	void EntRingConnection::SetEndPoint(EntityVGPU* targetEntity, int index)
 	{
+		if (index >= 0)
+		{
+			endPoint = targetEntity->GetTransformedNodes()[index];
+		}
 		EntityPoint endPoint;
 		endPoint.entity = targetEntity;
 		endPoint.endPointIndex = index;
@@ -482,7 +526,7 @@ namespace CNCSYS
 			conponents[0]->ResetColor();
 			conponents[0]->createGCode = false;
 		}
-		for (int i = 1; i < conponents.size(); i++)
+		for (int i = 0; i < conponents.size(); i++)
 		{
 			if (processBoundary.second.entity == conponents[i])
 			{
@@ -504,21 +548,91 @@ namespace CNCSYS
 	std::string EntRingConnection::ToNcInstruction(SimulateStatus* Mstatus, bool createRecord, SketchGPU* sketch)
 	{
 		std::string s;
-		glm::vec3 start = conponents[0]->GetTransformedNodes()[0];
-		char buffer[256];
-		glm::mat4 transformedMatrix = MathUtils::scaledMatrix(conponents[0]->worldModelMatrix, { Mstatus->zoom,Mstatus->zoom ,Mstatus->zoom }, Mstatus->wcsAnchor);
-		transformedMatrix = MathUtils::tranlatedMatrix(transformedMatrix, -Mstatus->wcsAnchor);
-
-		for (EntityVGPU* ent : conponents)
+		if (conponents.size() > 0)
 		{
-			if (ent->createGCode)
-			{
+			char buffer[256];
+			glm::mat4 transformedMatrix = MathUtils::scaledMatrix(conponents[0]->worldModelMatrix, { Mstatus->zoom,Mstatus->zoom ,Mstatus->zoom }, Mstatus->wcsAnchor);
+			transformedMatrix = MathUtils::tranlatedMatrix(transformedMatrix, -Mstatus->wcsAnchor);
 
-				s += ent->GenNcSection(Mstatus, createRecord, sketch);
+			glm::vec3 startPoint = StartPoint();
+			glm::vec3 leftBottom = bbox.getMin();
+			g_MScontext.XAxisStart = startPoint.x - leftBottom.x;
+			g_MScontext.YAxisStart = startPoint.y - leftBottom.y;
+			g_MScontext.ZAxisStart = startPoint.z - leftBottom.z;
+			g_MScontext.wcsAnchor = startPoint;
+
+			g_MScontext.objectRange = g_canvasInstance->GetOCSSystem()->objectRange;
+			g_MScontext.zoom = 1.0f;
+			g_MScontext.toolPos = glm::vec3(0.0f);
+			int step = 0;
+
+			//开头写入M辅助码
+			char MBuffer[256];
+			std::sprintf(MBuffer, "N%03d M1 K%f L%f\n", g_MScontext.ncstep, g_MScontext.XAxisStart, g_MScontext.YAxisStart);
+			s += MBuffer;
+			g_MScontext.ncstep++;
+			GCodeRecord rec(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+			GCodeController::GetController()->AddRecord(rec);
+
+			{
+				std::sprintf(MBuffer, "N%03d M2 K%f\n", g_MScontext.ncstep, g_MScontext.ZAxisStart);
+				s += MBuffer;
+				g_MScontext.ncstep++;
+				rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+			
+			//计算刀补偏置后起点
+			float toolDistance = g_MScontext.GetToolDistance();
+			float toolRadius = g_MScontext.GetToolRadius();
+
+			//{
+			//	//给定进刀位置
+			//	if (direction == GeomDirection::CW)
+			//	{
+			//		std::sprintf(MBuffer, "N%03d G81 X%f Y%f\n", g_MScontext.ncstep, 1.5 * -toolRadius, 1.5 * -toolRadius);
+			//	}
+			//	else
+			//	{
+			//		std::sprintf(MBuffer, "N%03d G81 X%f Y%f\n", g_MScontext.ncstep, 1.5 * toolRadius, 1.5 * toolRadius);
+			//	}
+			//	rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+			//	GCodeController::GetController()->AddRecord(rec);
+			//	g_MScontext.ncstep++;
+			//	s += MBuffer;
+			//}
+
+			{
+				if (direction == GeomDirection::CW)
+				{
+					sprintf(MBuffer, "N%03d G41 D%f\n", g_MScontext.ncstep, toolRadius);
+				}
+				else
+				{
+					sprintf(MBuffer, "N%03d G42 D%f\n", g_MScontext.ncstep, toolRadius);
+				}
+				g_MScontext.ncstep++;
+				s += MBuffer;
+				rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+
+			{
+				std::sprintf(MBuffer, "N%03d G01 X0 Y0\n", g_MScontext.ncstep);
+				g_MScontext.ncstep++;
+				s += MBuffer;
+				rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+				GCodeController::GetController()->AddRecord(rec);
+			}
+			g_MScontext.toolPos = glm::vec3(0, 0, 0);
+			for (EntityVGPU* ent : conponents)
+			{
+				if (ent->createGCode)
+				{
+					s += ent->GenNcSection(Mstatus, createRecord, sketch);
+				}
 			}
 		}
-
-		Mstatus->toolPos = conponents[conponents.size() - 1]->GetTransformedNodes().back();
 
 		return s;
 	}
@@ -548,6 +662,7 @@ namespace CNCSYS
 			conponent->SetHighLight(false);
 			conponent->Reverse();
 		}
+		std::swap(startPoint, endPoint);
 	}
 
 	void EntRingConnection::Move(const glm::vec3& offset)
@@ -555,6 +670,7 @@ namespace CNCSYS
 		for (EntityVGPU* ent : conponents)
 		{
 			ent->Move(offset);
+			ent->UpdatePaintData();
 		}
 		if (centroidPoint)
 		{

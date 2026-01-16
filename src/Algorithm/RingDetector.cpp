@@ -23,7 +23,7 @@ std::vector<EntRingConnection*> RingDetector::RingDetect(const std::vector<Entit
 
 		group->leftBound = start;
 		group->rightBound = end;
-		if (currentEnt->GetType() != EntityType::Line && currentEnt->direction != GeomDirection::CCW)
+		if (currentEnt->GetType() != EntityType::Line && currentEnt->direction != GeomDirection::CW)
 		{
 			currentEnt->Reverse();
 			std::swap(group->leftBound, group->rightBound);

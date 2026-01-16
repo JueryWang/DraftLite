@@ -169,13 +169,13 @@ namespace CNCSYS
 		modalCallbacks[ModalState::MeasureDimension] = std::bind(&CanvasGPU::handleEventMeasureDimension, this, std::placeholders::_1, std::placeholders::_2);
 		HistoryRecorder::GetInstance()->SetSketch(m_currentSketch.get());
 
-		guide = CanvasGuide::GetInstance();
-		connect(guide->longPressTimerViewLeft, &QTimer::timeout, this, &CanvasGPU::OnPaceLeft);
-		connect(guide->longPressTimerViewRight, &QTimer::timeout, this, &CanvasGPU::OnPaceRight);
-		connect(guide->longPressTimerViewUp, &QTimer::timeout, this, &CanvasGPU::OnPaceUp);
-		connect(guide->longPressTimerViewDown, &QTimer::timeout, this, &CanvasGPU::OnPaceDown);
-		connect(guide->longPressTimerZoomIn, &QTimer::timeout, this, &CanvasGPU::OnZoomIn);
-		connect(guide->longPressTimerZoomOut, &QTimer::timeout, this, &CanvasGPU::OnZoomOut);
+		//guide = CanvasGuide::GetInstance();
+		//connect(guide->longPressTimerViewLeft, &QTimer::timeout, this, &CanvasGPU::OnPaceLeft);
+		//connect(guide->longPressTimerViewRight, &QTimer::timeout, this, &CanvasGPU::OnPaceRight);
+		//connect(guide->longPressTimerViewUp, &QTimer::timeout, this, &CanvasGPU::OnPaceUp);
+		//connect(guide->longPressTimerViewDown, &QTimer::timeout, this, &CanvasGPU::OnPaceDown);
+		//connect(guide->longPressTimerZoomIn, &QTimer::timeout, this, &CanvasGPU::OnZoomIn);
+		//connect(guide->longPressTimerZoomOut, &QTimer::timeout, this, &CanvasGPU::OnZoomOut);
 
 		toolAnchor = Anchor::GetInstance();
 		toolAnchor->SetCoordinateSystem(ocsSys);
@@ -279,7 +279,7 @@ namespace CNCSYS
 						QAction* actionSetOrigin = menu.addAction("设置为图形原点");
 						connect(actionSetOrigin, &QAction::triggered, [this]() {
 							m_currentSketch.get()->SetOrigin(glm::vec3(this->hoverPoint->point.x, this->hoverPoint->point.y, 0.0f));
-							});
+						});
 
 					}
 				}
@@ -307,7 +307,7 @@ namespace CNCSYS
 						});
 					QAction* eraseSelect = menu.addAction("删除所选");
 					connect(eraseSelect, &QAction::triggered, [this]() {
-							EraseSelectedEntitys();
+						EraseSelectedEntitys();
 						});
 					QAction* reverse = menu.addAction("反向");
 					connect(reverse, &QAction::triggered, [this]()
@@ -353,14 +353,6 @@ namespace CNCSYS
 		{
 			QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
 			QPoint currentMousePos = mouseEvent->pos();
-			if (guideRegion.contains(currentMousePos))
-			{
-				guide->show();
-			}
-			else
-			{
-				guide->hide();
-			}
 
 			offsetMove = currentMousePos - lastMousePos;
 
@@ -1450,16 +1442,15 @@ namespace CNCSYS
 
 	void CanvasGPU::SetScene(std::shared_ptr<SketchGPU> sketch, OCSGPU* ocs)
 	{
-		ocsSys->SetSketch(sketch);
-		g_mainWindow->SetSketch(sketch);
+		ocsSys = ocs;
+		ocs->SetSketch(sketch);
 		frontWidget->SetOCSystem(ocs);
 		toolAnchor->SetCoordinateSystem(ocs);
 		m_currentSketch = sketch;
 		sketch->mainCanvas = this;
-		ocsSys = ocs;
+		sketch->UpdateGCode();
 		this->UpdateOCS();
 		ocsSys->UpdateTickers();
-		sketch->UpdateGCode(false);
 		this->updateGL();
 	}
 
@@ -1746,9 +1737,10 @@ namespace CNCSYS
 			std::string NcProgram = m_currentSketch.get()->ToNcProgram();
 			GCodeEditor::GetInstance()->setText(QString::fromStdString(NcProgram));
 			m_currentSketch.get()->UpdateGCode();
-		};
+			};
 		HistoryRecorder::GetInstance()->PushRecord(rec);
 
+		int count = 0;
 		for (EntityVGPU* ent : selectedItems)
 		{
 			m_currentSketch.get()->EraseEntity(ent);
@@ -1758,7 +1750,6 @@ namespace CNCSYS
 
 	void CanvasGPU::ResetCanvas()
 	{
-		SetCaptureMode(CaptureMode::Entity);
 		lastHoverEntity = nullptr;
 		modalClickPos.clear();
 		this->EndModal();

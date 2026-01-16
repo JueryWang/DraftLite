@@ -57,4 +57,5 @@ public:
     float startAngle;
     float endAngle;
     std::vector<glm::vec3> arcSamples;
+    bool reversed = false;
 };

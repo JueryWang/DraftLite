@@ -2,6 +2,7 @@
 #include "Graphics/AABB.h"
 #include "Controls/GlobalPLCVars.h"
 #include "Controls/ScadaScheduler.h"
+#include "Common/ProgressInfo.h"
 #include "UI/GCodeEditor.h"
 
 Anchor* Anchor::instance = nullptr;
@@ -51,51 +52,51 @@ void Anchor::SetPosition(const glm::vec3& pos)
 
 void Anchor::UpdateNode()
 {
-	static glm::vec3 lastPosition = position;
+	//static glm::vec3 lastPosition = position;
 
-	PLCParam_ProtocalOpc* XposInfo = static_cast<PLCParam_ProtocalOpc*>(g_PLCVariables["gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"]);
-	PLCParam_ProtocalOpc* YposInfo = static_cast<PLCParam_ProtocalOpc*>(g_PLCVariables["gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"]);
+	//PLCParam_ProtocalOpc* XposInfo = static_cast<PLCParam_ProtocalOpc*>(g_PLCVariables[g_ConfigableKeys["AxisX"]]);
+	//PLCParam_ProtocalOpc* YposInfo = static_cast<PLCParam_ProtocalOpc*>(g_PLCVariables[g_ConfigableKeys["AxisY"]]);
 
-	if (XposInfo && YposInfo)
-	{
-		AtomicVar<PLC_TYPE_LREAL>* varX = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(XposInfo->bindVar);
-		AtomicVar<PLC_TYPE_LREAL>* varY = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(YposInfo->bindVar);
+	//if (XposInfo && YposInfo)
+	//{
+	//	AtomicVar<PLC_TYPE_LREAL>* varX = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(XposInfo->bindVar);
+	//	AtomicVar<PLC_TYPE_LREAL>* varY = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(YposInfo->bindVar);
 
-		position.x = varX->GetValue();
-		position.y = varY->GetValue();
+	//	position.x = varX->GetValue();
+	//	position.y = varY->GetValue();
 
-		if (animatorOpen)
-		{
-			// 初始化 VAO/VBO（只在首次需要时）
-			if (vao == 0)
-			{
-				glGenVertexArrays(1, &vao);
-				glGenBuffers(1, &vbo);
-			}
+	//	if (animatorOpen)
+	//	{
+	//		// 初始化 VAO/VBO（只在首次需要时）
+	//		if (vao == 0)
+	//		{
+	//			glGenVertexArrays(1, &vao);
+	//			glGenBuffers(1, &vbo);
+	//		}
 
-			// 预分配容量（如果还没有分配）
-			if (animatorPath.capacity() == 0)
-			{
-				animatorPath = std::vector<glm::vec3>(GCodeEditor::GetInstance()->lines());
-				glBindVertexArray(vao);
-				glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	//		// 预分配容量（如果还没有分配）
+	//		if (animatorPath.capacity() == 0)
+	//		{
+	//			animatorPath = std::vector<glm::vec3>(GCodeEditor::GetInstance()->lines());
+	//			glBindVertexArray(vao);
+	//			glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-				glBufferData(GL_ARRAY_BUFFER, (animatorPath.size()) * sizeof(glm::vec3), animatorPath.data(), GL_DYNAMIC_DRAW);
+	//			glBufferData(GL_ARRAY_BUFFER, (animatorPath.size()) * sizeof(glm::vec3), animatorPath.data(), GL_DYNAMIC_DRAW);
 
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
-				glEnableVertexAttribArray(0);
-			}
+	//			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+	//			glEnableVertexAttribArray(0);
+	//		}
 
-			// 当位置变化时，添加新路径点
-			if (lastPosition != position)
-			{
-				animatorPath[pathIndex] = position;
-				pathIndex++;
-				lastPosition = position;
-			}
+	//		// 当位置变化时，添加新路径点
+	//		if (lastPosition != position)
+	//		{
+	//			animatorPath[pathIndex] = position;
+	//			pathIndex++;
+	//			lastPosition = position;
+	//		}
 
-		}
-	}
+	//	}
+	//}
 
 }
 

@@ -11,6 +11,8 @@
 #include "NetWork/MessageValidtor.h"
 #include "UI/TaskListWindow.h"
 #include "IO/DxfProcessor.h"
+#include "Algorithm/RingDetector.h"
+#include "Algorithm/PartClassifier.h"
 #include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <IO/Utils.h>
@@ -77,7 +79,7 @@ void XMLProcessor::SaveProject(const QString& Filename)
 			}
 
 			writer.writeAttribute("id", QString("Default Layer"));
-			SaveScene(writer, sketch, tempPath,true);
+			SaveScene(writer, sketch, tempPath, true);
 			writer.writeEndElement();
 
 			writer.writeEndElement();
@@ -191,7 +193,7 @@ void XMLProcessor::SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch
 	}
 
 	auto groups = sketch->GetEntityGroups();
-	
+
 	int groupId = 0;
 	for (EntGroup* group : groups)
 	{
@@ -201,7 +203,7 @@ void XMLProcessor::SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch
 			for (EntityVGPU* ent : ring->conponents)
 			{
 				writer.writeStartElement("Entity");
-				writer.writeAttribute("GroupId",QString::number(groupId));
+				writer.writeAttribute("GroupId", QString::number(groupId));
 				writer.writeAttribute("RingId", QString::number(ringId));
 				writer.writeTextElement("type", QString::number(static_cast<int>(ent->GetType())));
 				std::string serilize = serilize_to_string(ent);
@@ -305,65 +307,40 @@ std::shared_ptr<CNCSYS::SketchGPU> XMLProcessor::ParseScene(const QDomElement& s
 	else
 	{
 		createdSketch = g_canvasInstance->GetSketchShared();
+		createdSketch->ClearEntities();
 	}
 
 	createdSketch->source = fileSource.toLocal8Bit();
-	std::vector< EntityParseInfo> parsedEntities;
+	std::vector< EntityVGPU*> parsedEntities;
 	// 遍历 Scene 下的所有 Entity 节点
 	QDomElement entityElem = sceneElem.firstChildElement("Entity");
 	while (!entityElem.isNull()) {
 		parsedEntities.push_back(ParseEntity(entityElem));
 		entityElem = entityElem.nextSiblingElement("Entity"); // 下一个同级别 Entity
 	}
-	std::vector<EntGroup*> parsedGroups;
-	for (EntityParseInfo& parsedInfo : parsedEntities)
-	{
-		bool findGroup = false;
-		bool findRing = false;
-		for (EntGroup* group : parsedGroups)
-		{
-			if (group->groupId == parsedInfo.groupId)
-			{
-				findGroup = true;
 
-				for (EntRingConnection* ring : group->rings)
-				{
-					if (ring->ringId == parsedInfo.ringId)
-					{
-						findRing = true;
-						ring->conponents.push_back(parsedInfo.ent);
-					}
-				}
-				if (!findRing)
-				{
-					EntRingConnection* ring = new EntRingConnection({ parsedInfo.ent });
-					ring->ringId = parsedInfo.ringId;
-					group->AddRingConnection(ring);
-				}
+	std::vector<EntRingConnection*> rings = RingDetector::RingDetect(parsedEntities);
+	PartClassifier classifier(rings);
+	std::vector<EntGroup*> parsedGroups = classifier.Execute();
+
+
+	for (EntGroup* group : parsedGroups)
+	{
+		for (EntRingConnection* ring : group->rings)
+		{
+			ring->RepairStart();
+
+			if (ring->direction == GeomDirection::CW)
+			{
+				ring->Reverse();
+				ring->direction = GeomDirection::CCW;
+				ring->RepairStart();
 			}
 		}
-		if (!findGroup)
-		{
-			EntRingConnection* ring = new EntRingConnection({ parsedInfo.ent });
-			ring->ringId = parsedInfo.ringId;
-			EntGroup* group = new EntGroup();
-			group->AddRingConnection(ring);
-			group->groupId = parsedInfo.groupId;
-			parsedGroups.push_back(group);
-		}
-	}
-
-	for (EntGroup* group : parsedGroups)
-	{
-		std::sort(group->rings.begin(), group->rings.end(), [](EntRingConnection* a, EntRingConnection* b) {return a->ringId < b->ringId; });
-	}
-	std::sort(parsedGroups.begin(), parsedGroups.end(), [](EntGroup* a, EntGroup* b) {return a->groupId < b->groupId; });
-
-	for (EntGroup* group : parsedGroups)
-	{
 		createdSketch->AddEntityGroup(group);
 	}
-	
+
+	auto groups = parsedGroups;
 	if (layerId != "Default Layer")
 	{
 		ToDoListItem* itemNew = new ToDoListItem();
@@ -372,16 +349,16 @@ std::shared_ptr<CNCSYS::SketchGPU> XMLProcessor::ParseScene(const QDomElement& s
 	}
 	else
 	{
-		g_canvasInstance->SetScene(createdSketch,g_canvasInstance->GetOCSSystem());
+		g_canvasInstance->SetScene(createdSketch, createdSketch->attachedOCS);
 	}
 
 	return createdSketch;
 }
 
 
-EntityParseInfo XMLProcessor::ParseEntity(const QDomElement& entityElem)
+EntityVGPU* XMLProcessor::ParseEntity(const QDomElement& entityElem)
 {
-	EntityParseInfo info;
+	EntityVGPU* ent;
 	int groupId = entityElem.attribute("GroupId").toInt();
 	int ringId = entityElem.attribute("RingId").toInt();
 	int type = entityElem.firstChildElement("type").text().toInt();
@@ -389,56 +366,54 @@ EntityParseInfo XMLProcessor::ParseEntity(const QDomElement& entityElem)
 	EntityType EntType = static_cast<EntityType>(type);
 	switch (EntType)
 	{
-		case EntityType::Point:
-		{
-			Point2DGPU* newPoint = new Point2DGPU();
-			Point2DGPU revoked_point = deserilize_from_string<Point2DGPU>(content);
-			newPoint->Copy(&revoked_point);
-			info.ent = newPoint;
-			break;
-		}
-		case EntityType::Line:
-		{
-			Line2DGPU* newLine = new Line2DGPU();
-			Line2DGPU revoked_line = deserilize_from_string<Line2DGPU>(content);
-   			newLine->Copy(&revoked_line);
-			info.ent = newLine;
-			break;
-		}
-		case EntityType::Circle:
-		{
-			Circle2DGPU* newCircle = new Circle2DGPU();
-			Circle2DGPU revoked_circle = deserilize_from_string<Circle2DGPU>(content);
-			newCircle->Copy(&revoked_circle);
-			info.ent = newCircle;
-			break;
-		}
-		case EntityType::Polyline:
-		{
-			Polyline2DGPU* newPoly = new Polyline2DGPU();
-			Polyline2DGPU reoked_poly = deserilize_from_string<Polyline2DGPU>(content);
-			newPoly->Copy(&reoked_poly);
-			info.ent = newPoly;
-			break;
-		}
-		case EntityType::Arc:
-		{
-			Arc2DGPU* newArc = new Arc2DGPU();
-			Arc2DGPU reovked_arc = deserilize_from_string<Arc2DGPU>(content);
-			newArc->Copy(&reovked_arc);
-			info.ent = newArc;
-			break;
-		}
-		case EntityType::Spline:
-		{
-			Arc2DGPU* newSpline = new Arc2DGPU();
-			Arc2DGPU revoked_spline = deserilize_from_string<Arc2DGPU>(content);
-			newSpline->Copy(&revoked_spline);
-			info.ent = newSpline;
-			break;
-		}
+	case EntityType::Point:
+	{
+		Point2DGPU* newPoint = new Point2DGPU();
+		Point2DGPU revoked_point = deserilize_from_string<Point2DGPU>(content);
+		newPoint->Copy(&revoked_point);
+		ent = newPoint;
+		break;
 	}
-	info.groupId = groupId;
-	info.ringId = ringId;
-	return info;
+	case EntityType::Line:
+	{
+		Line2DGPU* newLine = new Line2DGPU();
+		Line2DGPU revoked_line = deserilize_from_string<Line2DGPU>(content);
+		newLine->Copy(&revoked_line);
+		ent = newLine;
+		break;
+	}
+	case EntityType::Circle:
+	{
+		Circle2DGPU* newCircle = new Circle2DGPU();
+		Circle2DGPU revoked_circle = deserilize_from_string<Circle2DGPU>(content);
+		newCircle->Copy(&revoked_circle);
+		ent = newCircle;
+		break;
+	}
+	case EntityType::Polyline:
+	{
+		Polyline2DGPU* newPoly = new Polyline2DGPU();
+		Polyline2DGPU reoked_poly = deserilize_from_string<Polyline2DGPU>(content);
+		newPoly->Copy(&reoked_poly);
+		ent = newPoly;
+		break;
+	}
+	case EntityType::Arc:
+	{
+		Arc2DGPU* newArc = new Arc2DGPU();
+		Arc2DGPU reovked_arc = deserilize_from_string<Arc2DGPU>(content);
+		newArc->Copy(&reovked_arc);
+		ent = newArc;
+		break;
+	}
+	case EntityType::Spline:
+	{
+		Arc2DGPU* newSpline = new Arc2DGPU();
+		Arc2DGPU revoked_spline = deserilize_from_string<Arc2DGPU>(content);
+		newSpline->Copy(&revoked_spline);
+		ent = newSpline;
+		break;
+	}
+	}
+	return ent;
 }

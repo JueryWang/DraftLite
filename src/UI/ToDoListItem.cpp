@@ -17,6 +17,7 @@
 
 ToDoListItemWidget::ToDoListItemWidget(std::shared_ptr<CNCSYS::SketchGPU> _sketch, TaskListWindow* parent) : sketch(_sketch)
 {
+	fileSource = _sketch->source.c_str();
 	this->setAttribute(Qt::WA_DeleteOnClose, false);
 	this->setAttribute(Qt::WA_TransparentForMouseEvents, false);
 	parentListWindow = parent;
@@ -118,10 +119,10 @@ ToDoListItemWidget::ToDoListItemWidget(const QString& _fileSource, TaskListWindo
 			{
 				for (EntRingConnection* ring : group->rings)
 				{
-					if (ring->direction == GeomDirection::CCW)
+					if (ring->direction == GeomDirection::CW)
 					{
 						ring->Reverse();
-						ring->direction = GeomDirection::CW;
+						ring->direction = GeomDirection::CCW;
 					}
 				}
 			}
@@ -246,7 +247,7 @@ void ToDoListItemWidget::contextMenuEvent(QContextMenuEvent* event)
 	QMenu menu(this);
 
 	PLC_TYPE_BOOL isRunning = false;
-	ReadPLC_OPCUA(g_VarNodePathDict["AutoBusy"].c_str(), &isRunning, AtomicVarType::BOOL);
+	ReadPLC_OPCUA(g_ConfigableKeys["AutoBusy"].c_str(), &isRunning, AtomicVarType::BOOL);
 
 	if (!isRunning)
 	{

@@ -29,5 +29,5 @@ public:
 private:
 	void SaveScene(QXmlStreamWriter& writer, CNCSYS::SketchGPU* sketch, const QString& TempDir,bool defaultLayer = false);
 	std::shared_ptr<CNCSYS::SketchGPU> ParseScene(const QDomElement& sceneElem);
-	EntityParseInfo ParseEntity(const QDomElement& entityElem);
+	EntityVGPU* ParseEntity(const QDomElement& entityElem);
 };

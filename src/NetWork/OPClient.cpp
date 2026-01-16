@@ -70,6 +70,8 @@ OPClient::~OPClient()
 UA_StatusCode OPClient::ConnectToServer(const char* url)
 {
 	this->url = url;
+	if (client != nullptr)
+		return true;
 
 	if (client != nullptr)
 	{
@@ -102,12 +104,12 @@ UA_StatusCode OPClient::ConnectToServer(const char* url)
 	{
 		ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::OPC_CONNECT, true);
 		PLC_TYPE_BOOL pageInit = true;
-		WritePLC_OPCUA(g_VarNodePathDict["PageInit"].c_str(), &pageInit, AtomicVarType::BOOL);
+		WritePLC_OPCUA(g_ConfigableKeys["PageInit"].c_str(), &pageInit, AtomicVarType::BOOL);
 	}
 
 	this->url = url;
 
-	return status;
+	return (status == UA_STATUSCODE_GOOD);
 }
 
 void OPClient::ReadBackPLC_ProtoOpcUA(const std::vector<PLCParam_ProtocalOpc*>& addresses)
@@ -289,7 +291,7 @@ void OPClient::WriteOpcSingle(TaskWriteValueParam* param)
 		case AtomicVarType::INT:
 		{
 			UA_Int16 valueToWrite = static_cast<AtomicVar<PLC_TYPE_INT>*>(param->writeValue)->GetValue();
-			UA_Variant_setScalar(&variant, &valueToWrite, &UA_TYPES[UA_TYPES_INT64]);
+			UA_Variant_setScalar(&variant, &valueToWrite, &UA_TYPES[UA_TYPES_INT16]);
 			status = UA_Client_writeValueAttribute(client, nodeId, &variant);
 			hintValueStr = QString::number(valueToWrite);
 			break;
@@ -516,7 +518,7 @@ void OPClient::InitDirTable(int ns, const std::string& directory)
 
 bool OPClient::Reconnect()
 {
-	UA_StatusCode retval = ConnectToServer(this->url.c_str());
+	UA_StatusCode retval = UA_Client_connect(client, this->url.c_str());
 	if (retval == UA_STATUSCODE_GOOD)
 	{
 		ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::OPC_CONNECT, true);
@@ -528,12 +530,12 @@ bool OPClient::Reconnect()
 
 void OPClient::ReconnectWithHint()
 {
-	UA_StatusCode retval = ConnectToServer(this->url.c_str());
+	UA_StatusCode retval = UA_Client_connect(client, this->url.c_str());
 	if (retval == UA_STATUSCODE_GOOD)
 	{
 		ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::OPC_CONNECT, true);
 		PLC_TYPE_BOOL pageInit = true;
-		WritePLC_OPCUA(g_VarNodePathDict["PageInit"].c_str(), &pageInit, AtomicVarType::BOOL);
+		WritePLC_OPCUA(g_ConfigableKeys["PageInit"].c_str(), &pageInit, AtomicVarType::BOOL);
 		std::vector<SketchGPU*> sketches = TaskListWindow::GetInstance()->GetAllTaskSketches();
 		for (SketchGPU* sketch : sketches)
 		{

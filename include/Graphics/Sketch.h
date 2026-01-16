@@ -7,6 +7,7 @@
 #include "Graphics/AABB.h"
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Canvas.h"
+#include "Graphics/OCS.h"
 #include "Common/ProgressInfo.h"
 #include "Common/CraftParamConfig.h"
 #include "UI/ArrayGenerationDlg.h"
@@ -24,6 +25,7 @@ namespace CNCSYS
 		friend class OCSGPU;
 		friend class CanvasGPU;
 		friend class EntGroup;
+		friend class EntRingConnection;
 
 	public:
 		SketchGPU();
@@ -62,6 +64,7 @@ namespace CNCSYS
 		CanvasGPU* mainCanvas = nullptr;
 		std::string source;
 		CraftConfigItems attachedConfig;
+		OCSGPU* attachedOCS = nullptr;
 
 	private:
 		bgi::rtree<rtree_entry, bgi::quadratic<16>> rtree;
@@ -72,6 +75,7 @@ namespace CNCSYS
 		std::vector<EntGroup*> entityGroups;
 		std::vector<Path2D*> paths;
 		SimulateStatus SimulateStatus;
+		glm::vec3 wororigin = glm::vec3(0.0f);
 	};
 
 	class SketchCPU

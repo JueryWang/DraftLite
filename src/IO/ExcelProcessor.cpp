@@ -205,7 +205,7 @@ void ExcelProcessor::ReadPLCVariantMap()
 		}
 	}
 
-	for (auto& pair : g_VarNodePathDict)
+	for (auto& pair : g_ConfigableKeys)
 	{
 		ScadaScheduler::GetInstance()->RegisterReadBackVarKey(pair.second);
 	}

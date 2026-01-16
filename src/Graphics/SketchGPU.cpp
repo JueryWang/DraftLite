@@ -16,6 +16,7 @@
 #include "Controls/ScadaScheduler.h"
 #include "UI/GCodeEditor.h"
 #include "UI/MainLayer.h"
+#include "IO/Utils.h"
 #include "Common/ProgressInfo.h"
 #include "Algorithm/PartClassifier.h"
 #include <QDir>
@@ -83,16 +84,23 @@ namespace CNCSYS
 		entityIdsMap.erase(e->id);
 		RTree_erase_by_id(rtree, e->id);
 
-		if (e->ringParent != nullptr)
-		{
-			EntRingConnection* ring = e->ringParent;
-			ring->EraseEntity(e, this);
-		}
-
 		auto find = std::find(entities.begin(), entities.end(), e);
 		if (find != entities.end())
 		{
 			entities.erase(find);
+		}
+
+		try
+		{
+			if (e->ringParent != nullptr)
+			{
+				EntRingConnection* ring = e->ringParent;
+				ring->EraseEntity(e, this);
+			}
+		}
+		catch (...)
+		{
+			std::cout << __FUNCTIONW__ << std::endl;
 		}
 		e = nullptr;
 	}
@@ -178,11 +186,11 @@ namespace CNCSYS
 		if (g_opcuaClient && sendToFtp)
 		{
 			SCT_SEQUENCE_TASK* updateGCode = new SCT_SEQUENCE_TASK();
-			QString title = g_mainWindow->windowTitle();
+			QString title = QString::fromLocal8Bit(source.c_str());
 			QStringList parts = title.split("/");
-			QString fileName = parts.last();
+			QString fileName = FileNameFromPath(parts.last()) + ".cnc";
 			updateGCode->params.updateRemoteFtp = new TaskUpdateRemoteFtpParam();
-			updateGCode->params.updateRemoteFtp->fileUrl = " Share_files_anonymity/" + fileName.toStdString();
+			updateGCode->params.updateRemoteFtp->fileUrl = "Share_files_anonymity/" + fileName.toLocal8Bit();
 			updateGCode->type = SCT_TASK_TYPE::UPDATE_FTP_GCODE;
 			ScadaScheduler::GetInstance()->AddTask(updateGCode);
 		}
@@ -190,14 +198,20 @@ namespace CNCSYS
 
 	void SketchGPU::SetOrigin(const glm::vec3& origin)
 	{
+		for (EntGroup* group : entityGroups)
+		{
+			for (EntRingConnection* ring : group->rings)
+			{
+				ring->Move(-origin);
+			}
+		}
+
 		for (EntityVGPU* ent : entities)
 		{
-			ent->Move(-origin);
-			ent->UpdatePaintData();
 			this->UpdateEntityBox(ent, ent->bbox);
 		}
-		this->mainCanvas->ocsSys->ComputeScaleFitToCanvas();
-		this->UpdateGCode();
+		attachedOCS->ComputeScaleFitToCanvas();
+		this->UpdateGCode(true);
 	}
 
 	void SketchGPU::GenRectArray(RectArrayParam arrayParam)
@@ -274,64 +288,8 @@ namespace CNCSYS
 		auto groups = GetEntityGroups();
 		if (groups.size())
 		{
-			glm::vec3 startPoint = GetEntityGroups()[0]->rings[0]->conponents[0]->GetTransformedNodes()[0];
-			g_MScontext.XAxisStart = startPoint.x;
-			g_MScontext.YAxisStart = startPoint.y;
-			g_MScontext.ZAxisStart = startPoint.z;
-			g_MScontext.wcsAnchor = startPoint;
-
-			g_MScontext.objectRange = g_canvasInstance->GetOCSSystem()->objectRange;
-			g_MScontext.zoom = 1.0f;
-			g_MScontext.toolPos = startPoint;
-			g_MScontext.ncstep = 0;
-			int step = 0;
-
-			//开头写入M辅助码
-			char MBuffer[256];
-			std::sprintf(MBuffer, "N%03d M1 K%f L%f\n", g_MScontext.ncstep, g_MScontext.XAxisStart, g_MScontext.YAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			GCodeRecord rec(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
-			std::sprintf(MBuffer, "N%03d M2 K%f\n", g_MScontext.ncstep, g_MScontext.ZAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
-			std::sprintf(MBuffer, "N%03d M3 K%f L%f\n", g_MScontext.ncstep, g_MScontext.AAxisStart, g_MScontext.BAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
-			std::sprintf(MBuffer, "N%03d M4 K%f\n", g_MScontext.ncstep, g_MScontext.CAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
-			std::sprintf(MBuffer, "N%03d M5 K%f L%f\n", g_MScontext.ncstep, g_MScontext.UAxisStart, g_MScontext.VAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
-			std::sprintf(MBuffer, "N%03d M6 K%f\n", g_MScontext.ncstep, g_MScontext.WAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
-			std::sprintf(MBuffer, "N%03d M7 K%f L%f\n", g_MScontext.ncstep, g_MScontext.PAxisStart, g_MScontext.QAxisStart);
-			content += MBuffer;
-			g_MScontext.ncstep++;
-			rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
-
 			std::sort(entityGroups.begin(), entityGroups.end(), [&](EntGroup* g1, EntGroup* g2) {return g1->processOrder < g2->processOrder; });
-
+			g_MScontext.ncstep = 0;
 			for (EntGroup* group : entityGroups)
 			{
 				std::sort(group->rings.begin(), group->rings.end(), [&](EntRingConnection* r1, EntRingConnection* r2) { return r1->processOrder < r2->processOrder; });
@@ -341,11 +299,7 @@ namespace CNCSYS
 				}
 			}
 		}
-
-		//SimulateAnimator* animator = SimulateAnimator::GetInstance();
-		//animator->SetAnimationPath(entities);
-		//animator->Anaylse();
-		//animator->Exec();
+		//Anchor::GetInstance()->ReAssignDataSize(g_MScontext.ncstep);
 		return content;
 	}
 
@@ -363,7 +317,7 @@ namespace CNCSYS
 		//筛选完成后再基于线做相交性判断
 		for (EntityVGPU* ent : filteredItems)
 		{
-			if (ent->isVisible)
+			if (ent && ent->isVisible)
 			{
 				std::vector<glm::vec3> nodes = ent->GetTransformedNodes();
 				for (int i = 0; i < nodes.size() - 1; i++)
@@ -447,27 +401,43 @@ namespace CNCSYS
 			if (filteredEntity[i]->isVisible)
 			{
 				float distance;
-				for (size_t j = 0; j < filteredEntity[i]->boostPath.size(); j++)
+				double distanceFromStart = bg::distance(targetSearch, filteredEntity[i]->boostPath[0]);
+				double distanceFromEnd = bg::distance(targetSearch, filteredEntity[i]->boostPath.back());
+				if (distanceFromStart < distanceFromEnd)
 				{
-					distance = bg::distance(targetSearch, filteredEntity[i]->boostPath[j]);
-					if (distance < minDistance)
-					{
-						minDistance = distance;
-						result = filteredEntity[i]->boostPath[j];
-						findEntity = filteredEntity[i];
-						findIndex = j;
-					}
-				}
-				glm::vec3 transformedCentroid = filteredEntity[i]->GetTransformedCentroid();
-				BoostPoint centroid(transformedCentroid.x, transformedCentroid.y);
-				distance = bg::distance(targetSearch, centroid);
-				if (distance < minDistance)
-				{
-					minDistance = distance;
-					result = centroid;
+					minDistance = distanceFromStart;
+					result = filteredEntity[i]->boostPath[0];
 					findEntity = filteredEntity[i];
-					findIndex = -1;
+					findIndex = 0;
 				}
+				else
+				{
+					minDistance = distanceFromEnd;
+					result = filteredEntity[i]->boostPath.back();
+					findEntity = filteredEntity[i];
+					findIndex = filteredEntity[i]->boostPath.size()-1;
+				}
+				//for (size_t j = 0; j < filteredEntity[i]->boostPath.size(); j++)
+				//{
+				//	distance = bg::distance(targetSearch, filteredEntity[i]->boostPath[j]);
+				//	if (distance < minDistance)
+				//	{
+				//		minDistance = distance;
+				//		result = filteredEntity[i]->boostPath[j];
+				//		findEntity = filteredEntity[i];
+				//		findIndex = j;
+				//	}
+				//}
+				//glm::vec3 transformedCentroid = filteredEntity[i]->GetTransformedCentroid();
+				//BoostPoint centroid(transformedCentroid.x, transformedCentroid.y);
+				//distance = bg::distance(targetSearch, centroid);
+				//if (distance < minDistance)
+				//{
+				//	minDistance = distance;
+				//	result = centroid;
+				//	findEntity = filteredEntity[i];
+				//	findIndex = -1;
+				//}
 			}
 		}
 		if (minDistance < captureRadius)
