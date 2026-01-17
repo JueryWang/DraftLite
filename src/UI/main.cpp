@@ -24,6 +24,7 @@
 #include "NetWork/OPClient.h"
 #include "NetWork/FtpClient.h"
 #include "IO/ExcelProcessor.h"
+#include "UI/Components/HmiTemplateCraftConfig.h"
 #include <QMessageBox>
 #include <QFile>
 #include <QHboxLayout>
