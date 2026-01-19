@@ -431,7 +431,8 @@ void ConfigVariablesPage::BindSketch(CNCSYS::SketchGPU* sketch)
 
 ConfigVariablesPage::ConfigVariablesPage()
 {
-	this->setWindowFlags(Qt::Tool | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
+	this->setWindowTitle(tr("工艺配置"));
+	this->setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 	QVBoxLayout* vlay = new QVBoxLayout();
 	itemLists = new QListWidget();
 	itemLists->setMinimumSize(700, 400);
@@ -446,7 +447,6 @@ ConfigVariablesPage::ConfigVariablesPage()
 	btnConfirm->setFixedSize(80, 40);
 	hlay->addWidget(btnConfirm, Qt::AlignRight);
 	vlay->addLayout(hlay);
-	this->setWindowTitle(tr("工艺参数配置"));
 	this->setLayout(vlay);
 
 	ConfigVariablesItem::configPage = this;
@@ -464,7 +464,7 @@ ConfigVariablesPage::~ConfigVariablesPage()
 void ConfigVariablesPage::AddNewItem()
 {
 	QListWidgetItem* itemNew = new QListWidgetItem();
-	itemNew->setSizeHint(QSize(this->width(), 50));
+	itemNew->setSizeHint(QSize(this->width()-30, 50));
 	ConfigVariablesItem* configItem = new ConfigVariablesItem();
 	itemWidgets.push_back(configItem);
 	itemLists->addItem(itemNew);
@@ -476,6 +476,7 @@ void ConfigVariablesPage::DeleteItem(QListWidgetItem* item)
 	if (item)
 	{
 		int row = itemLists->row(item);
+		delete itemWidgets[row];
 		itemWidgets.erase(itemWidgets.begin() + row);
 		QListWidgetItem* takenItem = itemLists->takeItem(row);
 		delete takenItem;

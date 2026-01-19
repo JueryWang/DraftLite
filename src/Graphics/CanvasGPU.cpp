@@ -5,19 +5,20 @@
 #include "UI/GLWidget.h"
 #include "UI/TransformBaseHint.h"
 #include "UI/MainLayer.h"
+#include "UI/GCodeEditor.h"
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Primitives.h"
 #include "Graphics/Anchor.h"
 #include "Common/MathUtils.h"
 #include "Common/HistoryCmds.h"
 #include "IO/ObjectSerializer.h"
-#include "UI/GCodeEditor.h"
 #include "ModalEvent/EntityRotateModal.h"
 #include "ModalEvent/EntityScaleModal.h"
 #include "ModalEvent/EntityMirrorModal.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
 #include "ModalEvent/MeasureDimension.h"
 #include <UI/CanvasGuide.h>
+#include <QMessageBox>
 #include <Windows.h>
 #include <QMenu>
 #include <QFile>
@@ -264,26 +265,25 @@ namespace CNCSYS
 						connect(actionSetStart, &QAction::triggered, [this]() {
 							if (lastHoverEntity->ringParent != nullptr)
 							{
-								lastHoverEntity->ringParent->SetStartPoint(lastHoverEntity, lastHoverEntity->editPointIndex);
+									lastHoverEntity->ringParent->SetStartPoint(lastHoverEntity, lastHoverEntity->editPointIndex);
 							}
 							m_currentSketch.get()->UpdateGCode(true);
-							});
+						});
 						QAction* actionSetEnd = menu.addAction("设置为加工终点");
 						connect(actionSetEnd, &QAction::triggered, [this]() {
-							if (lastHoverEntity->ringParent != nullptr)
-							{
-								lastHoverEntity->ringParent->SetEndPoint(lastHoverEntity, lastHoverEntity->editPointIndex);
-							}
+								if (lastHoverEntity->ringParent != nullptr)
+								{
+									lastHoverEntity->ringParent->SetEndPoint(lastHoverEntity, lastHoverEntity->editPointIndex);
+								}
 							m_currentSketch->UpdateGCode(true);
 							});
 						QAction* actionSetOrigin = menu.addAction("设置为图形原点");
 						connect(actionSetOrigin, &QAction::triggered, [this]() {
 							m_currentSketch.get()->SetOrigin(glm::vec3(this->hoverPoint->point.x, this->hoverPoint->point.y, 0.0f));
 						});
-
 					}
 				}
-				if (selectedItems.size())
+				if (selectedItems.size() )
 				{
 					QAction* clearSelect = menu.addAction("取消选择");
 					connect(clearSelect, &QAction::triggered, [this]() {
@@ -292,22 +292,6 @@ namespace CNCSYS
 							ent->isSelected = false;
 						}
 						selectedItems.clear();
-						});
-					QAction* excludeNC = menu.addAction("排除路径");
-					connect(excludeNC, &QAction::triggered, [this]() {
-						for (EntityVGPU* ent : selectedItems)
-						{
-							ent->createGCode = false;
-							ent->isSelected = false;
-							ent->SetHighLight(false);
-							ent->attribColor = g_darkGreen;
-							ent->ResetColor();
-							m_currentSketch->UpdateGCode(true);
-						}
-						});
-					QAction* eraseSelect = menu.addAction("删除所选");
-					connect(eraseSelect, &QAction::triggered, [this]() {
-						EraseSelectedEntitys();
 						});
 					QAction* reverse = menu.addAction("反向");
 					connect(reverse, &QAction::triggered, [this]()

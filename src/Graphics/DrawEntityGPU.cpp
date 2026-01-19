@@ -512,12 +512,6 @@ namespace CNCSYS
 
 		processBoundary.second = endPoint;
 		//重置
-		for (EntityVGPU* ent : conponents)
-		{
-			ent->attribColor = g_greenColor;
-			ent->ResetColor();
-			ent->createGCode = true;
-		}
 		bool discard = false;
 		//起始选择点落在终点,当前段不选
 		if (processBoundary.first.endPointIndex == conponents[0]->indexRange.second)

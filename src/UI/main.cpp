@@ -35,7 +35,6 @@
 #include <algorithm>
 #include <string>
 #include <Windows.h>
-#include <UI/Components/HmiTemplateSectionConfiger.h>
 #include <DbgHelp.h>
 #pragma comment(lib, "Dbghelp.lib")
 using namespace CNCSYS;
@@ -116,12 +115,6 @@ int main(int argc, char* argv[])
 
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
-
-	//HmiTemplateMonitorTool* monitor = new HmiTemplateMonitorTool();
-	//monitor->show();
-
-	SectionConfigItems* sectionConfig = new SectionConfigItems();
-	sectionConfig->show();
 
 	ScadaScheduler::GetInstance()->Start();
 

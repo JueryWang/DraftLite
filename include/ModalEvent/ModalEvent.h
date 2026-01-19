@@ -13,6 +13,7 @@ namespace CNCSYS
 	class EntityMirrorModal;
 	class EntityShiftModal;
 	class MeasureDimensionModal;
+	class SectionConfigModal;
 
 	enum class ModalState : uint64_t
 	{
@@ -24,14 +25,13 @@ namespace CNCSYS
 		CreateArc = 1ULL << 5,
 		CreateRectangle = 1ULL << 6,
 		CreateSpline = 1ULL << 7,
-		CreateSelection = 1ULL << 8,
-		EntityMove = 1ULL << 9,
-		EntityZoom = 1ULL << 10,
-		EntityMirror = 1ULL << 11,
-		EntityRotate = 1ULL << 12,
-		EntityScale = 1ULL << 13,
-		EntityShift = 1ULL << 14,
-		MeasureDimension = 1ULL << 15
+		EntityMove = 1ULL << 8,
+		EntityZoom = 1ULL << 9,
+		EntityMirror = 1ULL << 10,
+		EntityRotate = 1ULL << 11,
+		EntityScale = 1ULL << 12,
+		EntityShift = 1ULL << 13,
+		MeasureDimension = 1ULL << 14
 	};
 
 	union ModalEventDrawFunc

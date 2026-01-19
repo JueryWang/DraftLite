@@ -27,7 +27,6 @@ class Point2DGPU;
 class Anchor;
 class CanvasGuide;
 
-
 namespace CNCSYS
 {
 	class EntityVGPU;
@@ -43,7 +42,10 @@ namespace CNCSYS
 	class TransformBaseHint;
 	class GLWidget;
 	struct EntityPoint;
+}
 
+namespace CNCSYS
+{
 	enum CaptureMode
 	{
 		Entity,

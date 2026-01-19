@@ -14,6 +14,7 @@
 #include <QApplication>
 #include <chrono> 
 #include <QVBoxLayout>
+#include <QMessageBox>
 #include <random>
 
 using namespace CNCSYS;

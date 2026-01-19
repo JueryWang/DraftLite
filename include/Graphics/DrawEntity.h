@@ -204,10 +204,18 @@ namespace CNCSYS
 		float a, b, c;
 	};
 
+
 	struct EntityPoint
 	{
 		EntityVGPU* entity;
 		int endPointIndex;
+	};
+
+	struct SectionBoundaryInfo
+	{
+		EntityPoint es;
+		EntityPoint ed;
+		GeomDirection dir;
 	};
 
 	class EntRingConnection
@@ -225,6 +233,7 @@ namespace CNCSYS
 			}
 		}
 
+		void MakeSection(const SectionBoundaryInfo& boundary,const glm::vec4& color = g_greenColor);
 		void RepairStart();
 		void SetStartPoint(EntityVGPU* targetEntity, int index);
 		void SetEndPoint(EntityVGPU* targetEntity, int index);
@@ -254,6 +263,7 @@ namespace CNCSYS
 		int processOrder = 0;
 		GeomDirection direction;
 
+		std::vector<SectionBoundaryInfo> sections;
 		std::pair<EntityPoint, EntityPoint> processBoundary;
 		int ringId;
 	};

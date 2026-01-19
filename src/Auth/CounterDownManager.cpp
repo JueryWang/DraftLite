@@ -26,6 +26,7 @@ Rectangle {
     signal popUpClose() 
     function onReload()
     {
+        countdownTimer.remainTime = counterDownManager.remainTime;
         unauthorizedPopup.startWarning(5);
     }
     
@@ -147,7 +148,7 @@ Rectangle {
 
             onTriggered: {
                 unauthorizedPopup.currentSeconds -= 1;
-                remainTime -= 1;    
+                remainTime--;
                 // 当倒计时只剩 1 秒时，开始执行渐隐动画
                 if (unauthorizedPopup.currentSeconds === 1) {
                     finalFadeOutAnim.start();
@@ -208,7 +209,7 @@ CounterDownManager::CounterDownManager(QObject* parent)
 	endTime = initTime.addSecs(30 * 60);
 
 	countdownTimer = new QTimer(this);
-	countdownTimer->setInterval(30 * 60 * 1000); // 每秒更新一次
+	countdownTimer->setInterval(10 * 60 * 1000); // 每秒更新一次
 	connect(countdownTimer, &QTimer::timeout, this, &CounterDownManager::updateTime);
 	countdownTimer->start();
 

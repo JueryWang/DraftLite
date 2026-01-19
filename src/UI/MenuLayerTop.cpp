@@ -65,10 +65,18 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		bool checked = actShowArrow->isChecked();
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showArrow = checked;
 		});
+
 	QAction* measureAct = editMenu->addAction(tr("测量"));
 	connect(measureAct, &QAction::triggered, [&]() {
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
 		});
+	QMenu* menu = topMenus->addMenu(tr("添加"));
+	QAction* addWorkBlance = editMenu->addAction(tr("毛坯"));
+
+	connect(measureAct, &QAction::triggered, [&]() {
+
+	});
+
 	QMenu* AuthMenu = topMenus->addMenu(tr("用户"));
 	actAuthInformation = AuthMenu->addAction(tr("授权信息"));
 

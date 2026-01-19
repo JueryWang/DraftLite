@@ -148,12 +148,18 @@ void FtpClient::CleanRemoteDirectory(const std::string& fileDir)
 		// Use active mode if passive mode fails
 		curl_easy_setopt(curl, CURLOPT_FTP_USE_EPSV, 0L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000L);
-		curl_easy_setopt(curl, CURLOPT_FTP_RESPONSE_TIMEOUT, 1L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000L);
+		curl_easy_setopt(curl, CURLOPT_FTP_RESPONSE_TIMEOUT, 5L);
 
 
 		res = curl_easy_perform(curl);
-
+		if (res != CURLE_OK) {
+			std::cerr << "[CURL ERROR] QUOTE command error：" << curl_easy_strerror(res) << std::endl;
+			// 可选：获取服务器返回的具体错误码
+			long responseCode = 0;
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+			std::cerr << "[FTP ResponseNumer]：" << responseCode << std::endl;
+		}
 		// Cleanup
 		curl_slist_free_all(commands);
 	}
@@ -243,41 +249,56 @@ std::vector<std::string> ftp_get_dir_list(CURL* curl, const char* base_url)
 	char* saveptr;
 	std::vector<std::string> fileList;
 
-	// 1. 获取当前文件夹的列表（URL 需以 "/" 结尾，确保列出该文件夹内容）
+	// 1. 确保路径以 / 结尾
 	char list_url[512];
-	snprintf(list_url, sizeof(list_url), "%s/", base_url); // 确保路径以 / 结尾
+	snprintf(list_url, sizeof(list_url), "%s/", base_url);
 
 	if (!ftp_get_list(curl, list_url, &list)) {
 		goto cleanup;
 	}
+
 	if (list.buffer != NULL)
 	{
-		// 2. 解析列表（按行分割）
 		token = strtok_s(list.buffer, "\r\n", &saveptr);
 
 		while (token != NULL) {
-
-			// 跳过空行或 "."、".."（当前目录和父目录）
-			if (token[0] == '\0' || strcmp(token, ".") == 0 || strcmp(token, "..") == 0) {
+			if (token[0] == '\0') {
 				token = strtok_s(NULL, "\r\n", &saveptr);
 				continue;
 			}
 
-			// 提取文件名（简化处理：假设 LIST 结果最后一个字段是文件名）
-			char* filename = token;
-			char* last_space = strrchr(token, ' ');
-			if (last_space) {
-				filename = last_space + 1; // 文件名在最后一个空格后
+			// --- 核心修复逻辑：保留空格 ---
+			// 标准 LIST 格式通常有 9 列，文件名是第 9 列及其之后的所有内容
+			int column = 0;
+			char* p = token;
+			// 跳过前 8 个字段
+			while (*p && column < 8) {
+				while (*p && *p == ' ') p++; // 跳过空格
+				if (*p && *p != ' ') {
+					column++;
+					while (*p && *p != ' ') p++; // 跳过非空格内容
+				}
+			}
+			// 此时 p 指向第 8 个字段后的空格，跳过这些空格即为完整文件名
+			while (*p && *p == ' ') p++;
+
+			std::string filename(p);
+
+			// 过滤掉当前目录和父目录
+			if (filename == "." || filename == "..") {
+				token = strtok_s(NULL, "\r\n", &saveptr);
+				continue;
 			}
 
-			fileList.push_back(filename);
+			if (!filename.empty()) {
+				fileList.push_back(filename);
+			}
 
 			token = strtok_s(NULL, "\r\n", &saveptr);
 		}
 	}
 
 cleanup:
-	// 释放列表内存
-	free(list.buffer);
+	if (list.buffer) free(list.buffer);
 	return fileList;
 }
