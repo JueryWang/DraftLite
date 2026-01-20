@@ -20,7 +20,7 @@
 #include "UI/DigitalHUD.h"
 #include "UI/TaskFlowGuide.h"
 #include "UI/CanvasGuide.h"
-#include "UI/Configer/WorkBlankConfig.h"
+#include "UI/Configer/RoughingConfig.h"
 
 #include "Controls/GlobalPLCVars.h"
 #include "NetWork/OPClient.h"
@@ -117,6 +117,8 @@ int main(int argc, char* argv[])
 
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
+
+	RoughingConfigPage::GetInstance()->show();
 
 	ScadaScheduler::GetInstance()->Start();
 
