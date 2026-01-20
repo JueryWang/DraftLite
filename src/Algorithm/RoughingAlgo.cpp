@@ -4,20 +4,21 @@
 #include <map>
 #define PRECISION 1000
 
-Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, double toolRadius, double stepover,double allowance)
+Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
 {
     glm::vec3 toolPos;
+    glm::vec3 workpieceCentroid = shape->centroid;
 
-    stepover = 10;
+    setting.stepover = 10;
     //先求余量的偏置
     Polyline2DGPU* originShape = static_cast<Polyline2DGPU*>(shape->ToPolyline());
-    Polyline2DGPU* offsetAllowance = static_cast<Polyline2DGPU*>(originShape->Offset(allowance, 1000));
+    Polyline2DGPU* offsetAllowance = static_cast<Polyline2DGPU*>(originShape->Offset(setting.allowance, 1000));
     Clipper2Lib::Path64 allowancePath;
     for (const BoostPoint& p : offsetAllowance->boostPath)
     {
         allowancePath.emplace_back(bg::get<0>(p) * PRECISION, bg::get<1>(p) * PRECISION);
     }
-
+    
     //偏置渐开线
     std::vector<Clipper2Lib::Path64> involute_sequence;
     std::map<Clipper2Lib::Path64*, Clipper2Lib::Paths64> involute_clippMap;
@@ -29,9 +30,7 @@ Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AAB
     workBox.emplace_back((int)workblank.XRange() * PRECISION, 0);
     
     //当前刀具所在位置
-    toolPos = workblank.getMax() + glm::vec3(toolRadius,toolRadius,0.0f);
-    Point2DGPU* toolInitPos = new Point2DGPU(toolPos);
-    g_canvasInstance->GetSketchShared()->AddEntity(toolInitPos);
+    toolPos = workblank.getMax() + glm::vec3(setting.toolRadius,setting.toolRadius,0.0f);
 
     std::vector<Path64> clipSections;
     
@@ -46,7 +45,7 @@ Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AAB
         offset.AddPaths(subject, JoinType::Round, EndType::Polygon);
 
         Paths64 solution;
-        double delta = step * stepover;
+        double delta = step * setting.stepover;
         offset.Execute(delta * PRECISION,solution);
         involute_sequence.push_back(solution[0]);
 
@@ -68,7 +67,6 @@ Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AAB
             sectionLine->SetParameter(clippingNodes,false);
             sectionLine->attribColor = g_yellowColor;
             sectionLine->ResetColor();
-            //g_canvasInstance->GetSketchShared()->AddEntity(sectionLine);
             layerPolys.push_back(sectionLine);
         }
         
@@ -81,8 +79,8 @@ Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AAB
     //前后两段线分别向外外扩展
     for (Polyline2DGPU* layer : layerPolys)
     {
-        layer->ExtendStart(toolRadius);
-        layer->ExtendEnd(toolRadius);
+        layer->ExtendStart(setting.toolRadius);
+        layer->ExtendEnd(setting.toolRadius);
         layer->UpdatePaintData();
     }
 
@@ -92,18 +90,27 @@ Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AAB
 
     for (Polyline2DGPU* layer : layerPolys)
     {
-        glm::vec3 start = layer->GetStart();
-        glm::vec3 end = layer->GetEnd();
-        if (glm::distance(start, toolPos) > glm::distance(end, toolPos))
+        auto nodes = layer->GetTransformedNodes();
+        glm::vec3 pathDir = nodes[1] - nodes[0];
+        glm::vec3 peiceDir = nodes[1] - workpieceCentroid;
+        //逆时针
+        if (glm::cross(pathDir, peiceDir).z > 0)
         {
-            layer->Reverse();
-            layer->UpdatePaintData();
-            std::swap(start, end);
+            if (setting.direction == MillingDirection::CCW)
+            {
+                std::reverse(nodes.begin(),nodes.end());
+            }
         }
-        auto transformedNodes = layer->GetTransformedNodes();
-        ultimatePath.insert(ultimatePath.end(), transformedNodes.begin(), transformedNodes.end());
-        
-        toolPos = end;
+        //顺时针
+        if (glm::cross(pathDir, peiceDir).z < 0)
+        {
+            if (setting.direction == MillingDirection::CW)
+            {
+                std::reverse(nodes.begin(), nodes.end());
+            }
+        }
+
+        ultimatePath.insert(ultimatePath.end(),nodes.begin(),nodes.end());
         delete layer;
     }
 

@@ -396,6 +396,7 @@ namespace CNCSYS
 			centroid += ent->GetTransformedCentroid();
 			contour.insert(contour.end(), nodes.begin(), nodes.end());
 			ent->ringId = EntRingConnection::counter;
+			centroid += ent->centroid;
 		}
 
 		area = MathUtils::ComputeArea(contour);
@@ -556,8 +557,6 @@ namespace CNCSYS
 		if (conponents.size() > 0)
 		{
 			char buffer[256];
-			glm::mat4 transformedMatrix = MathUtils::scaledMatrix(conponents[0]->worldModelMatrix, { Mstatus->zoom,Mstatus->zoom ,Mstatus->zoom }, Mstatus->wcsAnchor);
-			transformedMatrix = MathUtils::tranlatedMatrix(transformedMatrix, -Mstatus->wcsAnchor);
 
 			glm::vec3 startPoint = StartPoint();
 			glm::vec3 leftBottom = bbox.getMin();

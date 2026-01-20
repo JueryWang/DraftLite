@@ -1,4 +1,5 @@
 #include "UI/WorkBlankConfig.h"
+#include "UI/GCodeEditor.h"
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Primitives.h"
 #include "Graphics/Sketch.h"
@@ -87,7 +88,20 @@ WorkBlankConfigPage::WorkBlankConfigPage()
 			rectangle->isSelected = true;
 			g_canvasInstance->GetSketchShared()->AddEntity(rectangle);
 			WorkBlankConfigPage::s_attachedRing->workBlank = rectangle;
-			RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing,rectangle->bbox);
+			RoughingParamSettings roughingParam;
+			roughingParam.direction = MillingDirection::CCW;
+			Polyline2DGPU* generatePath = RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing,rectangle->bbox, roughingParam);
+			double toolRadius = 10;
+			std::string gcode;
+			g_MScontext.toolPos = glm::vec3(width + toolRadius,height + toolRadius,0.0f);
+			g_MScontext.wcsAnchor = glm::vec3(0, 0, 0);
+			g_MScontext.ncstep = 0;
+			
+			char buffer[256];
+			std::sprintf(buffer,"N%03d G81 X%f Y%f\n",g_MScontext.ncstep,g_MScontext.toolPos.x, g_MScontext.toolPos.y);
+			gcode += buffer;
+			gcode += generatePath->ToNcInstruction(&g_MScontext,false);
+			GCodeEditor::GetInstance()->setText(QString::fromStdString(gcode));
 		}
 	});
 

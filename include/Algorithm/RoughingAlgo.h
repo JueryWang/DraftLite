@@ -8,6 +8,6 @@ using namespace Clipper2Lib;
 class RoughingAlgo
 {
 public:
-	static Polyline2DGPU* GetRoughingPath(EntRingConnection* shape,const AABB& workblank,double toolRadius = 10,double stepover = 5, double allowance = 0.05);
+	static Polyline2DGPU* GetRoughingPath(EntRingConnection* shape,const AABB& workblank,RoughingParamSettings setting);
 	static std::vector<Path64> GetIntersections(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& pathB);
 };
