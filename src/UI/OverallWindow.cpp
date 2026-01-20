@@ -88,9 +88,9 @@ OverallWindow::OverallWindow()
 					free(newSliceFileName);
 					taskList->CurrentItemWidget()->AddCounter();
 					taskList->currentRequestNumber = (taskList->currentRequestNumber + 1) % (taskList->items.size());
-					PLC_TYPE_BOOL uploadDone = true;
-					WritePLC_OPCUA(g_ConfigableKeys["PCFileFTPDone"].c_str(), &uploadDone, AtomicVarType::BOOL);
 				}
+				PLC_TYPE_BOOL uploadDone = true;
+				WritePLC_OPCUA(g_ConfigableKeys["PCFileFTPDone"].c_str(), &uploadDone, AtomicVarType::BOOL);
 			}
 			monitorUploadFTP->lastValue.lastBool = ifRequestFile;
 		};

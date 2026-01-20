@@ -74,6 +74,32 @@ void Polyline2DGPU::Copy(Polyline2DGPU* other)
 	this->EntityVGPU::Copy(other);
 	this->SetParameter(other->nodes, other->isClosed, other->bulges);
 }
+void Polyline2DGPU::ExtendStart(float distance)
+{
+	std::vector<glm::vec3> polynodes = GetTransformedNodes();
+	glm::vec3 start1 = polynodes[0];
+	glm::vec3 start2 = polynodes[1];
+
+	glm::vec3 vecTouchStarts = glm::normalize(start1 - start2);
+	glm::vec3 startExtend = start1 + distance * vecTouchStarts;
+	glm::vec3 StartAdded = glm::inverse(this->worldModelMatrix) * glm::vec4(startExtend,1.0f);
+	nodes.insert(nodes.begin(),StartAdded);
+	bulges.insert(bulges.begin(),0.0f);
+	this->SetParameter(nodes, isClosed,bulges);
+}
+void Polyline2DGPU::ExtendEnd(float distance)
+{
+	std::vector<glm::vec3> polynodes = GetTransformedNodes();
+	glm::vec3 end1 = polynodes[polynodes.size()-1];
+	glm::vec3 end2 = polynodes[polynodes.size()-2];
+
+	glm::vec3 vecTouchEnd = glm::normalize(end1 - end2);
+	glm::vec3 EndExtend = end1 + distance * vecTouchEnd;
+	glm::vec3 EndAdded = glm::inverse(this->worldModelMatrix) * glm::vec4(EndExtend, 1.0f);
+	nodes.push_back(EndAdded);
+	bulges.push_back(0.0f);
+	this->SetParameter(nodes, isClosed,bulges);
+}
 void Polyline2DGPU::UpdatePaintData()
 {
 	if (vao > 0 && vbo > 0)
@@ -338,8 +364,13 @@ float Polyline2DGPU::CurvatureRadius(float t)
 	return radius;
 }
 
-void Polyline2DGPU::SetParameter(const std::vector<glm::vec3>& nodes, bool isClosed, const std::vector<float> bulges)
+void Polyline2DGPU::SetParameter(const std::vector<glm::vec3>& nodes, bool isClosed, std::vector<float> bulges)
 {
+	if (!bulges.size())
+	{
+		bulges.resize(nodes.size());
+		std::fill(bulges.begin(), bulges.end(), 0);
+	}
 	if (nodes.size() > 2)
 	{
 		bbox = AABB(nodes[0], nodes[1]);

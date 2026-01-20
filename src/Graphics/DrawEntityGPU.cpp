@@ -400,8 +400,6 @@ namespace CNCSYS
 
 		area = MathUtils::ComputeArea(contour);
 		centroid /= conponents.size();
-		centroidPoint = new Point2DGPU(centroid);
-		centroidPoint->isVisible = false;
 
 		startPoint = conponents[0]->GetTransformedNodes()[0];
 		endPoint = conponents.back()->GetTransformedNodes()[0];
@@ -413,13 +411,26 @@ namespace CNCSYS
 
 	EntRingConnection::~EntRingConnection()
 	{
-		delete centroidPoint;
 		for (EntityVGPU* conponent : conponents)
 		{
 			delete conponent;
 		}
 		conponents.clear();
 		contour.clear();
+	}
+
+	EntityVGPU* EntRingConnection::ToPolyline()
+	{
+		Polyline2DGPU* polyline = new Polyline2DGPU();
+		std::vector<glm::vec3> polylineNodes;
+		for (EntityVGPU* ent : conponents)
+		{
+			auto nodes = ent->GetTransformedNodes();
+			std::copy(nodes.begin(), nodes.end(),std::back_inserter(polylineNodes));
+		}
+		polyline->SetParameter(polylineNodes,false);
+
+		return polyline;
 	}
 
 	void EntRingConnection::RepairStart()
@@ -666,10 +677,6 @@ namespace CNCSYS
 			ent->Move(offset);
 			ent->UpdatePaintData();
 		}
-		if (centroidPoint)
-		{
-			centroidPoint->Move(offset);
-		}
 
 		bbox.Translate(offset);
 		startPoint += offset;
@@ -701,8 +708,6 @@ namespace CNCSYS
 		}
 		area = MathUtils::ComputeArea(contour);
 		centroid /= conponents.size();
-		centroidPoint = new Point2DGPU(centroid);
-		centroidPoint->isVisible = false;
 
 		startPoint = conponents[0]->GetTransformedNodes()[0];
 		endPoint = conponents.back()->GetTransformedNodes().back();
@@ -718,6 +723,12 @@ namespace CNCSYS
 		}
 		if (conponents.size() == 0)
 		{
+			find = std::find(sketch->entities.begin(), sketch->entities.end(), workBlank);
+			if (find != sketch->entities.end())
+			{
+				sketch->entities.erase(find);
+			}
+			delete workBlank;
 			EntGroup* parent = this->groupParent;
 			parent->EraseRingConnection(this, sketch);
 		}

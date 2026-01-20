@@ -9,6 +9,12 @@ enum class GeomDirection
 	AtLine
 };
 
+enum class LineType
+{
+	SOLID,
+	DASHD
+};
+
 enum class LeadType
 {
 	None,
@@ -32,6 +38,21 @@ struct LeadLine
 	float length;
 	int angle;
 	int radius;
+};
+
+enum class MillingDirection
+{
+	CW,		//顺铣
+	CCW,	//逆铣
+	Any     //任意方向
+};
+
+struct RoughingParamSettings
+{
+	double stepover = 5;
+	double allowance = 0.05;
+	double toolRadius = 10;
+	MillingDirection direction;
 };
 
 //struct CraftPreConfigDefines

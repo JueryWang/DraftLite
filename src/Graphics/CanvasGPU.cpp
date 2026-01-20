@@ -891,7 +891,6 @@ namespace CNCSYS
 								{
 									uniqueSelection.insert(conponent);
 								}
-								uniqueSelection.insert(ent->ringParent->centroidPoint);
 							}
 							else
 							{
@@ -1743,26 +1742,6 @@ namespace CNCSYS
 	void CanvasGPU::SetCaptureMode(CaptureMode mode)
 	{
 		captureType = mode;
-		if (captureType == CaptureMode::Point)
-		{
-			for (EntGroup* group : m_currentSketch.get()->entityGroups)
-			{
-				for (EntRingConnection* ring : group->rings)
-				{
-					ring->centroidPoint->isVisible = true;
-				}
-			}
-		}
-		else
-		{
-			for (EntGroup* group : m_currentSketch.get()->entityGroups)
-			{
-				for (EntRingConnection* ring : group->rings)
-				{
-					ring->centroidPoint->isVisible = false;
-				}
-			}
-		}
 	}
 
 	QImage CanvasGPU::GrabImage(SketchGPU* sketch, OCSGPU* ocs, int imageWidth, int imageHeight)

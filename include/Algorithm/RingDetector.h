@@ -14,6 +14,7 @@ struct RingNode
     EntityVGPU* entity;
 };
 
+//¼ì²â»·
 class RingDetector
 {
 public:

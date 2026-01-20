@@ -18,6 +18,7 @@ namespace CNCSYS
 	extern glm::vec4 g_redColor;
 	extern glm::vec4 g_greenColor;
 	extern glm::vec4 g_darkGreen;
+	extern glm::vec4 g_workBlankColor;
 	extern Shader* g_mirrorShader;
 	extern Shader* g_lineShader;
 	extern Shader* g_dashedLineShader;

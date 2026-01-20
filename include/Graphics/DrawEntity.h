@@ -143,6 +143,7 @@ namespace CNCSYS
 		glm::vec4 attribColor = color;
 		glm::vec3 centroid;
 		bool isVisible = true;
+		bool selectable = true;
 		bool isSelected = false;
 		bool isHover = false;
 		bool openHighlight = false;
@@ -211,13 +212,6 @@ namespace CNCSYS
 		int endPointIndex;
 	};
 
-	struct SectionBoundaryInfo
-	{
-		EntityPoint es;
-		EntityPoint ed;
-		GeomDirection dir;
-	};
-
 	class EntRingConnection
 	{
 	public:
@@ -233,7 +227,8 @@ namespace CNCSYS
 			}
 		}
 
-		void MakeSection(const SectionBoundaryInfo& boundary,const glm::vec4& color = g_greenColor);
+		EntityVGPU* ToPolyline();
+
 		void RepairStart();
 		void SetStartPoint(EntityVGPU* targetEntity, int index);
 		void SetEndPoint(EntityVGPU* targetEntity, int index);
@@ -253,7 +248,8 @@ namespace CNCSYS
 
 	public:
 		std::vector<EntityVGPU*> conponents;
-		Point2DGPU* centroidPoint = nullptr;
+		//毛坯
+		EntityVGPU* workBlank = nullptr;
 		AABB bbox;
 		glm::vec3 startPoint;
 		glm::vec3 endPoint;
@@ -263,7 +259,6 @@ namespace CNCSYS
 		int processOrder = 0;
 		GeomDirection direction;
 
-		std::vector<SectionBoundaryInfo> sections;
 		std::pair<EntityPoint, EntityPoint> processBoundary;
 		int ringId;
 	};

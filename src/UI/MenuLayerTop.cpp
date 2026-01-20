@@ -3,6 +3,7 @@
 #include "UI/MainLayer.h"
 #include "UI/OverallWindow.h"
 #include "UI/GCodeEditor.h"
+#include "UI/WorkBlankConfig.h"
 #include "IO/DxfProcessor.h"
 #include "IO/GCodeProcessor.h"
 #include "IO/XMLProcessor.h"
@@ -68,13 +69,20 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 
 	QAction* measureAct = editMenu->addAction(tr("测量"));
 	connect(measureAct, &QAction::triggered, [&]() {
-		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
+			ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
 		});
-	QMenu* menu = topMenus->addMenu(tr("添加"));
-	QAction* addWorkBlance = editMenu->addAction(tr("毛坯"));
 
-	connect(measureAct, &QAction::triggered, [&]() {
+	QMenu* addMenu = topMenus->addMenu(tr("添加"));
+	QAction* addWorkBlance = addMenu->addAction(tr("毛坯"));
 
+	connect(addWorkBlance, &QAction::triggered, [&]() {
+		if (g_canvasInstance->GetSelectedEntitys().size())
+		{
+			CNCSYS::EntRingConnection* ring = g_canvasInstance->GetSelectedEntitys()[0]->ringParent;
+			WorkBlankConfigPage::BindRing(ring);
+			
+		}
+		WorkBlankConfigPage::GetInstance()->show();
 	});
 
 	QMenu* AuthMenu = topMenus->addMenu(tr("用户"));

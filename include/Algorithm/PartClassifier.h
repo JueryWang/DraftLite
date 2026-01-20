@@ -6,6 +6,7 @@
 
 using namespace CNCSYS;
 
+//零件识别算法
 class PartClassifier
 {
 public:

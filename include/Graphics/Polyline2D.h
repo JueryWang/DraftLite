@@ -23,6 +23,10 @@ public:
     Polyline2DGPU(const std::vector<glm::vec3>& points, bool isClosed, const std::vector<float> bulges = {});
     ~Polyline2DGPU();
     void Copy(Polyline2DGPU* other);
+    //延起点方向外扩指定距离
+    void ExtendStart(float distance);
+    //延终点外扩指定距离
+    void ExtendEnd(float distance);
     virtual void UpdatePaintData() override;
     virtual EntityType GetType() const override { return EntityType::Polyline; }
     virtual glm::vec3 GetStart() override;
@@ -44,7 +48,7 @@ public:
     virtual std::string ToNcInstruction(SimulateStatus* Mstatus, bool createRecord = false, SketchGPU* sketch = nullptr) override;
     virtual std::string GenNcSection(SimulateStatus* Mstatus, bool createRecord = false, SketchGPU* sketch = nullptr) override;
     virtual QString Description() override;
-    void SetParameter(const std::vector<glm::vec3>& nodes, bool isClosed, const std::vector<float> bulges);
+    void SetParameter(const std::vector<glm::vec3>& nodes, bool isClosed, std::vector<float> bulges = {});
     void Simplify(float epsilon);
     void Smooth(float epsilon);
 
