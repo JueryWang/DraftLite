@@ -3,7 +3,7 @@
 #include "UI/MainLayer.h"
 #include "UI/OverallWindow.h"
 #include "UI/GCodeEditor.h"
-#include "UI/WorkBlankConfig.h"
+#include "UI/Configer/WorkBlankConfig.h"
 #include "IO/DxfProcessor.h"
 #include "IO/GCodeProcessor.h"
 #include "IO/XMLProcessor.h"

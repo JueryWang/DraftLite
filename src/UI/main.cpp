@@ -20,7 +20,7 @@
 #include "UI/DigitalHUD.h"
 #include "UI/TaskFlowGuide.h"
 #include "UI/CanvasGuide.h"
-#include "UI/WorkBlankConfig.h"
+#include "UI/Configer/WorkBlankConfig.h"
 
 #include "Controls/GlobalPLCVars.h"
 #include "NetWork/OPClient.h"

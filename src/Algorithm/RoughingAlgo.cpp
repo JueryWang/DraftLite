@@ -109,6 +109,22 @@ Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AAB
                 std::reverse(nodes.begin(), nodes.end());
             }
         }
+        
+        if (ultimatePath.size() > 0)
+        {
+            Path64 marchingline;
+            glm::vec3 start = ultimatePath.back();
+            glm::vec3 end = *nodes.begin();
+
+            //²úÉúÅö×²,²å²¹µã
+            marchingline.emplace_back(start.x * PRECISION ,start.y * PRECISION);
+            marchingline.emplace_back(end.x * PRECISION, end.y * PRECISION);
+            if (GetIntersections(marchingline, involute_sequence[1]).size() > 0)
+            {
+                glm::vec3 interp = glm::vec3(max(start.x, end.x), max(start.y, end.y), 0.0f);
+                ultimatePath.push_back(interp);
+            }
+        }
 
         ultimatePath.insert(ultimatePath.end(),nodes.begin(),nodes.end());
         delete layer;

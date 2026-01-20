@@ -1,4 +1,4 @@
-#include "UI/WorkBlankConfig.h"
+#include "UI/Configer/WorkBlankConfig.h"
 #include "UI/GCodeEditor.h"
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Primitives.h"

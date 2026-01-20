@@ -95,6 +95,8 @@ file(GLOB UIHeaders include/UI/*.h)
 file(GLOB UISources src/UI/*.cpp)
 file(GLOB UIComponentHeaders include/UI/Components/*.h)
 file(GLOB UIComponentSources src/UI/Components/*.cpp)
+file(GLOB UIConfigerHeaders include/UI/Configer/*.h)
+file(GLOB UIConfigerSources src/UI/Configer/*.cpp)
 file(GLOB NetHeaders include/NetWork/*.h)
 file(GLOB NetSources src/NetWork/*.cpp)
 file(GLOB PathHeaders include/Path/*.h)
@@ -129,6 +131,8 @@ qt_add_executable(${PROJECT_NAME}
         ${NetSources}
         ${UIComponentHeaders}
         ${UIComponentSources}
+        ${UIConfigerHeaders}
+        ${UIConfigerSources}
         ${PathHeaders}
         ${PathSources}
         ${AlgoHeaders}
@@ -197,6 +201,14 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/UI/Components"
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/UI/Components"
             PREFIX "Source Files/UI/Components"
             FILES ${UIComponentSources}
+            )
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/UI/Configer"
+            PREFIX "Header Files/UI/Configer"
+            FILES ${UIConfigerHeaders}
+            )
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/UI/Configer"
+            PREFIX "Source Files/UI/Configer"
+            FILES ${UIConfigerSources}
             )
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/NetWork"
              PREFIX "Header Files/NetWork"
