@@ -50,7 +50,7 @@ enum class MillingDirection
 struct RoughingParamSettings
 {
 	double stepover = 5;
-	double allowance = 0.05;
+	double allowance = 0.01;
 	double toolRadius = 10;
 	MillingDirection direction;
 };

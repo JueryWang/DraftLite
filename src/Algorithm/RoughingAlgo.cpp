@@ -1,154 +1,171 @@
 #include "Algorithm/RoughingAlgo.h"
 #include "Graphics/Canvas.h"
 #include "Graphics/Sketch.h"
+#include "Controls/GCodeController.h"
 #include <map>
-#define PRECISION 1000
 
-Polyline2DGPU* RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
+std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
 {
+    std::string gcode;
+
+    int PRECISION = (int)(1.0 / setting.allowance);
     Polyline2DGPU* ultimatePoly = new Polyline2DGPU();
-    //判断是否需要多段工序
-    if (shape->bbox.getMax().x < (workblank.getMax().x + setting.toolRadius) &&
-        shape->bbox.getMin().x >(shape->bbox.getMin().x - setting.toolRadius) &&
-        shape->bbox.getMax().y < (workblank.getMax().y + setting.toolRadius) &&
-        shape->bbox.getMin().y >(shape->bbox.getMin().y - setting.toolRadius)
-        )
+    //单工序
+    glm::vec3 toolPos;
+    glm::vec3 workpieceCentroid = shape->centroid;
+
+    setting.stepover = 10;
+    //先求余量的偏置
+    Polyline2DGPU* originShape = static_cast<Polyline2DGPU*>(shape->ToPolyline());
+    Polyline2DGPU* offsetAllowance = static_cast<Polyline2DGPU*>(originShape->Offset(setting.allowance, 1000));
+    Clipper2Lib::Path64 allowancePath;
+    for (const BoostPoint& p : offsetAllowance->boostPath)
     {
-        //单工序
-        glm::vec3 toolPos;
-        glm::vec3 workpieceCentroid = shape->centroid;
+        allowancePath.emplace_back(bg::get<0>(p) * PRECISION, bg::get<1>(p) * PRECISION);
+    }
+    
+    //偏置渐开线
+    std::vector<Clipper2Lib::Path64> involute_sequence;
+    std::map<Clipper2Lib::Path64*, Clipper2Lib::Paths64> involute_clippMap;
 
-        setting.stepover = 10;
-        //先求余量的偏置
-        Polyline2DGPU* originShape = static_cast<Polyline2DGPU*>(shape->ToPolyline());
-        Polyline2DGPU* offsetAllowance = static_cast<Polyline2DGPU*>(originShape->Offset(setting.allowance, 1000));
-        Clipper2Lib::Path64 allowancePath;
-        for (const BoostPoint& p : offsetAllowance->boostPath)
+    Clipper2Lib::Path64 workBox;
+    workBox.emplace_back((int)workblank.XRange() * PRECISION, (int)workblank.YRange() * PRECISION);
+    workBox.emplace_back(0, (int)workblank.YRange() * PRECISION);
+    workBox.emplace_back(0,0);
+    workBox.emplace_back((int)workblank.XRange() * PRECISION, 0);
+    
+    //当前刀具所在位置
+    toolPos = workblank.getMax() + glm::vec3(setting.toolRadius,setting.toolRadius,0.0f);
+
+    std::vector<Path64> clipSections;
+    
+    std::vector<Polyline2DGPU*> layerPolys;
+
+    int step = 0;
+    do
+    {
+        ClipperOffset offset;
+        Paths64  subject;
+        subject.push_back(allowancePath);
+        offset.AddPaths(subject, JoinType::Round, EndType::Polygon);
+
+        Paths64 solution;
+        double delta = step * setting.stepover;
+        offset.Execute(delta * PRECISION,solution);
+        involute_sequence.push_back(solution[0]);
+
+        step++;
+        clipSections = GetIntersections(involute_sequence.back(), workBox);
+
+        std::vector<glm::vec3> clippingNodes;
+        involute_clippMap[&involute_sequence.back()] = clipSections;
+        for (const Path64 clipping : clipSections)
         {
-            allowancePath.emplace_back(bg::get<0>(p) * PRECISION, bg::get<1>(p) * PRECISION);
+            for (const Point64& pt : clipping)
+            {
+                clippingNodes.push_back({ (float)pt.x / PRECISION,(float)pt.y / PRECISION,0.0f });
+            }
         }
-    
-        //偏置渐开线
-        std::vector<Clipper2Lib::Path64> involute_sequence;
-        std::map<Clipper2Lib::Path64*, Clipper2Lib::Paths64> involute_clippMap;
-
-        Clipper2Lib::Path64 workBox;
-        workBox.emplace_back((int)workblank.XRange() * PRECISION, (int)workblank.YRange() * PRECISION);
-        workBox.emplace_back(0, (int)workblank.YRange() * PRECISION);
-        workBox.emplace_back(0,0);
-        workBox.emplace_back((int)workblank.XRange() * PRECISION, 0);
-    
-        //当前刀具所在位置
-        toolPos = workblank.getMax() + glm::vec3(setting.toolRadius,setting.toolRadius,0.0f);
-
-        std::vector<Path64> clipSections;
-    
-        std::vector<Polyline2DGPU*> layerPolys;
-
-        int step = 0;
-        do
+        if (clippingNodes.size() > 0)
         {
-            ClipperOffset offset;
-            Paths64  subject;
-            subject.push_back(allowancePath);
-            offset.AddPaths(subject, JoinType::Round, EndType::Polygon);
-
-            Paths64 solution;
-            double delta = step * setting.stepover;
-            offset.Execute(delta * PRECISION,solution);
-            involute_sequence.push_back(solution[0]);
-
-            step++;
-            clipSections = GetIntersections(involute_sequence.back(), workBox);
-
-            std::vector<glm::vec3> clippingNodes;
-            involute_clippMap[&involute_sequence.back()] = clipSections;
-            for (const Path64 clipping : clipSections)
-            {
-                for (const Point64& pt : clipping)
-                {
-                    clippingNodes.push_back({ (float)pt.x / PRECISION,(float)pt.y / PRECISION,0.0f });
-                }
-            }
-            if (clippingNodes.size() > 0)
-            {
-                Polyline2DGPU* sectionLine = new Polyline2DGPU();
-                sectionLine->SetParameter(clippingNodes,false);
-                sectionLine->attribColor = g_yellowColor;
-                sectionLine->ResetColor();
-                layerPolys.push_back(sectionLine);
-            }
+            Polyline2DGPU* sectionLine = new Polyline2DGPU();
+            sectionLine->SetParameter(clippingNodes,false);
+            sectionLine->attribColor = g_yellowColor;
+            sectionLine->ResetColor();
+            layerPolys.push_back(sectionLine);
+        }
         
-        } while (clipSections.size() > 0);
+    } while (clipSections.size() > 0);
     
-        Polyline2DGPU* temp = *layerPolys.begin();
-        delete temp;
-        layerPolys.erase(layerPolys.begin());
+    Polyline2DGPU* temp = *layerPolys.begin();
+    delete temp;
+    layerPolys.erase(layerPolys.begin());
 
-        //前后两段线分别向外外扩展
-        for (Polyline2DGPU* layer : layerPolys)
-        {
-            layer->ExtendStart(setting.toolRadius);
-            layer->ExtendEnd(setting.toolRadius);
-            layer->UpdatePaintData();
-        }
-
-        std::reverse(layerPolys.begin(),layerPolys.end());
-
-        std::vector<glm::vec3> ultimatePath;
-
-        for (Polyline2DGPU* layer : layerPolys)
-        {
-            auto nodes = layer->GetTransformedNodes();
-            glm::vec3 pathDir = nodes[1] - nodes[0];
-            glm::vec3 peiceDir = nodes[1] - workpieceCentroid;
-            //逆时针
-            if (glm::cross(pathDir, peiceDir).z > 0)
-            {
-                if (setting.direction == MillingDirection::CCW)
-                {
-                    std::reverse(nodes.begin(),nodes.end());
-                }
-            }
-            //顺时针
-            if (glm::cross(pathDir, peiceDir).z < 0)
-            {
-                if (setting.direction == MillingDirection::CW)
-                {
-                    std::reverse(nodes.begin(), nodes.end());
-                }
-            }
-        
-            if (ultimatePath.size() > 0)
-            {
-                Path64 marchingline;
-                glm::vec3 start = ultimatePath.back();
-                glm::vec3 end = *nodes.begin();
-
-                //产生碰撞,插补点
-                marchingline.emplace_back(start.x * PRECISION ,start.y * PRECISION);
-                marchingline.emplace_back(end.x * PRECISION, end.y * PRECISION);
-                if (GetIntersections(marchingline, involute_sequence[1]).size() > 0)
-                {
-                    glm::vec3 interp = glm::vec3(max(start.x, end.x), max(start.y, end.y), 0.0f);
-                    ultimatePath.push_back(interp);
-                }
-            }
-
-            ultimatePath.insert(ultimatePath.end(),nodes.begin(),nodes.end());
-            delete layer;
-        }
-
-        ultimatePoly->SetParameter(ultimatePath,false);
-        ultimatePoly->attribColor = g_yellowColor;
-        ultimatePoly->ResetColor();
-        g_canvasInstance->GetSketchShared()->AddEntity(ultimatePoly);
-    
-        delete originShape;
-        delete offsetAllowance;
+    //前后两段线分别向外外扩展
+    for (Polyline2DGPU* layer : layerPolys)
+    {
+        layer->ExtendStart(setting.toolRadius);
+        layer->ExtendEnd(setting.toolRadius);
+        layer->UpdatePaintData();
     }
 
-    return ultimatePoly;
+    std::reverse(layerPolys.begin(),layerPolys.end());
+
+    std::vector<glm::vec3> ultimatePath;
+
+    char buffer[256];
+    for (Polyline2DGPU* layer : layerPolys)
+    {
+        auto nodes = layer->GetTransformedNodes();
+        
+        {
+            std::sprintf(buffer,"N%03d G00 X%f Y%f\n",g_MScontext.ncstep,nodes[0].x,nodes[0].y);
+            gcode += buffer;
+            g_MScontext.ncstep++;
+            GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+            GCodeController::GetController()->AddRecord(rec);
+        }
+
+        glm::vec3 pathDir = nodes[1] - nodes[0];
+        glm::vec3 peiceDir = nodes[1] - workpieceCentroid;
+        //逆时针
+        if (glm::cross(pathDir, peiceDir).z > 0)
+        {
+            if (setting.direction == MillingDirection::CCW)
+            {
+                layer->Reverse();
+                std::reverse(nodes.begin(),nodes.end());
+            }
+        }
+        //顺时针
+        if (glm::cross(pathDir, peiceDir).z < 0)
+        {
+            if (setting.direction == MillingDirection::CW)
+            {
+                layer->Reverse();
+                std::reverse(nodes.begin(), nodes.end());
+            }
+        }
+        
+        if (ultimatePath.size() > 0)
+        {
+            Path64 marchingline;
+            glm::vec3 start = ultimatePath.back();
+            glm::vec3 end = *nodes.begin();
+
+            //产生碰撞,插补点
+            marchingline.emplace_back(start.x * PRECISION ,start.y * PRECISION);
+            marchingline.emplace_back(end.x * PRECISION, end.y * PRECISION);
+            if (GetIntersections(marchingline, involute_sequence[1]).size() > 0)
+            {
+                glm::vec3 interp = glm::vec3(max(start.x, end.x), max(start.y, end.y), 0.0f);
+                ultimatePath.push_back(interp);
+
+                {
+                    std::sprintf(buffer, "N%03d G00 X%f Y%f\n", g_MScontext.ncstep, max(start.x, end.x), max(start.y, end.y));
+                    gcode += buffer;
+                    g_MScontext.ncstep++;
+                    GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+                    GCodeController::GetController()->AddRecord(rec);
+                }
+            }
+        }
+        gcode += layer->GenNcSection(&g_MScontext,true);
+
+        ultimatePath.insert(ultimatePath.end(),nodes.begin(),nodes.end());
+        delete layer;
+    }
+
+    ultimatePoly->SetParameter(ultimatePath,false);
+    ultimatePoly->attribColor = g_yellowColor;
+    ultimatePoly->ResetColor();
+    g_canvasInstance->GetSketchShared()->AddEntity(ultimatePoly);
+    ultimatePoly->SelfAmendArcSection();
+    
+    delete originShape;
+    delete offsetAllowance;
+
+    return gcode;
 }
 
 std::vector<Path64> RoughingAlgo::GetIntersections(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& pathB)

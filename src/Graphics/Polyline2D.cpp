@@ -1,10 +1,12 @@
 #include "Graphics/Polyline2D.h"
+#include "Graphics/Circle2D.h"
 #include "Common/ProgressInfo.h"
 #include "Controls/GCodeController.h"
 #include "Graphics/Sketch.h"
 #include "UI/GCodeEditor.h"
 #include "Graphics/Arc2D.h"
 #include "Graphics/OCS.h"
+#include "Algorithm/CircleDetector.h"
 
 std::vector<glm::vec3> intermidatePolygon;
 
@@ -99,6 +101,33 @@ void Polyline2DGPU::ExtendEnd(float distance)
 	nodes.push_back(EndAdded);
 	bulges.push_back(0.0f);
 	this->SetParameter(nodes, isClosed,bulges);
+}
+void Polyline2DGPU::SelfAmendArcSection()
+{
+	std::vector<CircleClusterNode> clusters;
+	std::vector<glm::vec3> nodes = GetTransformedNodes();
+	CircleDBSCAN dbscan(0.6,5);
+
+	for (int i = 0; i < nodes.size() - 2; i++)
+	{
+		glm::vec3 center;
+		float angleStart;
+		float angleEnd;
+		float radius;
+		std::tie(center,angleStart,angleEnd,radius) = MathUtils::CalculateCircleByThreePoints(nodes[i],nodes[i+1],nodes[i+1]);
+		if (!(std::isnan(center.x) ||  std::isnan(center.y) || std::isnan(radius)))
+		{
+			clusters.emplace_back(this,center.x,center.y,radius,i,i+2);
+		}
+	}
+
+	//std::vector<int> labels = dbscan.Fit(clusters);
+	//for (int i = 0; i < labels.size(); i++)
+	//{
+	//	CircleClusterNode circleParams = clusters[labels[i]];
+	//	Circle2DGPU* circle = new Circle2DGPU(glm::vec3(circleParams.x, circleParams.y,0.0f),circleParams.radius);
+	//	g_canvasInstance->GetSketchShared()->AddEntity(circle);
+	//}
 }
 void Polyline2DGPU::UpdatePaintData()
 {

@@ -3,6 +3,8 @@
 #include <cmath>
 #include <algorithm>
 #include <unordered_set>
+#include <utility>
+#include "Graphics/DrawEntity.h"
 
 struct CircleClusterNode
 {
@@ -10,9 +12,13 @@ public:
 	float x;
 	float y;
 	float radius;
+	CNCSYS::EntityVGPU* entityParent = nullptr;
+	std::pair<int, int> indexRange;
 
-	CircleClusterNode(float x_ = 0.0f, float y_ = 0.0f, float radius_ = 0.0f)
-		: x(x_), y(y_), radius(radius_) {
+	CircleClusterNode(CNCSYS::EntityVGPU* ent = nullptr,float x_ = 0.0f, float y_ = 0.0f, float radius_ = 0.0f,int indexStart = 0,int indexEnd = 0)
+		: entityParent(ent),x(x_), y(y_), radius(radius_){
+		indexRange.first = indexStart;
+		indexRange.first = indexEnd;
 	}
 };
 
@@ -34,7 +40,6 @@ private:
 	const float eps;					//邻域半径,相似度阈值
 	const int minSamples;				//形成核心点的最小点数
 	std::vector<int> labels;			//聚类标签,-1 表示噪声
-	std::vector<CircleClusterNode> clusters;
 	static const int UNCLASSIFIED = -2;
 	static const int NOISE = -1;
 };
