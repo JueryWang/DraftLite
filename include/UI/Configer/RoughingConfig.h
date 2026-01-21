@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QGroupBox>
+#include "Common/ProcessCraft.h"
 
 class RoughingConfigPage : public QWidget
 {
@@ -18,6 +19,8 @@ private:
 
 private:
 	static RoughingConfigPage* s_instance;
+	static RoughingParamSettings s_setting;
+	
 	QLabel* labelDirection = nullptr;
 	QComboBox* comboDirection = nullptr;
 	QLabel* labelTolerance = nullptr;
@@ -26,4 +29,8 @@ private:
 	QLineEdit* editRemain = nullptr;
 	QLabel* labelLineSpacing = nullptr;
 	QLineEdit* editLineSpacing = nullptr;
+
+	QPushButton* btnExec = nullptr;
+	QPushButton* btnComfirm = nullptr;
+	QPushButton* btnCancel = nullptr;
 };

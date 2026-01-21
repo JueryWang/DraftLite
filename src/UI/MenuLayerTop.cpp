@@ -4,6 +4,7 @@
 #include "UI/OverallWindow.h"
 #include "UI/GCodeEditor.h"
 #include "UI/Configer/WorkBlankConfig.h"
+#include "UI/Configer/RoughingConfig.h"
 #include "IO/DxfProcessor.h"
 #include "IO/GCodeProcessor.h"
 #include "IO/XMLProcessor.h"
@@ -46,7 +47,7 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 
 	QMenu* editMenu = topMenus->addMenu(tr("编辑"));
 	QMenu* captureMenu = editMenu->addMenu(tr("开启图元捕捉"));
-	actEntityCapture = captureMenu->addAction(tr("开启图元捕捉"));
+	actEntityCapture = captureMenu->addAction(tr("开启图元捕捉")); 
 	actEntityCapture->setCheckable(true);
 	actEntityCapture->setChecked(true);
 	actPointCapture = captureMenu->addAction(tr("开启点捕捉"));
@@ -74,6 +75,12 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 
 	QMenu* addMenu = topMenus->addMenu(tr("添加"));
 	QAction* addWorkBlance = addMenu->addAction(tr("毛坯"));
+
+	QMenu* CamMenu = topMenus->addMenu(tr("CAM"));
+	QAction* addRoughting = CamMenu->addAction(tr("开粗"));
+	connect(addRoughting, &QAction::triggered, [&]() {
+		RoughingConfigPage::GetInstance()->show();
+	});
 
 	connect(addWorkBlance, &QAction::triggered, [&]() {
 		if (g_canvasInstance->GetSelectedEntitys().size())

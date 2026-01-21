@@ -19,9 +19,11 @@ private:
 	WorkBlankConfigPage();
 	~WorkBlankConfigPage();
 
+public:
+	static CNCSYS::EntRingConnection* s_attachedRing;
+
 private:
 	static WorkBlankConfigPage* s_instance;
-	static CNCSYS::EntRingConnection* s_attachedRing;
 
 	QLabel* labelConfigWidth = nullptr;
 	QLabel* labelConfigHeight = nullptr;

@@ -118,8 +118,6 @@ int main(int argc, char* argv[])
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
 
-	RoughingConfigPage::GetInstance()->show();
-
 	ScadaScheduler::GetInstance()->Start();
 
 	return app.exec();

@@ -3,18 +3,24 @@
 #include "Graphics/Sketch.h"
 #include "Controls/GCodeController.h"
 #include <map>
+#include <QMessageBox>
+CNCSYS::EntityVGPU* RoughingAlgo::s_roughingPoly = nullptr;
 
 std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
 {
+    if (RoughingAlgo::s_roughingPoly != nullptr)
+    {
+        g_canvasInstance->GetSketchShared()->EraseEntity(s_roughingPoly);
+        delete RoughingAlgo::s_roughingPoly;
+    }
+
     std::string gcode;
 
-    int PRECISION = (int)(1.0 / setting.allowance);
+    int PRECISION = (int)(1.0 / setting.tolerance);
     Polyline2DGPU* ultimatePoly = new Polyline2DGPU();
     //单工序
     glm::vec3 toolPos;
     glm::vec3 workpieceCentroid = shape->centroid;
-
-    setting.stepover = 10;
     //先求余量的偏置
     Polyline2DGPU* originShape = static_cast<Polyline2DGPU*>(shape->ToPolyline());
     Polyline2DGPU* offsetAllowance = static_cast<Polyline2DGPU*>(originShape->Offset(setting.allowance, 1000));
@@ -35,7 +41,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     workBox.emplace_back((int)workblank.XRange() * PRECISION, 0);
     
     //当前刀具所在位置
-    toolPos = workblank.getMax() + glm::vec3(setting.toolRadius,setting.toolRadius,0.0f);
+    toolPos = workblank.getMax() + glm::vec3(setting.stepover,setting.stepover,0.0f);
 
     std::vector<Path64> clipSections;
     
@@ -96,57 +102,56 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     char buffer[256];
     for (Polyline2DGPU* layer : layerPolys)
     {
+        if (setting.direction == MillingDirection::CW)
+        {
+            layer->Reverse();
+        }
         auto nodes = layer->GetTransformedNodes();
         
         {
-            std::sprintf(buffer,"N%03d G00 X%f Y%f\n",g_MScontext.ncstep,nodes[0].x,nodes[0].y);
+            std::sprintf(buffer,"N%03d G00 X%f Y%f\n",g_MScontext.ncstep,nodes[0].x - g_MScontext.wcsAnchor,nodes[0].y - g_MScontext.wcsAnchor);
             gcode += buffer;
             g_MScontext.ncstep++;
             GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
             GCodeController::GetController()->AddRecord(rec);
         }
 
-        glm::vec3 pathDir = nodes[1] - nodes[0];
-        glm::vec3 peiceDir = nodes[1] - workpieceCentroid;
-        //逆时针
-        if (glm::cross(pathDir, peiceDir).z > 0)
+        if (setting.direction == MillingDirection::Any)
         {
-            if (setting.direction == MillingDirection::CCW)
+            glm::vec3 start = layer->GetStart();
+            glm::vec3 end = layer->GetEnd();
+            if (glm::distance(start, toolPos) > glm::distance(end, toolPos))
             {
                 layer->Reverse();
+                layer->UpdatePaintData();
                 std::reverse(nodes.begin(),nodes.end());
+                std::swap(start, end);
             }
+            toolPos = end;
         }
-        //顺时针
-        if (glm::cross(pathDir, peiceDir).z < 0)
+        else
         {
-            if (setting.direction == MillingDirection::CW)
+            if (ultimatePath.size() > 0)
             {
-                layer->Reverse();
-                std::reverse(nodes.begin(), nodes.end());
-            }
-        }
-        
-        if (ultimatePath.size() > 0)
-        {
-            Path64 marchingline;
-            glm::vec3 start = ultimatePath.back();
-            glm::vec3 end = *nodes.begin();
+                Path64 marchingline;
+                glm::vec3 start = ultimatePath.back();
+                glm::vec3 end = *nodes.begin();
 
-            //产生碰撞,插补点
-            marchingline.emplace_back(start.x * PRECISION ,start.y * PRECISION);
-            marchingline.emplace_back(end.x * PRECISION, end.y * PRECISION);
-            if (GetIntersections(marchingline, involute_sequence[1]).size() > 0)
-            {
-                glm::vec3 interp = glm::vec3(max(start.x, end.x), max(start.y, end.y), 0.0f);
-                ultimatePath.push_back(interp);
-
+                //产生碰撞,插补点
+                marchingline.emplace_back(start.x * PRECISION ,start.y * PRECISION);
+                marchingline.emplace_back(end.x * PRECISION, end.y * PRECISION);
+                if (GetIntersections(marchingline, involute_sequence[1]).size() > 0)
                 {
-                    std::sprintf(buffer, "N%03d G00 X%f Y%f\n", g_MScontext.ncstep, max(start.x, end.x), max(start.y, end.y));
-                    gcode += buffer;
-                    g_MScontext.ncstep++;
-                    GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-                    GCodeController::GetController()->AddRecord(rec);
+                    glm::vec3 interp = glm::vec3(max(start.x, end.x), max(start.y, end.y), 0.0f);
+                    ultimatePath.push_back(interp);
+
+                    {
+                        std::sprintf(buffer, "N%03d G00 X%f Y%f\n", g_MScontext.ncstep, max(start.x, end.x), max(start.y, end.y));
+                        gcode += buffer;
+                        g_MScontext.ncstep++;
+                        GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+                        GCodeController::GetController()->AddRecord(rec);
+                    }
                 }
             }
         }
@@ -156,12 +161,30 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         delete layer;
     }
 
-    ultimatePoly->SetParameter(ultimatePath,false);
+    s_roughingPoly = ultimatePoly;
+    if (ultimatePath.size() > 0)
+    {
+        ultimatePoly->SetParameter(ultimatePath,false);
+    }
+    else
+    {
+        clipSections = GetIntersections(allowancePath, workBox);
+        std::vector<glm::vec3> nodes;
+        for (const Path64& clipping : clipSections)
+        {
+            for (const Point64& pt : clipping)
+            {
+                nodes.push_back({ (float)pt.x / PRECISION,(float)pt.y / PRECISION,0.0f });
+            }
+        }
+        ultimatePoly->SetParameter(nodes, false);
+        gcode += ultimatePoly->ToNcInstruction(&g_MScontext, true);
+    }
     ultimatePoly->attribColor = g_yellowColor;
     ultimatePoly->ResetColor();
-    g_canvasInstance->GetSketchShared()->AddEntity(ultimatePoly);
+    g_canvasInstance->GetSketchShared()->AddEntity(s_roughingPoly);
     ultimatePoly->SelfAmendArcSection();
-    
+
     delete originShape;
     delete offsetAllowance;
 

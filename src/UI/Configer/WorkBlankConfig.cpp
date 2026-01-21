@@ -88,19 +88,6 @@ WorkBlankConfigPage::WorkBlankConfigPage()
 			rectangle->isSelected = true;
 			g_canvasInstance->GetSketchShared()->AddEntity(rectangle);
 			WorkBlankConfigPage::s_attachedRing->workBlank = rectangle;
-			RoughingParamSettings roughingParam;
-			roughingParam.direction = MillingDirection::CCW;
-			double toolRadius = 10;
-			g_MScontext.toolPos = glm::vec3(width + toolRadius,height + toolRadius,0.0f);
-			g_MScontext.wcsAnchor = glm::vec3(0, 0, 0);
-			g_MScontext.ncstep = 0;
-			
-			std::string gcode;
-			char buffer[256];
-			std::sprintf(buffer,"N%03d G81 X%f Y%f\n",g_MScontext.ncstep,g_MScontext.toolPos.x, g_MScontext.toolPos.y);
-			gcode += buffer;
-			gcode += RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing,rectangle->bbox, roughingParam);
-			GCodeEditor::GetInstance()->setText(QString::fromStdString(gcode));
 		}
 	});
 
