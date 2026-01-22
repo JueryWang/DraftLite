@@ -6,7 +6,7 @@
 #include "UI/GCodeEditor.h"
 #include "Graphics/Arc2D.h"
 #include "Graphics/OCS.h"
-#include "Algorithm/CircleDetector.h"
+#include "Algorithm/ClusterAlgo.h"
 
 std::vector<glm::vec3> intermidatePolygon;
 

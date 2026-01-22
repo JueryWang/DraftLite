@@ -132,7 +132,7 @@ RoughingConfigPage::RoughingConfigPage()
 			std::sprintf(buffer, "N%03d G81 X%f Y%f\n", g_MScontext.ncstep, g_MScontext.toolPos.x - g_MScontext.wcsAnchor, g_MScontext.toolPos.y - g_MScontext.wcsAnchor);
 			gcode += buffer;
 			gcode += RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing, WorkBlankConfigPage::s_attachedRing->workBlank->bbox, RoughingConfigPage::s_setting);
-			GCodeEditor::GetInstance()->CleanCache();
+			//GCodeEditor::GetInstance()->CleanCache();
 			GCodeEditor::GetInstance()->setText(QString::fromStdString(gcode));
 		});
 

@@ -29,7 +29,11 @@ typedef bg::model::box<BoostPoint> BoostBox;
 typedef bg::model::multi_polygon<BoostPolygon> multi_polygon;
 typedef std::pair<bg::model::box<BoostPoint>, int> rtree_entry;
 
-constexpr double PI = 3.14159265358979323846;
+#ifdef PI
+#undef PI
+#endif
+#define PI 3.14159265358979323846
+
 constexpr double deg2Rad = PI / 180.0f;
 constexpr double rad2Deg = 180.0 / PI;
 constexpr float epsilon = 1e-6;
@@ -321,7 +325,6 @@ namespace CNCSYS
 			if (abs(cross.z) < epsilon * MaxLen)
 				return GeomDirection::AtLine;
 		}
-
 
 		static double NormalizeAngle(double angle)
 		{

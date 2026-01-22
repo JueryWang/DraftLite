@@ -1,4 +1,5 @@
 #include "Common/OpenGLContext.h"
+#include <random>
 
 namespace CNCSYS
 {
@@ -43,5 +44,16 @@ namespace CNCSYS
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
 		return true;
+	}
+	glm::vec4 GetRandomColor()
+	{
+		static std::random_device rd;
+		static std::mt19937 gen(rd());
+
+		// 2. 定义分布范围 [0.0, 1.0)
+		// 如果需要包含 1.0，可以使用 std::nextafter(1.0, 2.0)
+		std::uniform_real_distribution<double> dis(0.0, 1.0);
+
+		return glm::vec4(dis(gen), dis(gen), dis(gen), 1.0f);
 	}
 }

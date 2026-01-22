@@ -16,6 +16,8 @@
 #include "Controls/ScadaScheduler.h"
 #include "UI/GCodeEditor.h"
 #include "UI/MainLayer.h"
+#include "UI/Configer/RoughingConfig.h"
+#include "UI/Configer/WorkBlankConfig.h"
 #include "IO/Utils.h"
 #include "Common/ProgressInfo.h"
 #include "Algorithm/PartClassifier.h"
@@ -100,7 +102,7 @@ namespace CNCSYS
 		}
 		catch (...)
 		{
-			std::cout << __FUNCTIONW__ << std::endl;
+			std::cout << "Exec Error"<<__FUNCTIONW__ << std::endl;
 		}
 		e = nullptr;
 	}
@@ -159,6 +161,8 @@ namespace CNCSYS
 		{
 			mainCanvas->ResetCanvas();
 		}
+
+		WorkBlankConfigPage::s_attachedRing = nullptr;
 	}
 
 	void SketchGPU::AddPath(Path2D* p)
@@ -417,27 +421,6 @@ namespace CNCSYS
 					findEntity = filteredEntity[i];
 					findIndex = filteredEntity[i]->boostPath.size()-1;
 				}
-				//for (size_t j = 0; j < filteredEntity[i]->boostPath.size(); j++)
-				//{
-				//	distance = bg::distance(targetSearch, filteredEntity[i]->boostPath[j]);
-				//	if (distance < minDistance)
-				//	{
-				//		minDistance = distance;
-				//		result = filteredEntity[i]->boostPath[j];
-				//		findEntity = filteredEntity[i];
-				//		findIndex = j;
-				//	}
-				//}
-				//glm::vec3 transformedCentroid = filteredEntity[i]->GetTransformedCentroid();
-				//BoostPoint centroid(transformedCentroid.x, transformedCentroid.y);
-				//distance = bg::distance(targetSearch, centroid);
-				//if (distance < minDistance)
-				//{
-				//	minDistance = distance;
-				//	result = centroid;
-				//	findEntity = filteredEntity[i];
-				//	findIndex = -1;
-				//}
 			}
 		}
 		if (minDistance < captureRadius)

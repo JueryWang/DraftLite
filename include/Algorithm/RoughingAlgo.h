@@ -10,7 +10,10 @@ class RoughingAlgo
 {
 public:
 	static std::string GetRoughingPath(EntRingConnection* shape,const AABB& workblank,RoughingParamSettings setting);
-	static std::vector<Path64> GetIntersections(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& pathB);
+	static Paths64 GetIntersections(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& pathB);
+private:
+	//空走路径碰到工件,则插点回避碰撞
+	static void InterpToEscape(const glm::vec3 start,const glm::vec3 end,std::vector<glm::vec3> &path, int PRECISION,const Path64 barrier,std::string& gcode);
 
 	static CNCSYS::EntityVGPU* s_roughingPoly;
 };

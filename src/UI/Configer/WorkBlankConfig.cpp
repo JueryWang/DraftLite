@@ -5,6 +5,7 @@
 #include "Graphics/Sketch.h"
 #include "Graphics/Canvas.h"
 #include "Algorithm/RoughingAlgo.h"
+#include <QMessageBox>
 #include <QGridLayout>
 
 using namespace CNCSYS;
@@ -63,6 +64,10 @@ WorkBlankConfigPage::WorkBlankConfigPage()
 
 			widthEdit->setText(QString::number(width));
 			heightEdit->setText(QString::number(height));
+		}
+		else
+		{
+			QMessageBox::warning(nullptr,"警告","未指定工件");
 		}
 	});
 

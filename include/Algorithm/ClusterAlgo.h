@@ -43,3 +43,28 @@ private:
 	static const int UNCLASSIFIED = -2;
 	static const int NOISE = -1;
 };
+
+
+struct PointClusterNode
+{
+public:
+	glm::vec3 pt;
+	CNCSYS::EntityVGPU* entityParent;
+	int cluster_id = -1;
+
+	PointClusterNode(const glm::vec3& _pt, CNCSYS::EntityVGPU* _parent) : pt(_pt), entityParent(_parent) {}
+};
+
+//K-Means
+class PointRegionCluster
+{
+public:
+	PointRegionCluster(const std::vector<PointClusterNode>& _points);
+	~PointRegionCluster();
+
+public:
+	static std::map<int, std::vector<PointClusterNode>> kmeans(std::vector<PointClusterNode>& points,std::vector<PointClusterNode>& init_center, int k, int max_iter = 100);
+
+private:
+	std::vector<PointClusterNode> points;
+};

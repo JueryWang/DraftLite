@@ -69,4 +69,6 @@ namespace CNCSYS
 	};
 
 	bool InitializeOpenGL();
+
+	glm::vec4 GetRandomColor();
 }
