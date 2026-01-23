@@ -3,7 +3,6 @@
 #include "ProcessCraft.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
-
 #include <boost/geometry.hpp>
 #include <boost/polygon/polygon.hpp>
 #include <boost/geometry/geometries/multi_polygon.hpp>

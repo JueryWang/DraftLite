@@ -20,7 +20,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
 
     std::string gcode;
 
-    int PRECISION = (int)(1.0 / setting.tolerance);
+    int PRECISION = 1000;
     Polyline2DGPU* ultimatePoly = new Polyline2DGPU();
     //������
     glm::vec3 workpieceCentroid = shape->centroid;
@@ -91,7 +91,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             clippingNodes.clear();
         }
         firstOffset = false;
-
+                        
     } while (clipSections.size());
 
     //首尾延长刀具半径值
@@ -102,46 +102,56 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         layer->UpdatePaintData();
     }
     std::reverse(layerPolys.begin(), layerPolys.end());
-
     //先聚类,区分出各截断区域
     std::map<int, std::vector<PointClusterNode>> pointSet = PointRegionCluster::kmeans(clusterNodes, clusterInitCenter, clusterInitCenter.size(), 10);
-    char buffer[256];
-    bool toolInited = false;
+    //建图
+    VisibilityGraph graph;
+    //添加障碍轮廓
+    std::vector<Point64> ObstacleNodes;
+    for (const Point64& pt : involute_sequence[0])
+    {
+        ObstacleNodes.push_back(pt);
+    }
+    graph.addObstacle(ObstacleNodes);
+    for (const Point64& pt : involute_sequence.back())
+    {
+        graph.addExtraPoint(pt);
+    }
 
+    bool toolInited = false;
+    glm::vec3 lastEnd;
+    char buffer[256];
     for (auto& pair : pointSet)
     {
+        //由内往外翻转为由外向内
+        std::reverse(pair.second.begin(), pair.second.end());
+        if(toolInited)
+        {
+            Path64 marchingline;
+            glm::vec3 start = lastEnd;
+            glm::vec3 end = pair.second[0].entityParent->GetStart();
+            marchingline.emplace_back(start.x * PRECISION, start.y * PRECISION);
+            marchingline.emplace_back(end.x * PRECISION, end.y * PRECISION);
+            auto clipSections = GetIntersections(marchingline, involute_sequence[0]);
+            if (clipSections.size() > 0)
+            {
+                InterpToEscape(start, end, graph, gcode);
+            }
+        }
+        toolInited = true;
+
         std::vector<glm::vec3> sectionPath;
         Polyline2DGPU* sectionPoly = new Polyline2DGPU();
         glm::vec4 randomColor = GetRandomColor();
 
         for (PointClusterNode& pNode : pair.second)
         {
-            pNode.entityParent->attribColor = randomColor;
-            pNode.entityParent->ResetColor();
-
             EntityVGPU* layer = pNode.entityParent;
             if (setting.direction == MillingDirection::CW)
             {
                 layer->Reverse();
             }
             auto nodes = layer->GetTransformedNodes();
-            if (!toolInited)
-            {
-                g_MScontext.toolPos = nodes[0];
-                toolInited = true;
-            }
-
-            {
-                Path64 marchingline;
-                glm::vec3 start = g_MScontext.toolPos;
-                glm::vec3 end = nodes[0];
-                marchingline.emplace_back(start.x* PRECISION, start.y* PRECISION);
-                marchingline.emplace_back(end.x* PRECISION, end.y* PRECISION);
-                if (GetIntersections(marchingline, involute_sequence[0]).size() > 0)
-                {
-                    InterpToEscape(start, end, sectionPath, PRECISION, involute_sequence[0], gcode);
-                }
-            }
 
             if (setting.direction == MillingDirection::Any)
             {
@@ -155,11 +165,12 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     std::swap(start, end);
                 }
             }
-            g_MScontext.toolPos = nodes.back();
+            lastEnd = nodes.back();
             gcode += layer->GenNcSection(&g_MScontext, true);
             sectionPath.insert(sectionPath.end(), nodes.begin(), nodes.end());
             delete layer;
         }
+
 
         if (sectionPath.size() > 0)
         {
@@ -209,40 +220,17 @@ Paths64 RoughingAlgo::GetIntersections(const Clipper2Lib::Path64& pathA, const C
     return solution_open;
 }
 
-void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, std::vector<glm::vec3>& path,int PRECISION,const Path64 barrier, std::string& gcode)
+void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, VisibilityGraph& vGraph, std::string& gcode)
 {
-    char buffer[256];
-    Path64 marchingline;
-    glm::vec3 interp = glm::vec3(max(start.x, end.x), max(start.y, end.y), 0.0f);
-    bool interpAdded = false;
+    Polyline2DGPU* interpPoly = new Polyline2DGPU();
 
-    if (PointInPolygon(Point64(interp.x * PRECISION, interp.y * PRECISION), barrier) == PointInPolygonResult::IsOutside)
-    {
-        std::sprintf(buffer, "N%03d G00 X%f Y%f\n", g_MScontext.ncstep, interp.x - g_MScontext.wcsAnchor.x, interp.y - g_MScontext.wcsAnchor.y);
-        gcode += buffer;
-        g_MScontext.ncstep++;
-        GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-        GCodeController::GetController()->AddRecord(rec);
-        gcode += buffer;
-        interpAdded = true;
-    }
-    else
-    {
-        interp = glm::vec3(min(start.x, end.x), min(start.y, end.y), 0.0f);
-        if(PointInPolygon(Point64(interp.x * PRECISION, interp.y * PRECISION), barrier) == PointInPolygonResult::IsOutside)
-        {
-            std::sprintf(buffer, "N%03d G00 X%f Y%f\n", g_MScontext.ncstep, interp.x - g_MScontext.wcsAnchor.x, interp.y - g_MScontext.wcsAnchor.y);
-            gcode += buffer;
-            g_MScontext.ncstep++;
-            GCodeRecord rec(std::string(buffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-            GCodeController::GetController()->AddRecord(rec);
-            gcode += buffer;
-            interpAdded = true;
-        }
-    }
-    if (!interpAdded)
-    {
-        std::cout << "Interp Not Added!" << std::endl;
-    }
-    path.push_back(interp);
+    vGraph.buildGraph(Point64(start.x*1000,start.y*1000), Point64(end.x * 1000, end.y * 1000));
+
+    std::vector<glm::vec3> path = vGraph.solve();
+    path.insert(path.begin(),start);
+    path.push_back(end);
+    interpPoly->SetParameter(path, false);
+    interpPoly->attribColor = GetRandomColor();
+    interpPoly->ResetColor();
+    g_canvasInstance->GetSketchShared()->AddEntity(interpPoly);
 }
