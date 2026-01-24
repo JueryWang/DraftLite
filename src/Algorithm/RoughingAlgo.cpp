@@ -80,10 +80,11 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                 sectionLine->attribColor = g_yellowColor;
                 sectionLine->ResetColor();
                 layerPolys.push_back(sectionLine);
-                clusterNodes.push_back(PointClusterNode(sectionLine->centroid, involute_sequence.size(), sectionLine));
+                //最内层0
+                clusterNodes.push_back(PointClusterNode(sectionLine->centroid, involute_sequence.size()-1, sectionLine));
                 if (firstOffset)
                 {
-                    clusterInitCenter.push_back(PointClusterNode(sectionLine->centroid, involute_sequence.size(), sectionLine));
+                    clusterInitCenter.push_back(PointClusterNode(sectionLine->centroid, involute_sequence.size()-1, sectionLine));
                 }
             }
             clippingNodes.clear();
@@ -91,7 +92,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         firstOffset = false;
 
     } while (clipSections.size());
-
+    
     //首尾延长刀具半径值
     for (Polyline2DGPU* layer : layerPolys)
     {
@@ -100,6 +101,12 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         layer->UpdatePaintData();
     }
     std::reverse(layerPolys.begin(), layerPolys.end());
+    
+    //翻转,最外层层级为0
+    for (PointClusterNode& pointCluster : clusterNodes)
+    {
+        pointCluster.clippingLayer = (involute_sequence.size()-1) - pointCluster.clippingLayer;
+    }
     std::reverse(involute_sequence.begin(),involute_sequence.end());
     //先聚类,区分出各截断区域
     std::map<int, std::vector<PointClusterNode>> pointSet = PointRegionCluster::kmeans(clusterNodes, clusterInitCenter, clusterInitCenter.size(), 10);
@@ -113,11 +120,19 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     {
         ObstacleNodes.push_back(pt);
     }
+    Polyline2DGPU* boundary = new Polyline2DGPU();
+    std::vector<glm::vec3> boundNodes;
+
     graph.addObstacle(ObstacleNodes);
     for (const Point64& pt : involute_sequence[0])
     {
         graph.addExtraPoint(pt);
+        boundNodes.push_back(glm::vec3(pt.x/1000.0f,pt.y/1000.0f,0.0f));
     }
+    boundary->SetParameter(boundNodes,false);
+    boundary->attribColor = GetRandomColor();
+    boundary->ResetColor();
+    g_canvasInstance->GetSketchShared()->AddEntity(boundary);
 
     bool toolInited = false;
     glm::vec3 lastEnd;
@@ -181,6 +196,39 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     g_MScontext.ncstep++;
                     g_canvasInstance->GetSketchShared()->AddEntity(line);
                 }
+            }
+            else if (toolInited)
+            {
+                int collisionLayer = (pair.second[i].clippingLayer+1) > (involute_sequence.size() - 1) ? (involute_sequence.size() - 1) : (pair.second[i].clippingLayer + 1);
+                Path64 marchingline;
+                glm::vec3 lineS = lastEnd;
+                glm::vec3 lineEd = start;
+                marchingline.emplace_back(lineS.x* PRECISION, lineS.y* PRECISION);
+                marchingline.emplace_back(lineEd.x* PRECISION, lineEd.y* PRECISION);
+                
+                if (GetIntersections(marchingline, involute_sequence[collisionLayer]).size() > 0)
+                {
+                    Polyline2DGPU* newSection = new Polyline2DGPU();
+                    newSection->SetParameter(sectionPath, false);
+                    newSection->attribColor = g_yellowColor;
+                    newSection->ResetColor();
+                    g_canvasInstance->GetSketchShared()->AddEntity(newSection);
+                    sectionPath.clear();
+
+                    graph.ClearGraph();
+                    std::vector<Point64> ObstacleNodes;
+                    for (const Point64& pt : involute_sequence[collisionLayer])
+                    {
+                        ObstacleNodes.push_back(pt);
+                    }
+                    graph.addObstacle(ObstacleNodes);
+                    for (const Point64& pt : involute_sequence[0])
+                    {
+                        graph.addExtraPoint(pt);
+                    }
+                    InterpToEscape(lineS, lineEd, graph, gcode);
+                }
+
             }
 
             lastEnd = nodes.back();

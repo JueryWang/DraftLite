@@ -86,7 +86,7 @@ void VisibilityGraph::ClearGraph()
     nodes.clear();
 }
 
-//Dijkstra 求最短路径
+//bfs求可达路径
 std::vector<glm::vec3> VisibilityGraph::solve()
 {
     int n = nodes.size();
