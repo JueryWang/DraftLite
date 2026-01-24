@@ -16,5 +16,5 @@ private:
 	//空走路径碰到工件,则插点回避碰撞
 	static void InterpToEscape(const glm::vec3 start,const glm::vec3 end, VisibilityGraph& vGraph,std::string& gcode);
 
-	static CNCSYS::EntityVGPU* s_roughingPoly;
+	static std::vector<CNCSYS::EntityVGPU*> s_cache;
 };

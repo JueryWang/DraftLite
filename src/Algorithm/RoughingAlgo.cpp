@@ -8,25 +8,28 @@
 #include <map>
 #include <chrono>
 
-CNCSYS::EntityVGPU * RoughingAlgo::s_roughingPoly;
+std::vector<CNCSYS::EntityVGPU*> RoughingAlgo::s_cache;
 
 std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
 {
-    if (RoughingAlgo::s_roughingPoly != nullptr)
+    if (RoughingAlgo::s_cache.size())
     {
-        g_canvasInstance->GetSketchShared()->EraseEntity(s_roughingPoly);
-        delete RoughingAlgo::s_roughingPoly;
+        for (EntityVGPU* path : RoughingAlgo::s_cache)
+        {
+            g_canvasInstance->GetSketchShared()->EraseEntity(path);
+            delete path;
+        }
+        RoughingAlgo::s_cache.clear();
     }
 
     std::string gcode;
 
     int PRECISION = 1000;
-    Polyline2DGPU* ultimatePoly = new Polyline2DGPU();
-    //������
     glm::vec3 workpieceCentroid = shape->centroid;
     //����������ƫ��
     Polyline2DGPU* originShape = static_cast<Polyline2DGPU*>(shape->ToPolyline());
     Polyline2DGPU* offsetAllowance = static_cast<Polyline2DGPU*>(originShape->Offset(setting.allowance, 1000));
+    //余量轮廓
     Clipper2Lib::Path64 allowancePath;
     for (const BoostPoint& p : offsetAllowance->boostPath)
     {
@@ -120,19 +123,11 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     {
         ObstacleNodes.push_back(pt);
     }
-    Polyline2DGPU* boundary = new Polyline2DGPU();
-    std::vector<glm::vec3> boundNodes;
-
     graph.addObstacle(ObstacleNodes);
     for (const Point64& pt : involute_sequence[0])
     {
         graph.addExtraPoint(pt);
-        boundNodes.push_back(glm::vec3(pt.x/1000.0f,pt.y/1000.0f,0.0f));
     }
-    boundary->SetParameter(boundNodes,false);
-    boundary->attribColor = GetRandomColor();
-    boundary->ResetColor();
-    g_canvasInstance->GetSketchShared()->AddEntity(boundary);
 
     bool toolInited = false;
     glm::vec3 lastEnd;
@@ -195,6 +190,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     gcode += buffer;
                     g_MScontext.ncstep++;
                     g_canvasInstance->GetSketchShared()->AddEntity(line);
+                    s_cache.push_back(line);
                 }
             }
             else if (toolInited)
@@ -213,15 +209,18 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     newSection->attribColor = g_yellowColor;
                     newSection->ResetColor();
                     g_canvasInstance->GetSketchShared()->AddEntity(newSection);
+                    s_cache.push_back(newSection);
                     sectionPath.clear();
 
                     graph.ClearGraph();
-                    std::vector<Point64> ObstacleNodes;
-                    for (const Point64& pt : involute_sequence[collisionLayer])
+                    if (collisionLayer == (involute_sequence.size() - 1))
                     {
-                        ObstacleNodes.push_back(pt);
+                        graph.addObstacle(allowancePath);
                     }
-                    graph.addObstacle(ObstacleNodes);
+                    else
+                    {
+                        graph.addObstacle(involute_sequence[collisionLayer]);
+                    }
                     for (const Point64& pt : involute_sequence[0])
                     {
                         graph.addExtraPoint(pt);
@@ -260,6 +259,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         sectionPoly->attribColor = g_yellowColor;
         sectionPoly->ResetColor();
         g_canvasInstance->GetSketchShared()->AddEntity(sectionPoly);
+        s_cache.push_back(sectionPoly);
     }
 
     delete originShape;
@@ -307,6 +307,7 @@ void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, Vi
             g_MScontext.ncstep++;
         }
         g_canvasInstance->GetSketchShared()->AddEntity(interpPoly);
+        s_cache.push_back(interpPoly);
     }
     else
     {
@@ -315,5 +316,6 @@ void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, Vi
         line->attribColor = g_redColor;
         line->ResetColor();
         g_canvasInstance->GetSketchShared()->AddEntity(line);
+        s_cache.push_back(line);
     }
 }
