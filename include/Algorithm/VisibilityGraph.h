@@ -28,14 +28,14 @@ public:
 	VisibilityGraph();
 	~VisibilityGraph();
 	// 添加障碍物(多边形)
-	void addObstacle(const std::vector<Point64>& polygon);
+	void addObstacle(const Path64& polygon);
 	// 添加额外的可达点（Steiner Points）
 	void addExtraPoint(const Point64& p);
 	//构建图结构
 	void buildGraph(const Point64& start, const Point64& end);
+	void ClearGraph();
 
 	std::vector<glm::vec3> solve();
-
 private:
 	//可视性检查
 	bool is_visible(const Point64& p1, const Point64& p2) const;

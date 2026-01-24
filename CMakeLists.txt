@@ -33,6 +33,7 @@ find_package(CURL REQUIRED)
 find_package(QT NAMES Qt5 Qt6 COMPONENTS OpenGL Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Sql Xml REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Sql Xml)
+find_package(OpenMP REQUIRED)
 
 include_directories(include)
 include_directories(${Qt${QT_VERSION_MAJOR}_INCLUDE_DIRS})
@@ -328,6 +329,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:${BOOST_LIBRARYDIR}/libboost_serialization-vc143-mt-x64-1_82.lib>
     open62541::open62541
     CURL::libcurl
+    OpenMP::OpenMP_CXX
 )
 
 install(
