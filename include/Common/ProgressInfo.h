@@ -2,6 +2,9 @@
 #include "glm/glm.hpp"
 #include "Graphics/AABB.h"
 #include "Controls/GlobalPLCVars.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include <Auth/dongle/D8.h>
 #include <mutex>
 #include <QMainWindow>
@@ -155,8 +158,13 @@ extern AuthInfo g_authInfo;
 extern char DevicePath[MAX_PATH];
 extern GeomDirection g_defaultDir;
 extern GeomDirection g_defaultDirReverse;
+extern std::shared_ptr<spdlog::logger> g_file_logger;
 
 void InitPLConfig();
 void InitLogger();
 int InitProgressContext();
 int CheckAuth(bool popUpMsg = true);
+
+#define LOG_FILE_INFO(...) g_file_logger->info(__VA_ARGS__)
+#define LOG_FILE_ERROR(...) g_file_logger->error(__VA_ARGS__)
+#define LOG_FILE_WARN(...) g_file_logger->warn(__VA_ARGS__)

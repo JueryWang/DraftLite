@@ -26,8 +26,9 @@ public:
     void ExtendStart(float distance);
     //延终点外扩指定距离
     void ExtendEnd(float distance);
+    //识别到Arc段,替换bulge
+    void SelfFitArc();
     //自检查是否存在圆弧段,修改bulge
-    void SelfAmendArcSection();
     virtual void UpdatePaintData() override;
     virtual EntityType GetType() const override { return EntityType::Polyline; }
     virtual glm::vec3 GetStart() override;

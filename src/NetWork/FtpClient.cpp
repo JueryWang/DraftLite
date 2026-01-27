@@ -91,6 +91,7 @@ void FtpClient::UploadFile(const QString& content, const QString& ftpFileDir)
 		if (res != CURLE_OK)
 		{
 			std::cerr << "upload failed: " << curl_easy_strerror(res) << std::endl;
+			g_file_logger->critical("上传CNC文件失败:,error code:{}  ||调用函数{}", curl_easy_strerror(res), __FUNCTION__);
 		}
 	}
 	fclose(local_file);
@@ -154,11 +155,10 @@ void FtpClient::CleanRemoteDirectory(const std::string& fileDir)
 
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK) {
-			std::cerr << "[CURL ERROR] QUOTE command error：" << curl_easy_strerror(res) << std::endl;
 			// 可选：获取服务器返回的具体错误码
 			long responseCode = 0;
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-			std::cerr << "[FTP ResponseNumer]：" << responseCode << std::endl;
+			g_file_logger->warn("清空FTP文件夹失败:{},error code:{}  ||调用函数{}", curl_easy_strerror(res), responseCode,__FUNCTION__);
 		}
 		// Cleanup
 		curl_slist_free_all(commands);
@@ -235,7 +235,7 @@ int ftp_get_list(CURL* curl, const char* ftp_url, struct FtpFile* list)
 		// 执行请求
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK) {
-			fprintf(stderr, "获取列表失败: %s\n", curl_easy_strerror(res));
+			g_file_logger->warn("清空FTP文件夹失败:{},error code:{}  ||调用函数{}", curl_easy_strerror(res), __FUNCTION__);
 			return 0;
 		}
 	}

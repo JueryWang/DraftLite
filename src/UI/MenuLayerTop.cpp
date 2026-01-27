@@ -22,6 +22,8 @@
 #include <QApplication>
 #include <QMessageBox>
 
+#include "clipper2/clipper.h"
+#include "Graphics/Primitives.h"
 using namespace CNCSYS;
 
 MenuLayerTop::MenuLayerTop(OverallWindow* parent)
@@ -45,8 +47,8 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	QAction* actImportScene = fileMenu->addAction("导入工程");
 	connect(actImportScene, &QAction::triggered, this, &MenuLayerTop::OnImportScene);
 
-	QMenu* editMenu = topMenus->addMenu(tr("编辑"));
-	QMenu* captureMenu = editMenu->addMenu(tr("开启图元捕捉"));
+	QMenu* settingMenu = topMenus->addMenu(tr("设置"));
+	QMenu* captureMenu = settingMenu->addMenu(tr("开启图元捕捉"));
 	actEntityCapture = captureMenu->addAction(tr("开启图元捕捉")); 
 	actEntityCapture->setCheckable(true);
 	actEntityCapture->setChecked(true);
@@ -60,7 +62,16 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		actEntityCapture->setChecked(false);
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Point);
 		});
-	QMenu* showModeMenu = editMenu->addMenu(tr("显示"));
+	QMenu* cncOptimizeMenu = settingMenu->addMenu(tr("CNC优化"));
+	QAction* arcFitConfig = cncOptimizeMenu->addAction(tr("弧段优化"));
+	connect(arcFitConfig, &QAction::triggered, []() {
+		Polyline2DGPU* polyline = static_cast<Polyline2DGPU*>(g_canvasInstance->GetSelectedEntitys()[0]->ringParent->ToPolyline());
+		Polyline2DGPU* offseted = static_cast<Polyline2DGPU*>(polyline->Offset(5.0f,1000));
+		g_canvasInstance->GetSketchShared()->AddEntity(offseted);
+		offseted->SelfFitArc();
+	});
+
+	QMenu* showModeMenu = settingMenu->addMenu(tr("显示"));
 	actShowArrow = showModeMenu->addAction(tr("方向箭头"));
 	actShowArrow->setCheckable(true);
 	connect(actShowArrow, &QAction::triggered, [&]() {
@@ -68,7 +79,7 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showArrow = checked;
 		});
 
-	QAction* measureAct = editMenu->addAction(tr("测量"));
+	QAction* measureAct = settingMenu->addAction(tr("测量"));
 	connect(measureAct, &QAction::triggered, [&]() {
 			ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
 		});

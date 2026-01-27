@@ -471,6 +471,28 @@ namespace CNCSYS
 			return std::tuple<glm::vec3, float, float, float>(center, angleStart, angleEnd, radius);
 		}
 
+		static double GetCurvature(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2)
+		{
+			double a = glm::distance(p0, p1);
+			double b = glm::distance(p1, p2);
+			double c = glm::distance(p0, p2);
+			double s = (a + b + c) / 2;
+			double area = sqrt(s * (s - a) * (s - b) * (s - c));
+			return 4 * area / (a * b * c); // 曲率 = 1/半径
+		}
+
+		static double GetCurvatureRadius(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2)
+		{
+			double a = glm::distance(p0, p1);
+			double b = glm::distance(p1, p2);
+			double c = glm::distance(p0, p2);
+			double s = (a + b + c) / 2;
+			double area = sqrt(s * (s - a) * (s - b) * (s - c));
+			if (area < epsilon)
+				return std::numeric_limits<double>::infinity();
+			return (a * b * c) / (4 * area); // 半径
+		}
+
 		static glm::vec3 CatmullRomInterpolate(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, double t, double tau = 0.5)
 		{
 			double t2 = t * t;

@@ -51,30 +51,39 @@ std::vector<int> CircleDBSCAN::GetNeighbors(const std::vector<CircleClusterNode>
 
 double CircleDBSCAN::CircleSimilarity(const CircleClusterNode& c1, const CircleClusterNode& c2)
 {
-	float dx = c1.x - c2.x;
-	float dy = c1.y - c2.y;
-	float distance = (float)(sqrt(dx * dx + dy * dy));
+	double dx = static_cast<double>(c1.x) - c2.x;
+	double dy = static_cast<double>(c1.y) - c2.y;
+	double d = sqrt(dx * dx + dy * dy);
 
-	if (distance <= fabs(c1.radius - c2.radius))
-		return 0.0f;
+	double r1 = c1.radius;
+	double r2 = c2.radius;
 
-	if (distance <= fabs(c1.radius - c2.radius))
+	// 1. 完全分离 (纠正：应该是半径之和)
+	if (d >= r1 + r2) return 0.0;
+
+	// 2. 包含关系
+	if (d <= fabs(r1 - r2))
 	{
-		float smallerRadius = std::min(c1.radius,c2.radius);
-		float largerRadius = std::max(c1.radius,c2.radius);
-		return (smallerRadius * smallerRadius) / (largerRadius * largerRadius);
+		double rSmall = std::min(r1, r2);
+		double rLarge = std::max(r1, r2);
+		return (rSmall * rSmall) / (rLarge * rLarge);
 	}
-	// 计算相交面积
-	float r1 = c1.radius;
-	float r2 = c2.radius;
-	float d = distance;
 
-	float part1 = r1 * r1 * static_cast<float>(acos((d * d + r1 * r1 - r2 * r2) / (2 * d * r1)));
-	float part2 = r2 * r2 * static_cast<float>(acos((d * d + r2 * r2 - r1 * r1) / (2 * d * r2)));
-	float part3 = 0.5f * static_cast<float>(sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2)));
+	// 3. 相交逻辑 (只有在这里才执行)
+	double r1Sq = r1 * r1;
+	double r2Sq = r2 * r2;
 
-	float intersectionArea = part1 + part2 - part3;
-	float unionArea = static_cast<float>(M_PI) * (r1 * r1 + r2 * r2) - intersectionArea;
+	// 关键：防止 acos 越界
+	double cos1 = std::max(-1.0, std::min(1.0, (d * d + r1Sq - r2Sq) / (2 * d * r1)));
+	double cos2 = std::max(-1.0, std::min(1.0, (d * d + r2Sq - r1Sq) / (2 * d * r2)));
+
+	double part1 = r1Sq * acos(cos1);
+	double part2 = r2Sq * acos(cos2);
+	// 关键：防止 sqrt 负数
+	double part3 = 0.5 * sqrt(std::max(0.0, (-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2)));
+
+	double intersectionArea = part1 + part2 - part3;
+	double unionArea = M_PI * (r1Sq + r2Sq) - intersectionArea;
 
 	return intersectionArea / unionArea;
 }
@@ -83,34 +92,31 @@ void CircleDBSCAN::ExpandCluster(const std::vector<CircleClusterNode>& circles, 
 {
 	labels[circleIndex] = clusterId;
 
+	// 1. 在循环外维护哈希集合，避免重复创建
+	std::unordered_set<int> inSeedSet(neighbors.begin(), neighbors.end());
+
+	// 2. 这里的 index 模拟了队列的操作
 	int index = 0;
 	while (index < neighbors.size())
 	{
 		int currentIndex = neighbors[index];
 
-		if (labels[currentIndex] == UNCLASSIFIED)
-		{
+		if (labels[currentIndex] == NOISE) {
+			labels[currentIndex] = clusterId;
+		}
+		else if (labels[currentIndex] == UNCLASSIFIED) {
+			labels[currentIndex] = clusterId;
+
 			std::vector<int> currentNeighbors = GetNeighbors(circles, currentIndex);
 
-			//若当前点是核心点,将其邻域点加入待处理列表(去重)
-			if (currentNeighbors.size() >= minSamples)
-			{
-				std::unordered_set<int> neighborSet(neighbors.begin(), neighbors.end());
-				for (int n : currentNeighbors)
-				{
-					if (neighborSet.find(n) == neighborSet.end())
-					{
+			if (currentNeighbors.size() >= minSamples) {
+				for (int n : currentNeighbors) {
+					if (inSeedSet.insert(n).second) {
 						neighbors.push_back(n);
-						neighborSet.insert(n);
 					}
 				}
 			}
 		}
-
-		if (labels[currentIndex] == UNCLASSIFIED || labels[currentIndex] == NOISE) {
-			labels[currentIndex] = clusterId;
-		}
-
 		index++;
 	}
 }

@@ -9,13 +9,11 @@
 #include "Common/ProgressInfo.h"
 #include "NetWork/FtpClient.h"
 #include "NetWork/OPClient.h"
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/sinks/basic_file_sink.h"
 #include <QMessageBox>
 #include <QPushButton>
 #include <QClipBoard>
 #include <QGuiApplication>
+#include <fstream>
 
 using namespace CNCSYS;
 char DevicePath[MAX_PATH];
@@ -36,6 +34,7 @@ GeomDirection g_defaultDir = GeomDirection::CCW;
 GeomDirection g_defaultDirReverse = GeomDirection::CW;
 D8 g_dogKey;
 AuthInfo g_authInfo;
+std::shared_ptr<spdlog::logger> g_file_logger;
 
 void InitPLConfig()
 {
@@ -135,24 +134,23 @@ void InitPLConfig()
 
 void InitLogger()
 {
-	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	if (g_settings->value("Settings/Debug") == "Debug")
-	{
-		console_sink->set_level(spdlog::level::debug);
-	}
-	console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%t] %v");
-
-	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logger.log", true);
-	file_sink->set_level(spdlog::level::warn);
-
-	std::vector<spdlog::sink_ptr> sinks{ console_sink,file_sink };
-	auto logger = std::make_shared<spdlog::logger>("network_logger", sinks.begin(), sinks.end());
-	logger->set_level(spdlog::level::debug);  // 全局最低级别
-	spdlog::register_logger(logger);
+	g_file_logger = spdlog::basic_logger_mt("global_file_logger", "./logger.log", true);
+	g_file_logger->set_level(spdlog::level::trace);
+	// - 方式1：warn及以上级别立即flush（推荐）
+	g_file_logger->flush_on(spdlog::level::warn);
+	// - 方式2：也可设置每1秒自动flush（兜底）
+	spdlog::flush_every(std::chrono::seconds(1));
+	// 配置日志格式
+	g_file_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+	// 设置日志级别
+	g_file_logger->set_level(spdlog::level::trace);
+	// 错误级别立即刷新
+	g_file_logger->flush_on(spdlog::level::err);
 }
 
 int InitProgressContext()
 {
+	InitLogger();
 	QDir tempDir("./temp");
 	// 递归删除整个 temp 目录（包括所有内容和目录本身）
 	tempDir.removeRecursively();
@@ -165,7 +163,6 @@ int InitProgressContext()
 		CounterDownManager* counterDown = new CounterDownManager();
 	}
 	InitPLConfig();
-	InitLogger();
 	//{
 	FtpClient::SetFtpUrl("ftp://192.168.6.6:21");
 	FtpClient::CleanRemoteDirectory(g_ftpDir);

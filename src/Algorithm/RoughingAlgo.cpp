@@ -103,6 +103,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         layer->ExtendEnd(setting.toolRadius);
         layer->UpdatePaintData();
     }
+
     std::reverse(layerPolys.begin(), layerPolys.end());
     
     //翻转,最外层层级为0
@@ -118,12 +119,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     //初始障碍物,单个区域切割完成后更新
     Path64 Obstacle;
     //添加障碍轮廓
-    std::vector<Point64> ObstacleNodes;
-    for (const Point64& pt : involute_sequence.back())
-    {
-        ObstacleNodes.push_back(pt);
-    }
-    graph.addObstacle(ObstacleNodes);
+    graph.addObstacle(involute_sequence.back());
     for (const Point64& pt : involute_sequence[0])
     {
         graph.addExtraPoint(pt);
@@ -142,7 +138,6 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         Polyline2DGPU* sectionPoly = new Polyline2DGPU();
         glm::vec4 randomColor = GetRandomColor();
 
-        
         for (int i = 0; i < pair.second.size(); i++)
         {
             PointClusterNode pNode = pair.second[i];
@@ -233,9 +228,24 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             lastEnd = nodes.back();
             gcode += layer->GenNcSection(&g_MScontext, false);
             sectionPath.insert(sectionPath.end(), nodes.begin(), nodes.end());
+            //Paths64 line;
+            //line.push_back(MakePath({(int)(nodes[0].x * PRECISION),int(nodes[0].y * PRECISION),int(nodes.back().x * PRECISION),int(nodes.back().y * PRECISION)}));
+            //Paths64 removed = InflatePaths(line, setting.toolRadius, JoinType::Round, EndType::Round);
+            //auto dif = Difference({ workBox }, removed, FillRule::EvenOdd);
+            //workBox = dif[0];
             delete layer;
         }
         toolInited = true;
+
+        //Polyline2DGPU* remainedPoly = new Polyline2DGPU();
+        //std::vector<glm::vec3> remainPolyNodes;
+        //for (const Point64& pt : workBox)
+        //{
+        //    remainPolyNodes.push_back({ (float)pt.x / PRECISION,(float)pt.y / PRECISION,0.0f });
+        //}
+        //remainedPoly->attribColor = GetRandomColor();
+        //remainedPoly->ResetColor();
+        //g_canvasInstance->GetSketchShared()->AddEntity(remainedPoly);
 
 
         if (sectionPath.size() > 0)

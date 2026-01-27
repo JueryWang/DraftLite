@@ -1,11 +1,12 @@
 #include "Graphics/Polyline2D.h"
 #include "Graphics/Circle2D.h"
+#include "Graphics/Point2D.h"
 #include "Common/ProgressInfo.h"
 #include "Controls/GCodeController.h"
 #include "Graphics/Sketch.h"
-#include "UI/GCodeEditor.h"
 #include "Graphics/Arc2D.h"
 #include "Graphics/OCS.h"
+#include "UI/GCodeEditor.h"
 #include "Algorithm/ClusterAlgo.h"
 
 std::vector<glm::vec3> intermidatePolygon;
@@ -102,31 +103,23 @@ void Polyline2DGPU::ExtendEnd(float distance)
 	bulges.push_back(0.0f);
 	this->SetParameter(nodes, isClosed,bulges);
 }
-void Polyline2DGPU::SelfAmendArcSection()
+void Polyline2DGPU::SelfFitArc()
 {
-	std::vector<CircleClusterNode> clusters;
-	std::vector<glm::vec3> nodes = GetTransformedNodes();
-	CircleDBSCAN dbscan(0.6,5);
-
-	for (int i = 0; i < nodes.size() - 2; i++)
+	int windowsize = 5;
+	//根据曲率半径是否平稳变化来反应是否进入圆弧段
+	std::vector<glm::vec3> transformedNodes = GetTransformedNodes();
+	std::vector<double> curvatureRadius(transformedNodes.size()-2,0);
+	int size = transformedNodes.size();
+	double mean = 0.0;
+	for (int i = 0; i < (transformedNodes.size()-2); i++)
 	{
-		glm::vec3 center;
-		float angleStart;
-		float angleEnd;
-		float radius;
-		std::tie(center,angleStart,angleEnd,radius) = MathUtils::CalculateCircleByThreePoints(nodes[i],nodes[i+1],nodes[i+1]);
-		if (!(std::isnan(center.x) ||  std::isnan(center.y) || std::isnan(radius)))
-		{
-			clusters.emplace_back(this,center.x,center.y,radius,i,i+2);
-		}
+		float radius = MathUtils::GetCurvatureRadius(transformedNodes[i], transformedNodes[i+1], transformedNodes[i+2]);
+		curvatureRadius[i] = radius;
 	}
 
-	//std::vector<int> labels = dbscan.Fit(clusters);
-	//for (int i = 0; i < labels.size(); i++)
+	//for (int i = 0; i < curvatureRadius.size() - windowsize; i++)
 	//{
-	//	CircleClusterNode circleParams = clusters[labels[i]];
-	//	Circle2DGPU* circle = new Circle2DGPU(glm::vec3(circleParams.x, circleParams.y,0.0f),circleParams.radius);
-	//	g_canvasInstance->GetSketchShared()->AddEntity(circle);
+	//	
 	//}
 }
 void Polyline2DGPU::UpdatePaintData()
@@ -184,21 +177,6 @@ void Polyline2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 		shader->setVec4("PaintColor", color);
 		if (mode != RenderMode::Point)
 		{
-			if (isSelected)
-			{
-				float Xfactor = this->bbox.XRange() / ocsSys->canvasRange->XRange();
-				float Yfactor = this->bbox.YRange() / ocsSys->canvasRange->YRange();
-				float factorWidth = Xfactor * ocsSys->canvasWidth;
-				float factorHeight = Xfactor * ocsSys->canvasHeight;
-				//float baseScreenDash = (factorWidth /8.0f) * (0.6f);
-				//std::cout << "baseScreenDash = " << baseScreenDash << std::endl;
-				//float baseScreenGap = (factorWidth /8.0f) * (0.4f);
-				//std::cout << "baseScreenGap = " << baseScreenGap << std::endl;
-
-				//shader->setFloat("baseScreenDash", baseScreenDash);
-				//shader->setFloat("baseScreenGap", baseScreenGap);
-			}
-
 			glLineWidth(g_lineWidth);
 			glBindVertexArray(vao);
 			glDrawArrays(isClosed ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polylineBulgedSamples.size());
@@ -225,8 +203,10 @@ void Polyline2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 			}
 		}
 	}
-	//shader->setVec4("PaintColor", g_whiteColor);
-	//glDrawArrays(GL_POINTS, 0, 1);
+	g_pointShader->use();
+	g_pointShader->setMat4("model", worldModelMatrix);
+	g_pointShader->setVec4("PaintColor", g_whiteColor);
+	glDrawArrays(GL_POINTS, 0, 1);
 }
 void Polyline2DGPU::Move(const glm::vec3& offset)
 {

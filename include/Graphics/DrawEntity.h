@@ -228,7 +228,6 @@ namespace CNCSYS
 		}
 
 		EntityVGPU* ToPolyline();
-
 		void RepairStart();
 		void SetStartPoint(EntityVGPU* targetEntity, int index);
 		void SetEndPoint(EntityVGPU* targetEntity, int index);

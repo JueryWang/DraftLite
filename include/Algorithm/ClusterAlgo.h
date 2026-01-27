@@ -13,10 +13,11 @@ public:
 	float y;
 	float radius;
 	CNCSYS::EntityVGPU* entityParent = nullptr;
+	CNCSYS::EntityVGPU* entityCentroid = nullptr;
 	std::pair<int, int> indexRange;
 
-	CircleClusterNode(CNCSYS::EntityVGPU* ent = nullptr,float x_ = 0.0f, float y_ = 0.0f, float radius_ = 0.0f,int indexStart = 0,int indexEnd = 0)
-		: entityParent(ent),x(x_), y(y_), radius(radius_){
+	CircleClusterNode(CNCSYS::EntityVGPU* ent = nullptr, CNCSYS::EntityVGPU* center = nullptr,float x_ = 0.0f, float y_ = 0.0f, float radius_ = 0.0f,int indexStart = 0,int indexEnd = 0)
+		: entityParent(ent), entityCentroid(center),x(x_), y(y_), radius(radius_){
 		indexRange.first = indexStart;
 		indexRange.first = indexEnd;
 	}

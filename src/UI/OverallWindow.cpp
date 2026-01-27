@@ -11,6 +11,7 @@
 #include "UI/Components/HmiTemplateMsgBox.h"
 #include "UI/TaskListWindow.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
+#include "Common/ProgressInfo.h"
 #include <QApplication>
 #include <chrono> 
 #include <QVBoxLayout>
@@ -187,7 +188,10 @@ OverallWindow::~OverallWindow()
 {
 
 }
-
+void OverallWindow::closeEvent(QCloseEvent* event)
+{
+	g_file_logger->flush();
+}
 void OverallWindow::SetShow()
 {
 	mainWindow->GetCanvasPanel()->show();

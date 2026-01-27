@@ -56,6 +56,12 @@ struct RoughingParamSettings
 	MillingDirection direction;
 };
 
+struct ArcFitPramSettings
+{
+	float similarityThreshold;
+	int minCluster;
+};
+
 //struct CraftPreConfigDefines
 //{
 //	std::string alias;

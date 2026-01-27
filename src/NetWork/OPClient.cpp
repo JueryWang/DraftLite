@@ -26,6 +26,7 @@
 
 UA_BrowseRequest bReq;
 
+
 void OPClient::BrowseChildrenRecursive(UA_Client* client, const UA_NodeId* parentNodeId, int depth, int targetNameSapce, std::vector<std::string>& table) {
 	bReq.nodesToBrowseSize = 1;
 	bReq.nodesToBrowse[0].nodeId = *parentNodeId;
@@ -93,6 +94,7 @@ UA_StatusCode OPClient::ConnectToServer(const char* url)
 
 		if (curStatus != status)
 		{
+			g_file_logger->critical("PLC连接失败:,error code:{}  ||调用函数{}", UA_StatusCode_name(status), __FUNCTION__);
 			QMetaObject::invokeMethod(messageHandler, "handleOpcConnectFailed",
 				Qt::QueuedConnection,
 				Q_ARG(OPClient*, this));
@@ -350,6 +352,7 @@ void OPClient::WriteOpcSingle(TaskWriteValueParam* param)
 					Q_ARG(QString, hintValueStr),
 					Q_ARG(QString, QString::fromLocal8Bit(description))
 				));
+			g_file_logger->critical("写入节点{}失败:{},error code:{}  ||调用函数{}", param->tag, UA_StatusCode_name(status), __FUNCTION__);
 		}
 		curStatus = status;
 
@@ -432,8 +435,7 @@ void OPClient::InitDirTable(int ns, const std::string& directory)
 		auto endSearchNodes = std::chrono::system_clock::now();
 		auto searchDuration = endSearchNodes - startSearchNodes;
 		int searchCostsInMilliSec = std::chrono::duration_cast<std::chrono::milliseconds>(searchDuration).count();
-		std::cout << "search Duration costs: " << searchCostsInMilliSec << " ms" << std::endl;
-
+		g_file_logger->info("扫描OPCUA结构树耗时:{}  ||调用函数{}", searchCostsInMilliSec, __FUNCTION__);
 		int dotCount = std::count(directory.begin(), directory.end(), '.');
 
 		std::vector<std::string> RegKeys;
@@ -509,7 +511,7 @@ void OPClient::InitDirTable(int ns, const std::string& directory)
 		auto endAssignVars = std::chrono::system_clock::now();
 		auto assignDuration = endAssignVars - startAssignVars;
 		int assignCostsInMilliSec = std::chrono::duration_cast<std::chrono::milliseconds>(assignDuration).count();
-		std::cout << "assign Duration costs: " << assignCostsInMilliSec << " ms" << std::endl;
+		g_file_logger->info("分配OPCUA变量耗时:{}  ||调用函数{}", assignCostsInMilliSec, __FUNCTION__);
 		QApplication::restoreOverrideCursor();
 
 		ScadaScheduler::GetInstance()->RegisterReadBackVarKey("gvlHMI.stParameterGearChamferMachine.stParameterCADWork.sWorkFileName");
@@ -559,8 +561,7 @@ void OPClient::ReconnectWithHint()
 void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarType type)
 {
 	if (varOpc->status != UA_STATUSCODE_GOOD) {
-		UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
-			"节点 读取状态异常: %s", UA_StatusCode_name(varOpc->status));
+		g_file_logger->error("OPC 节点 读取状态异常:{}  ||调用函数{}", UA_StatusCode_name(varOpc->status), __FUNCTION__);
 	}
 
 	if (varOpc->value.type == &UA_TYPES[UA_TYPES_STRING])

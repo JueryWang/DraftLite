@@ -1979,6 +1979,7 @@ namespace CNCSYS
 			pointRender->use();
 			pointRender->setMat4("projection", ortho);
 			pointRender->setMat4("view", view);
+			pointRender->setVec2("viewportSize", glm::vec2(width, height));
 			pointRender->setFloat("PointSize", 10);
 
 			//绘制Entity实体
