@@ -8,6 +8,10 @@
 #include "Graphics/OCS.h"
 #include "UI/GCodeEditor.h"
 #include "Algorithm/ClusterAlgo.h"
+#include <QtCharts/QChart>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QChartView>
+#include <QtCharts/QValueAxis>
 
 std::vector<glm::vec3> intermidatePolygon;
 
@@ -103,24 +107,142 @@ void Polyline2DGPU::ExtendEnd(float distance)
 	bulges.push_back(0.0f);
 	this->SetParameter(nodes, isClosed,bulges);
 }
-void Polyline2DGPU::SelfFitArc()
+void Polyline2DGPU::SelfFitArc(int modifyHint)
 {
-	int windowsize = 5;
+	int windowsize = 10;
+	int halfWindowsize = windowsize / 2;
 	//根据曲率半径是否平稳变化来反应是否进入圆弧段
 	std::vector<glm::vec3> transformedNodes = GetTransformedNodes();
-	std::vector<double> curvatureRadius(transformedNodes.size()-2,0);
+	std::vector<double> curvatureRadius(transformedNodes.size(),0);
 	int size = transformedNodes.size();
-	double mean = 0.0;
-	for (int i = 0; i < (transformedNodes.size()-2); i++)
+	QLineSeries* series = new QLineSeries();
+	double maxValue = 0.0f;
+	int range = size - 1;
+	for (int i = 0; i < transformedNodes.size(); i++)
 	{
-		float radius = MathUtils::GetCurvatureRadius(transformedNodes[i], transformedNodes[i+1], transformedNodes[i+2]);
+		double radius = MathUtils::GetCurvatureRadius(transformedNodes[i], transformedNodes[(i+1)% range], transformedNodes[(i+2)% range]);
 		curvatureRadius[i] = radius;
 	}
 
-	//for (int i = 0; i < curvatureRadius.size() - windowsize; i++)
-	//{
-	//	
-	//}
+	//计算一次差分
+	for(int i = 1; i < curvatureRadius.size(); i++)
+	{
+		curvatureRadius[i] = fmax((curvatureRadius[i] - curvatureRadius[i - 1]), 0);
+		series->append(i, curvatureRadius[i]);
+	}
+
+	int spilkeCount = 0;
+	std::vector<std::pair<int, double>> features;
+	std::vector<double> confidences(curvatureRadius.size(), 0);
+
+	for(int i = 0 ; i< curvatureRadius.size(); i++)
+	{
+		double maxElement = 0.0;
+		double localmean = 0.0f;
+		for (int j = -halfWindowsize; j < halfWindowsize; j++)
+		{
+			int index = (i + j + size) % range;
+			double value = curvatureRadius[index];
+			localmean += value;
+			if(maxElement < value)
+			{
+				maxElement = value;
+			}
+		}
+		localmean = localmean - maxElement;
+		localmean /= (windowsize-1);
+		double confidence = fmax((curvatureRadius[i] - localmean)/(curvatureRadius[i]+localmean),0);
+		features.emplace_back(i,confidence);
+		series->append(i, confidence);
+		confidences[i] = confidence;
+	}
+	std::nth_element(confidences.begin(), confidences.begin() + (2*modifyHint) - 1, confidences.end(), std::greater<double>());
+
+	series->setName("曲率半径变化图");
+
+	QChart* chart = new QChart();
+	QValueAxis* axisX = new QValueAxis();
+	axisX->setRange(0, curvatureRadius.size());
+
+	QValueAxis* axisY = new QValueAxis();
+	axisY->setRange(0, maxValue * 1.1);
+	chart->setAxisX(axisX, series);
+	chart->setAxisY(axisY, series);
+	chart->addSeries(series);
+	chart->legend()->setVisible(true);
+	QChartView* chartView = new QChartView(chart);
+	chartView->setRenderHint(QPainter::Antialiasing); // 抗锯齿，让图表更清晰
+	chartView->show();
+	chartView->raise();
+	chartView->setInteractive(true);
+	chartView->setRubberBand(QChartView::RectangleRubberBand);
+
+	double threshold = confidences[(2 * modifyHint -1)];
+	std::vector<glm::vec3> newNodes;
+	//弧段边界
+	std::vector<std::pair<int, int>> ArcBondary;
+
+	std::pair<int, int> currentArc = { -1,-1 };
+	for (std::pair<int, double> feature : features)
+	{
+		if (currentArc.first == -1)
+		{
+			currentArc.first = feature.first + 2;
+		}
+		else if (currentArc.first != -1 && feature.second > threshold)
+		{
+			currentArc.second = feature.first-2;
+			ArcBondary.push_back(currentArc);
+		}
+		if (currentArc.first != -1 && currentArc.second != -1)
+		{
+			currentArc = { -1,-1 };
+		}
+	}
+	
+	for (auto& boundary : ArcBondary)
+	{
+		if ((boundary.second - boundary.first) > 3)
+		{
+			Polyline2DGPU* arcSection = new Polyline2DGPU();
+			std::vector<glm::vec3> arcNodes;
+			for(int i = boundary.first; i <= boundary.second; i++)
+			{
+				arcNodes.push_back(transformedNodes[i % range]);
+			}
+			arcSection->SetParameter(arcNodes,false);
+			arcSection->attribColor = GetRandomColor();
+			arcSection->ResetColor();
+			g_canvasInstance->GetSketchShared()->AddEntity(arcSection);
+
+		}
+	}
+
+	std::vector<glm::vec3> fittedNodes;
+	std::vector<float> fiitedBulges;
+	for (int i = 0; i < transformedNodes.size(); i++)
+	{
+		bool findInArc = false;
+		for (auto& bound : ArcBondary)
+		{
+			if (i > bound.second)
+				break;
+			if (i > bound.first && i < bound.second)
+			{
+				findInArc = true;
+			}
+		}
+
+		if (findInArc)
+		{
+			//最小二乘法
+		}
+		else
+		{
+			fittedNodes.push_back(transformedNodes[i]);
+			fiitedBulges.push_back(0.0f);
+		}
+	}
 }
 void Polyline2DGPU::UpdatePaintData()
 {
@@ -202,11 +324,11 @@ void Polyline2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 				glUniform2i(glGetUniformLocation(shader->ID, "highlightSec"), -1, -1);
 			}
 		}
+		g_pointShader->use();
+		g_pointShader->setMat4("model", worldModelMatrix);
+		g_pointShader->setVec4("PaintColor", g_whiteColor);
+		glDrawArrays(GL_POINTS, 0, polylineBulgedSamples.size());
 	}
-	g_pointShader->use();
-	g_pointShader->setMat4("model", worldModelMatrix);
-	g_pointShader->setVec4("PaintColor", g_whiteColor);
-	glDrawArrays(GL_POINTS, 0, 1);
 }
 void Polyline2DGPU::Move(const glm::vec3& offset)
 {

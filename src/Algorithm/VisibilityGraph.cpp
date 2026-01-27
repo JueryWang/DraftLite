@@ -126,7 +126,7 @@ std::vector<glm::vec3> VisibilityGraph::solve()
     std::vector<glm::vec3> path;
     if (found) { // 确保终点可达
         for (int curr = end; curr != -1; curr = parent[curr]) {
-            path.push_back(glm::vec3(nodes[curr].x / 1000.0f, nodes[curr].y / 1000.0f, 0.0f));
+            path.push_back(glm::vec3(nodes[curr].x / precision, nodes[curr].y / precision, 0.0f));
         }
         std::reverse(path.begin(), path.end());
     }

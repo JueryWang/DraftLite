@@ -67,8 +67,8 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	connect(arcFitConfig, &QAction::triggered, []() {
 		Polyline2DGPU* polyline = static_cast<Polyline2DGPU*>(g_canvasInstance->GetSelectedEntitys()[0]->ringParent->ToPolyline());
 		Polyline2DGPU* offseted = static_cast<Polyline2DGPU*>(polyline->Offset(5.0f,1000));
-		g_canvasInstance->GetSketchShared()->AddEntity(offseted);
-		offseted->SelfFitArc();
+		//g_canvasInstance->GetSketchShared()->AddEntity(offseted);
+		offseted->SelfFitArc(5);
 	});
 
 	QMenu* showModeMenu = settingMenu->addMenu(tr("显示"));

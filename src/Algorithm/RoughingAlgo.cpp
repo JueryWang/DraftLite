@@ -9,6 +9,7 @@
 #include <chrono>
 
 std::vector<CNCSYS::EntityVGPU*> RoughingAlgo::s_cache;
+int RoughingAlgo::percision;
 
 std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
 {
@@ -24,7 +25,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
 
     std::string gcode;
 
-    int PRECISION = 1000;
+    RoughingAlgo::percision = 1.0/setting.tolerance;
     glm::vec3 workpieceCentroid = shape->centroid;
     //����������ƫ��
     Polyline2DGPU* originShape = static_cast<Polyline2DGPU*>(shape->ToPolyline());
@@ -33,17 +34,17 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     Clipper2Lib::Path64 allowancePath;
     for (const BoostPoint& p : offsetAllowance->boostPath)
     {
-        allowancePath.emplace_back(bg::get<0>(p) * PRECISION, bg::get<1>(p) * PRECISION);
+        allowancePath.emplace_back(bg::get<0>(p) * RoughingAlgo::percision, bg::get<1>(p) * RoughingAlgo::percision);
     }
 
     //ƫ�ý�����
     std::vector<Clipper2Lib::Path64> involute_sequence;
 
     Clipper2Lib::Path64 workBox;
-    workBox.emplace_back((int)workblank.XRange() * PRECISION, (int)workblank.YRange() * PRECISION);
-    workBox.emplace_back(0, (int)workblank.YRange() * PRECISION);
+    workBox.emplace_back((int)workblank.XRange() * RoughingAlgo::percision, (int)workblank.YRange() * RoughingAlgo::percision);
+    workBox.emplace_back(0, (int)workblank.YRange() * RoughingAlgo::percision);
     workBox.emplace_back(0, 0);
-    workBox.emplace_back((int)workblank.XRange() * PRECISION, 0);
+    workBox.emplace_back((int)workblank.XRange() * RoughingAlgo::percision, 0);
 
     //刀具位置
     std::vector<Path64> clipSections;
@@ -62,7 +63,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
 
         Paths64 solution;
         double delta = step * setting.stepover;
-        offset.Execute(delta * PRECISION, solution);
+        offset.Execute(delta * RoughingAlgo::percision, solution);
         involute_sequence.push_back(solution[0]);
 
         step++;
@@ -74,7 +75,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         {
             for (const Point64& pt : clipping)
             {
-                clippingNodes.push_back({ (float)pt.x / PRECISION,(float)pt.y / PRECISION,0.0f });
+                clippingNodes.push_back({ (float)pt.x / RoughingAlgo::percision,(float)pt.y / RoughingAlgo::percision,0.0f });
             }
             if (clippingNodes.size() > 0)
             {
@@ -120,6 +121,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     Path64 Obstacle;
     //添加障碍轮廓
     graph.addObstacle(involute_sequence.back());
+    graph.SetPrecision(RoughingAlgo::percision);
     for (const Point64& pt : involute_sequence[0])
     {
         graph.addExtraPoint(pt);
@@ -132,7 +134,6 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     {
         //由内往外翻转为由外向内
         std::reverse(pair.second.begin(), pair.second.end());
-
 
         std::vector<glm::vec3> sectionPath;
         Polyline2DGPU* sectionPoly = new Polyline2DGPU();
@@ -169,8 +170,8 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                 Path64 marchingline;
                 glm::vec3 lineS = lastEnd;
                 glm::vec3 lineEd = start;
-                marchingline.emplace_back(lineS.x * PRECISION, lineS.y * PRECISION);
-                marchingline.emplace_back(lineEd.x * PRECISION, lineEd.y * PRECISION);
+                marchingline.emplace_back(lineS.x * RoughingAlgo::percision, lineS.y * RoughingAlgo::percision);
+                marchingline.emplace_back(lineEd.x * RoughingAlgo::percision, lineEd.y * RoughingAlgo::percision);
                 if (GetIntersections(marchingline, involute_sequence[0]).size() > 0)
                 {
                     InterpToEscape(lineS, lineEd, graph, gcode);
@@ -194,8 +195,8 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                 Path64 marchingline;
                 glm::vec3 lineS = lastEnd;
                 glm::vec3 lineEd = start;
-                marchingline.emplace_back(lineS.x* PRECISION, lineS.y* PRECISION);
-                marchingline.emplace_back(lineEd.x* PRECISION, lineEd.y* PRECISION);
+                marchingline.emplace_back(lineS.x* RoughingAlgo::percision, lineS.y* RoughingAlgo::percision);
+                marchingline.emplace_back(lineEd.x* RoughingAlgo::percision, lineEd.y* RoughingAlgo::percision);
                 
                 if (GetIntersections(marchingline, involute_sequence[collisionLayer]).size() > 0)
                 {
@@ -260,7 +261,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             {
                 for (const Point64& pt : clipping)
                 {
-                    nodes.push_back({ (float)pt.x / PRECISION,(float)pt.y / PRECISION,0.0f });
+                    nodes.push_back({ (float)pt.x / RoughingAlgo::percision,(float)pt.y / RoughingAlgo::percision,0.0f });
                 }
             }
             sectionPoly->SetParameter(nodes, false);
@@ -300,7 +301,7 @@ Paths64 RoughingAlgo::GetIntersections(const Clipper2Lib::Path64& pathA, const C
 void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, VisibilityGraph& vGraph, std::string& gcode)
 {
     char buffer[256];
-    vGraph.buildGraph(Point64(start.x * 1000, start.y * 1000), Point64(end.x * 1000, end.y * 1000));
+    vGraph.buildGraph(Point64(start.x * RoughingAlgo::percision, start.y * RoughingAlgo::percision), Point64(end.x * RoughingAlgo::percision, end.y * RoughingAlgo::percision));
     std::vector<glm::vec3> path = vGraph.solve();
     if (path.size() > 2)
     {

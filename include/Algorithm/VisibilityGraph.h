@@ -34,6 +34,7 @@ public:
 	//构建图结构
 	void buildGraph(const Point64& start, const Point64& end);
 	void ClearGraph();
+	void SetPrecision(int p) { precision = p; }
 
 	std::vector<glm::vec3> solve();
 private:
@@ -44,4 +45,6 @@ private:
 	std::vector<Point64> nodes;
 	std::vector<Path64> obstacles;
 	std::vector<std::vector<std::pair<int, double>>> adj;
+
+	int precision = 1000;
 };

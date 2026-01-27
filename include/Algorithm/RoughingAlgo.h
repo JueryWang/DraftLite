@@ -17,4 +17,5 @@ private:
 	static void InterpToEscape(const glm::vec3 start,const glm::vec3 end, VisibilityGraph& vGraph,std::string& gcode);
 
 	static std::vector<CNCSYS::EntityVGPU*> s_cache;
+	static int percision;
 };
