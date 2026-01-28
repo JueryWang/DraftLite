@@ -123,8 +123,13 @@ void Circle2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 			}
 		}
 	}
-	//shader->setVec4("PaintColor", g_whiteColor);
-	//glDrawArrays(GL_POINTS, 0, 1);
+	if (g_canvasInstance->showInnerPoint)
+	{
+		g_pointShader->use();
+		g_pointShader->setMat4("model", worldModelMatrix);
+		g_pointShader->setVec4("PaintColor", g_whiteColor);
+		glDrawArrays(GL_POINTS, 0, circleSamples.size());
+	}
 }
 void Circle2DGPU::Move(const glm::vec3& offset)
 {

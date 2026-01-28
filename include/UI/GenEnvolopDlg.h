@@ -18,6 +18,6 @@ namespace CNCSYS
 		float expand = 0.5f;
 		float smooth = 1.0f;
 		bool isSmooth;
-		float smoothPercision = 0.1;
+		float smoothprecision = 0.1;
 	};
 }

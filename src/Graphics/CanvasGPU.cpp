@@ -817,10 +817,10 @@ namespace CNCSYS
 						}
 					}
 					glm::vec3 anchorPos = ocsSys->GetOCSPosWithPixelPos(glm::vec2(mouseEvent->pos().x(), mouseEvent->pos().y()));
-					float percision = std::max(ocsSys->canvasRange->MaxRange() * 0.01f, 1.0f);
+					float precision = std::max(ocsSys->canvasRange->MaxRange() * 0.01f, 1.0f);
 					double distance = m_currentSketch.get()->GetDistanceToSelectedItems(anchorPos);
 
-					if (distance < percision)
+					if (distance < precision)
 					{
 						EnterModal(ModalState::EntityMove);
 						return;
@@ -922,10 +922,10 @@ namespace CNCSYS
 	{
 		glm::vec3 capturePos = ocsSys->GetOCSPosWithPixelPos(glm::vec2(mousePos.x(), mousePos.y()));
 
-		float percision = ocsSys->canvasRange->MinRange() * 0.05f;
+		float precision = ocsSys->canvasRange->MinRange() * 0.05f;
 		if (captureType == CaptureMode::Entity)
 		{
-			EntityVGPU* ent = m_currentSketch.get()->QueryNearsetEntity(capturePos, percision);
+			EntityVGPU* ent = m_currentSketch.get()->QueryNearsetEntity(capturePos, precision);
 
 			if (lastHoverEntity)
 			{
@@ -954,7 +954,7 @@ namespace CNCSYS
 			int pointIndx;
 			glm::vec2 pointPos;
 
-			std::tie(searchEntity, pointIndx, pointPos) = m_currentSketch.get()->QueryNearestPoint(capturePos, percision);
+			std::tie(searchEntity, pointIndx, pointPos) = m_currentSketch.get()->QueryNearestPoint(capturePos, precision);
 			if (searchEntity == nullptr)
 			{
 				hoverPoint->isHover = false;
@@ -977,7 +977,7 @@ namespace CNCSYS
 			{
 				glm::vec3 editPos = searchEntity->GetStart();
 				float distance = glm::distance(editPos, capturePos);
-				if (distance < percision)
+				if (distance < precision)
 				{
 					searchEntity->editPointIndex = searchEntity->indexRange.first;
 					hoverPoint->isHover = true;
@@ -989,7 +989,7 @@ namespace CNCSYS
 			{
 				glm::vec3 editPos = searchEntity->GetEnd();
 				float distance = glm::distance(editPos, capturePos);
-				if (distance < percision)
+				if (distance < precision)
 				{
 					searchEntity->editPointIndex = searchEntity->indexRange.second;
 					hoverPoint->isHover = true;

@@ -116,6 +116,7 @@ namespace CNCSYS
 		std::function<void(const QString&)> hoverChangedCallback;
 
 		bool showArrow = false;
+		bool showInnerPoint = false;
 		ModalState operationState = ModalState::NormalInteract;
 
 	private:

@@ -10,6 +10,7 @@
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/geometries/box.hpp>
+#include <Eigen/Dense>
 #include <limits>
 #include <utility>
 #include <algorithm>
@@ -491,6 +492,33 @@ namespace CNCSYS
 			if (area < epsilon)
 				return std::numeric_limits<double>::infinity();
 			return (a * b * c) / (4 * area); // 半径
+		}
+		
+		//最小二乘法拟合圆弧
+		//返回{ 圆心 , 半径}
+		static std::tuple<glm::vec3, double> FitCircleByPoints(const std::vector<glm::vec3>& points)
+		{
+			int n = points.size();
+			Eigen::MatrixXd M(n, 3);
+			Eigen::VectorXd b(n);
+
+			for (int i = 0; i < n; ++i) {
+				M(i, 0) = points[i].x;
+				M(i, 1) = points[i].y;
+				M(i, 2) = 1.0;
+				b(i) = points[i].x * points[i].x + points[i].y * points[i].y;
+			}
+
+			Eigen::Vector3d u = M.colPivHouseholderQr().solve(b);
+
+			glm::vec3 center;
+			double r;
+
+			center.x = u[0] / 2.0;
+			center.y = u[1] / 2.0;
+			r = std::sqrt(u[2] + center.x * center.x  + center.y * center.y);
+
+			return std::tuple<glm::vec3, double>(center,r);
 		}
 
 		static glm::vec3 CatmullRomInterpolate(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, double t, double tau = 0.5)

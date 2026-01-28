@@ -109,9 +109,10 @@ void Polyline2DGPU::ExtendEnd(float distance)
 }
 void Polyline2DGPU::SelfFitArc(int modifyHint)
 {
+	//根据曲率半径是否平稳变化来反应是否进入圆弧段
+
 	int windowsize = 10;
 	int halfWindowsize = windowsize / 2;
-	//根据曲率半径是否平稳变化来反应是否进入圆弧段
 	std::vector<glm::vec3> transformedNodes = GetTransformedNodes();
 	std::vector<double> curvatureRadius(transformedNodes.size(),0);
 	int size = transformedNodes.size();
@@ -210,10 +211,10 @@ void Polyline2DGPU::SelfFitArc(int modifyHint)
 			{
 				arcNodes.push_back(transformedNodes[i % range]);
 			}
-			arcSection->SetParameter(arcNodes,false);
-			arcSection->attribColor = GetRandomColor();
-			arcSection->ResetColor();
-			g_canvasInstance->GetSketchShared()->AddEntity(arcSection);
+			//arcSection->SetParameter(arcNodes,false);
+			//arcSection->attribColor = GetRandomColor();
+			//arcSection->ResetColor();
+			//g_canvasInstance->GetSketchShared()->AddEntity(arcSection);
 
 		}
 	}
@@ -223,19 +224,38 @@ void Polyline2DGPU::SelfFitArc(int modifyHint)
 	for (int i = 0; i < transformedNodes.size(); i++)
 	{
 		bool findInArc = false;
+		std::vector<glm::vec3> fitSamples;
 		for (auto& bound : ArcBondary)
 		{
-			if (i > bound.second)
-				break;
-			if (i > bound.first && i < bound.second)
+			if (i == bound.first && i < bound.second)
 			{
 				findInArc = true;
+				for (int j = bound.first; j < bound.second; j++)
+				{
+					fitSamples.push_back(transformedNodes[j]);
+				}
+				i = bound.second;
+				break;
 			}
 		}
 
 		if (findInArc)
 		{
 			//最小二乘法
+			glm::vec3 circleCenter;
+			double circleRadius;
+			std::tie(circleCenter, circleRadius) = MathUtils::FitCircleByPoints(fitSamples);
+			double startAngle = glm::degrees(std::atan2(fitSamples[0].y - circleCenter.y,fitSamples[0].x - circleCenter.x));
+			if (startAngle < 0)
+				startAngle = startAngle + 360;
+			double endAngle = glm::degrees(std::atan2(fitSamples.back().y - circleCenter.y, fitSamples.back().x - circleCenter.x));
+			if (endAngle < 0)
+				endAngle = endAngle + 360;
+			if (endAngle < startAngle)
+				std::swap(startAngle,endAngle);
+			Arc2DGPU* arc = new Arc2DGPU();
+			arc->SetParameter(circleCenter, startAngle, endAngle, circleRadius);
+			g_canvasInstance->GetSketchShared()->AddEntity(arc);
 		}
 		else
 		{
@@ -243,6 +263,8 @@ void Polyline2DGPU::SelfFitArc(int modifyHint)
 			fiitedBulges.push_back(0.0f);
 		}
 	}
+
+
 }
 void Polyline2DGPU::UpdatePaintData()
 {
@@ -324,10 +346,13 @@ void Polyline2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 				glUniform2i(glGetUniformLocation(shader->ID, "highlightSec"), -1, -1);
 			}
 		}
-		g_pointShader->use();
-		g_pointShader->setMat4("model", worldModelMatrix);
-		g_pointShader->setVec4("PaintColor", g_whiteColor);
-		glDrawArrays(GL_POINTS, 0, polylineBulgedSamples.size());
+		if (g_canvasInstance->showInnerPoint)
+		{
+			g_pointShader->use();
+			g_pointShader->setMat4("model", worldModelMatrix);
+			g_pointShader->setVec4("PaintColor", g_whiteColor);
+			glDrawArrays(GL_POINTS, 0, polylineBulgedSamples.size());
+		}
 	}
 }
 void Polyline2DGPU::Move(const glm::vec3& offset)

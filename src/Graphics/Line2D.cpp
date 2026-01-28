@@ -113,8 +113,13 @@ void Line2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 				glDisable(GL_DEPTH_TEST);
 			}
 		}
-		//shader->setVec4("PaintColor", g_whiteColor);
-		//glDrawArrays(GL_POINTS, 0, 1);
+		if (g_canvasInstance->showInnerPoint)
+		{
+			g_pointShader->use();
+			g_pointShader->setMat4("model", worldModelMatrix);
+			g_pointShader->setVec4("PaintColor", g_whiteColor);
+			glDrawArrays(GL_POINTS, 0, 2);
+		}
 	}
 }
 

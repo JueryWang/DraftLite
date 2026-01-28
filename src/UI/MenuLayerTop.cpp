@@ -77,7 +77,13 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	connect(actShowArrow, &QAction::triggered, [&]() {
 		bool checked = actShowArrow->isChecked();
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showArrow = checked;
-		});
+	});
+	actShowInnerPoint = showModeMenu->addAction(tr("内部点"));
+	actShowInnerPoint->setCheckable(true);
+	connect(actShowInnerPoint, &QAction::triggered, [&]() {
+		bool checked = actShowInnerPoint->isChecked();
+		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showInnerPoint = checked;
+	});
 
 	QAction* measureAct = settingMenu->addAction(tr("测量"));
 	connect(measureAct, &QAction::triggered, [&]() {

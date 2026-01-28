@@ -148,8 +148,13 @@ void Arc2DGPU::Paint(Shader* shader, OCSGPU* ocsSys, RenderMode mode)
 				glLineWidth(2);
 			}
 		}
-		//shader->setVec4("PaintColor", g_whiteColor);
-		//glDrawArrays(GL_POINTS, 0, 1);
+		if (g_canvasInstance->showInnerPoint)
+		{
+			g_pointShader->use();
+			g_pointShader->setMat4("model", worldModelMatrix);
+			g_pointShader->setVec4("PaintColor", g_whiteColor);
+			glDrawArrays(GL_POINTS, 0, arcSamples.size());
+		}
 	}
 }
 glm::vec3 Arc2DGPU::GetStart()

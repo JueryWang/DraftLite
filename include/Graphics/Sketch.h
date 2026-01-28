@@ -51,7 +51,7 @@ namespace CNCSYS
 		std::vector<EntityVGPU*> QueryBatchSelection(const AABB& box);
 		EntityVGPU* QueryNearsetEntity(const glm::vec3& center, float precision);
 		double GetDistanceToSelectedItems(const glm::vec3& center);
-		std::tuple<EntityVGPU*, int, glm::vec2> QueryNearestPoint(const glm::vec3& center, float percision);
+		std::tuple<EntityVGPU*, int, glm::vec2> QueryNearestPoint(const glm::vec3& center, float precision);
 		CanvasGPU* GetCanvas() { return mainCanvas; }
 
 		std::vector<EntityVGPU*> GetEntities() { return entities; }

@@ -18,6 +18,7 @@ set(CMAKE_PREFIX_PATH ${Qt6_ROOT} ${CMAKE_PREFIX_PATH})
 list(APPEND CMAKE_PREFIX_PATH  "C:/Users/Admin/Documents/lib/open62541/lib/cmake/open62541")
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/QXslx/Debug/lib/cmake/QXlsxQt6")
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/libcurl/lib/cmake/CURL")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/Eigen3/cmake")
 
 set(BOOST_ROOT "C:/Users/Admin/Documents/lib/boost_1_82_0")
 set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib64-msvc-14.3")
@@ -28,7 +29,7 @@ set(QT_QPA_PLATFORM_PLUGIN_PATH "C:/Users/Admin/Documents/lib/Qt/6.7.3/msvc2022_
 
 find_package(open62541 REQUIRED)
 #find_package(orocos_kdl REQUIRED)
-#find_package(Eigen3 REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(CURL REQUIRED)
 find_package(QT NAMES Qt5 Qt6 COMPONENTS OpenGL Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Charts Xml REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
@@ -329,6 +330,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:${BOOST_LIBRARYDIR}/libboost_serialization-vc143-mt-x64-1_82.lib>
     open62541::open62541
     CURL::libcurl
+    Eigen3::Eigen
     OpenMP::OpenMP_CXX
 )
 

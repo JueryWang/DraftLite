@@ -43,6 +43,7 @@ private:
 	QAction* actShowArrow = nullptr;
 	QAction* actConfiExport = nullptr;
 	QAction* actAuthInformation = nullptr;
+	QAction* actShowInnerPoint = nullptr;
 
 	bool m_isDraging = false;
 	QPoint m_offsetPoint = QPoint(0, 0);
