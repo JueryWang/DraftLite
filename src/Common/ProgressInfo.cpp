@@ -36,6 +36,10 @@ D8 g_dogKey;
 AuthInfo g_authInfo;
 std::shared_ptr<spdlog::logger> g_file_logger;
 
+SYSTEMTIME CurTime, LimitTimer;
+
+int CompareSystemTimes(const SYSTEMTIME& st1, const SYSTEMTIME& st2);
+
 void InitPLConfig()
 {
 	g_ConfigableKeys =
@@ -211,6 +215,24 @@ int CheckAuth(bool popUpMsg)
 
 	char localChipId[33];
 	g_dogKey.GetChipID(localChipId, DevicePath);
+	int year;
+	BYTE month;
+	BYTE day;
+	g_dogKey.GetLimitDate(&year, &month, &day, DevicePath);
+	g_authInfo.limitYear = year;
+	g_authInfo.limitMonth = month;
+	g_authInfo.limitDay = day;
+
+	LimitTimer.wYear = g_authInfo.limitYear;
+	LimitTimer.wMonth = g_authInfo.limitMonth;
+	LimitTimer.wDay = g_authInfo.limitDay;
+	::GetSystemTime(&CurTime);
+
+	if (CompareSystemTimes(CurTime,LimitTimer) >= 0)
+	{
+		QMessageBox::critical(NULL, QStringLiteral("错误"), QStringLiteral("加密狗许可证过期,请重新授权."));
+	}
+
 	char* originChipId = GetAuthChipId();
 	if (strcmp(localChipId, originChipId) != 0)
 	{
@@ -289,4 +311,17 @@ PLC_TYPE_LREAL SimulateStatus::GetToolDistance()
 {
 	std::lock_guard<std::mutex> lock(mutex);
 	return toolDistance;
+}
+
+
+int CompareSystemTimes(const SYSTEMTIME& st1, const SYSTEMTIME& st2) {
+	FILETIME ft1, ft2;
+	SystemTimeToFileTime(&st1, &ft1);
+	SystemTimeToFileTime(&st2, &ft2);
+
+	// 返回值含义：
+	// -1: ft1 < ft2 (st1 早于 st2)
+	//  0: ft1 == ft2
+	//  1: ft1 > ft2 (st1 晚于 st2)
+	return CompareFileTime(&ft1, &ft2);
 }

@@ -140,6 +140,10 @@ struct AuthInfo
 	std::string pcUUID;
 	std::string authCode;
 	std::string authTime;
+
+	int limitYear = 999;
+	int limitMonth = 12;
+	int limitDay = 31;
 };
 
 extern SimulateStatus g_MScontext;

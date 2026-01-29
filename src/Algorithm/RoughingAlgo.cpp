@@ -200,6 +200,12 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                 
                 if (GetIntersections(marchingline, involute_sequence[collisionLayer]).size() > 0)
                 {
+
+                    for (Point64& pt : involute_sequence[0])
+                    {
+                        //匹配最外层最近点
+
+                    }
                     Polyline2DGPU* newSection = new Polyline2DGPU();
                     newSection->SetParameter(sectionPath, false);
                     newSection->attribColor = g_yellowColor;

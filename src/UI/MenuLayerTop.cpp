@@ -153,7 +153,8 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	//this->installEventFilter(this);
 	this->setLayout(layout);
 
-	AuthInformation = new QGroupBox("授权信息");
+	AuthInformation = new QGroupBox();
+	AuthInformation->setWindowTitle("授权信息");
 	AuthInformation->setFixedSize(480, 250);
 	QGridLayout* gridLay = new QGridLayout();
 	QLabel* lbChipIDHint = new QLabel("原始授权加密狗ID: ");
@@ -168,10 +169,12 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	QLineEdit* editVerifyCode = new QLineEdit();
 	editVerifyCode->setReadOnly(true);
 	editVerifyCode->setText(QString::fromStdString(g_authInfo.authCode));
-	QLabel* lbAuthTime = new QLabel("授权时间");
+	QLabel* lbAuthTime = new QLabel("授权截至日期");
 	QLineEdit* editAuthTime = new QLineEdit();
+	QDate limitDate(g_authInfo.limitYear, g_authInfo.limitMonth, g_authInfo.limitDay);
 	editAuthTime->setReadOnly(true);
-	editAuthTime->setText(QString::fromStdString(g_authInfo.authTime));
+	QString limitDateString = limitDate.toString("yyyy-MM-dd");
+	editAuthTime->setText(limitDate.toString("yyyy-MM-dd"));
 
 	gridLay->addWidget(lbChipIDHint, 0, 0, 1, 1);
 	gridLay->addWidget(editChipID, 0, 1, 1, 3);
