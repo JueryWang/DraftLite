@@ -79,8 +79,7 @@ LONG WINAPI CrashHandler(EXCEPTION_POINTERS* pException) {
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
 	SetUnhandledExceptionFilter(CrashHandler);
 	QtWebEngineQuick::initialize();
 

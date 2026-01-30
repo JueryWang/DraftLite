@@ -36,7 +36,7 @@ private:
 	double inline CircleSimilarity(const CircleClusterNode& c1, const CircleClusterNode& c2);
 	//扩展聚类
 	void ExpandCluster(const std::vector<CircleClusterNode>& circles, int circleIndex, int clusterId, std::vector<int>& neighbors);
-
+	
 private:
 	const float eps;					//邻域半径,相似度阈值
 	const int minSamples;				//形成核心点的最小点数

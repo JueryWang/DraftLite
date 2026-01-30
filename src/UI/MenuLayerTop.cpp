@@ -62,14 +62,14 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		actEntityCapture->setChecked(false);
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Point);
 		});
-	QMenu* cncOptimizeMenu = settingMenu->addMenu(tr("CNC优化"));
-	QAction* arcFitConfig = cncOptimizeMenu->addAction(tr("弧段优化"));
-	connect(arcFitConfig, &QAction::triggered, []() {
-		Polyline2DGPU* polyline = static_cast<Polyline2DGPU*>(g_canvasInstance->GetSelectedEntitys()[0]->ringParent->ToPolyline());
-		Polyline2DGPU* offseted = static_cast<Polyline2DGPU*>(polyline->Offset(5.0f,1000));
-		//g_canvasInstance->GetSketchShared()->AddEntity(offseted);
-		offseted->SelfFitArc(5);
-	});
+	//QMenu* cncOptimizeMenu = settingMenu->addMenu(tr("CNC优化"));
+	//QAction* arcFitConfig = cncOptimizeMenu->addAction(tr("弧段优化"));
+	//connect(arcFitConfig, &QAction::triggered, []() {
+	//	Polyline2DGPU* polyline = static_cast<Polyline2DGPU*>(g_canvasInstance->GetSelectedEntitys()[0]->ringParent->ToPolyline());
+	//	Polyline2DGPU* offseted = static_cast<Polyline2DGPU*>(polyline->Offset(5.0f,1000));
+	//	//g_canvasInstance->GetSketchShared()->AddEntity(offseted);
+	//	offseted->SelfFitArc(5);
+	//});
 
 	QMenu* showModeMenu = settingMenu->addMenu(tr("显示"));
 	actShowArrow = showModeMenu->addAction(tr("方向箭头"));

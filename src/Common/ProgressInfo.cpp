@@ -231,6 +231,7 @@ int CheckAuth(bool popUpMsg)
 	if (CompareSystemTimes(CurTime,LimitTimer) >= 0)
 	{
 		QMessageBox::critical(NULL, QStringLiteral("错误"), QStringLiteral("加密狗许可证过期,请重新授权."));
+		return false;
 	}
 
 	char* originChipId = GetAuthChipId();
