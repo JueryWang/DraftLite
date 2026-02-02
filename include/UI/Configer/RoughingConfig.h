@@ -6,6 +6,9 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QListWidget>
+#include <QCheckBox>
+#include <map>
 #include "Common/ProcessCraft.h"
 
 class RoughingConfigPage : public QWidget

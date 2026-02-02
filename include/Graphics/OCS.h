@@ -2,6 +2,7 @@
 #include "Graphics/DrawEntity.h"
 #include "Graphics/AxisTicker.h"
 #include "Graphics/Camera2D.h"
+#include <QPoint>
 #include <vector>
 
 namespace CNCSYS
@@ -28,7 +29,8 @@ namespace CNCSYS
 		Camera2D* GetCamera() { return camera; }
 
 		//根据屏幕像素坐标获取画布坐标
-		inline glm::vec3 GetOCSPosWithPixelPos(const glm::vec2& pixelPos);
+		glm::vec3 GetOCSPosWithPixelPos(const glm::vec2& pixelPos);
+		glm::vec2 GetPixelPosWithOCSPos(const glm::vec3& ocsPos);
 		glm::vec3 OffsetFromScreenToCanvas(const glm::vec3& offset);
 
 	public:

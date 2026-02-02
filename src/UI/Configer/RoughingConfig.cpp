@@ -4,6 +4,7 @@
 #include "Common/ProgressInfo.h"
 #include "Algorithm/RoughingAlgo.h"
 #include "Graphics/DrawEntity.h"
+#include "QGroupBox"
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -134,6 +135,7 @@ RoughingConfigPage::RoughingConfigPage()
 			gcode += RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing, WorkBlankConfigPage::s_attachedRing->workBlank->bbox, RoughingConfigPage::s_setting);
 			//GCodeEditor::GetInstance()->CleanCache();
 			GCodeEditor::GetInstance()->setText(QString::fromStdString(gcode));
+
 		});
 
 	btnComfirm = new QPushButton("确认");

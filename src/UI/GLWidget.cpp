@@ -3,6 +3,7 @@
 #include "UI/Components/HmiInterfaceDefines.h"
 #include "Common/OpenGLContext.h"
 #include "Graphics/Sketch.h"
+#include "Graphics/OCS.h"
 #include <QRegularExpression>
 #include <QEvent>
 #include <QMouseEvent>
@@ -10,6 +11,7 @@
 #include <QDebug>
 
 bool firstShow = true;
+using namespace CNCSYS;
 
 std::string double_to_string_trim(double value) {
 	std::ostringstream oss;
@@ -141,6 +143,20 @@ namespace CNCSYS
 					str.replace(trailingDot, "");
 					painter.drawText(tickTextCoord.x, tickTextCoord.y, str);
 				}
+			}
+
+			pen.setColor(QColor(255,255,255));
+			QFont font = painter.font();
+			font.setPointSize(20);
+			font.setBold(true);
+			painter.setFont(font);
+			OCSGPU* ocsSys  = g_canvasInstance->GetOCSSystem();
+
+			for (Tag& tag : canvasTags)
+			{
+				glm::vec2 pixelPos = ocsSys->GetPixelPosWithOCSPos(tag.pixelPos);
+				painter.setPen(pen);
+				painter.drawText(pixelPos.x,pixelPos.y,tag.label);
 			}
 		}
 		painter.end();

@@ -203,12 +203,20 @@ namespace CNCSYS
 		UpdateTickers();
 	}
 
-	inline glm::vec3 OCSGPU::GetOCSPosWithPixelPos(const glm::vec2& pixelPos)
+	glm::vec3 OCSGPU::GetOCSPosWithPixelPos(const glm::vec2& pixelPos)
 	{
 		float mouseXfraction = pixelPos.x / canvasWidth;
 		float mouseYfraction = 1 - pixelPos.y / canvasHeight;
 
 		return glm::vec3(canvasRange->min.x + mouseXfraction * canvasRange->XRange(), canvasRange->min.y + mouseYfraction * canvasRange->YRange(), 0.0f);
+	}
+
+	glm::vec2 OCSGPU::GetPixelPosWithOCSPos(const glm::vec3& ocsPos)
+	{
+		float xFactor = (ocsPos.x - canvasRange->getMin().x)/(canvasRange->XRange());
+		float yFactor = (ocsPos.y - canvasRange->getMin().y)/(canvasRange->YRange());
+
+		return glm::vec2(canvasWidth * xFactor,canvasHeight * (1.0 - yFactor));
 	}
 
 	glm::vec3 OCSGPU::OffsetFromScreenToCanvas(const glm::vec3& offset)

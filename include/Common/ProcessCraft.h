@@ -1,6 +1,7 @@
 #pragma once
 #include "../OGL/glm/glm.hpp"
 #include <variant>
+#include <vector>
 
 enum class GeomDirection
 {
@@ -47,6 +48,7 @@ enum class MillingDirection
 	Any     //任意方向
 };
 
+
 struct RoughingParamSettings
 {
 	double stepover = 5; //行距
@@ -54,6 +56,14 @@ struct RoughingParamSettings
 	double tolerance = 0.01;
 	double toolRadius = 10;//刀具半径
 	MillingDirection direction;
+};
+
+struct RegionParamSettings
+{
+	int regionId;
+	GeomDirection dir;
+	double rotation;
+	glm::vec3 rotAnchor;
 };
 
 struct ArcFitPramSettings

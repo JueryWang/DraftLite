@@ -23,6 +23,14 @@ Spline2DGPU::Spline2DGPU(const std::vector<glm::vec3>& controlPoints, const std:
 	else
 	{
 		this->splineSamples = MathUtils::CatmullRomSmooth(controlPoints, 100);
+		for (int i = 0; i < splineSamples.size(); i++)
+		{
+			PathNode p;
+			p.Node = splineSamples[i];
+			pathNodes.push_back(p);
+		}
+
+		indexRange = { 0,splineSamples.size() - 1 };
 	}
 	this->controlPoints = controlPoints;
 	this->knots = knots;
@@ -418,6 +426,14 @@ void Spline2DGPU::SetParameter(const std::vector<glm::vec3>& controlpoints, cons
 	else
 	{
 		splineSamples = MathUtils::CatmullRomSmooth(controlPoints, 100);
+		for (int i = 0; i < splineSamples.size(); i++)
+		{
+			PathNode p;
+			p.Node = splineSamples[i];
+			pathNodes.push_back(p);
+		}
+
+		indexRange = { 0,splineSamples.size() - 1 };
 	}
 
 	bbox = AABB(controlPoints[0], controlPoints[1]);

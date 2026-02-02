@@ -53,6 +53,7 @@ public:
 	glm::vec3 pt;
 	CNCSYS::EntityVGPU* entityParent;
 	int cluster_id = -1;
+	bool remain = true;  //是否保留该区域
 
 	PointClusterNode(const glm::vec3& _pt,int layer,CNCSYS::EntityVGPU* _parent) : pt(_pt), clippingLayer(layer),entityParent(_parent) {}
 };

@@ -16,6 +16,7 @@
 #include "ModalEvent/EntityScaleModal.h"
 #include "ModalEvent/EntityMirrorModal.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
+#include "ModalEvent/EvSendCanvasTag.h"
 #include "ModalEvent/MeasureDimension.h"
 #include <UI/CanvasGuide.h>
 #include <QMessageBox>
@@ -228,6 +229,15 @@ namespace CNCSYS
 			GCodeEditor::GetInstance()->SetAutoSendFTP(false);
 			EvCanvasSetNewScene* evSetScene = static_cast<EvCanvasSetNewScene*>(event);
 			this->SetScene(evSetScene->m_sketch, evSetScene->m_ocs);
+			event->accept();
+			return true;
+		}
+		if (event->type() == EvSendCanvasTag::eventType)
+		{
+			EvSendCanvasTag* evSendTag = static_cast<EvSendCanvasTag*>(event);
+			frontWidget->AddTag(Tag(evSendTag->tagPos, evSendTag->tagLabel, evSendTag->tagSize));
+			event->accept();
+			return true;
 		}
 		switch (event->type())
 		{
@@ -430,7 +440,6 @@ namespace CNCSYS
 				glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), vertices.data());
 				glDrawArrays(GL_LINES, 0, 2);
 				glDisableClientState(GL_VERTEX_ARRAY);
-
 			}
 			else if (ticker.Ttype == TickType::Main)
 			{

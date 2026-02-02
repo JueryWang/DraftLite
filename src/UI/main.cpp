@@ -20,7 +20,7 @@
 #include "UI/DigitalHUD.h"
 #include "UI/TaskFlowGuide.h"
 #include "UI/CanvasGuide.h"
-#include "UI/Configer/RoughingConfig.h"
+#include "UI/Configer/RegionPlannerConfig.h"
 
 #include "Controls/GlobalPLCVars.h"
 #include "NetWork/OPClient.h"
@@ -118,6 +118,9 @@ int main(int argc, char* argv[]){
 	guide->show();
 
 	ScadaScheduler::GetInstance()->Start();
+
+	RegionPlannerConfigPage* regionConfig = RegionPlannerConfigPage::GetInstance();
+	regionConfig->show();
 
 	return app.exec();
 }

@@ -6,12 +6,14 @@
 #include "Graphics/Canvas.h"
 #include "Algorithm/RoughingAlgo.h"
 #include <QMessageBox>
+#include <QHBoxLayout>
 #include <QGridLayout>
 
 using namespace CNCSYS;
 
 CNCSYS::EntRingConnection* WorkBlankConfigPage::s_attachedRing = nullptr;
 WorkBlankConfigPage* WorkBlankConfigPage::s_instance = nullptr;
+
 
 WorkBlankConfigPage* WorkBlankConfigPage::GetInstance()
 {

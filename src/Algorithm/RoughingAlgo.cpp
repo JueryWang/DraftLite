@@ -1,15 +1,21 @@
 ﻿#include "Algorithm/RoughingAlgo.h"
-#include "Algorithm/ClusterAlgo.h"
 #include "Graphics/Canvas.h"
 #include "Graphics/Sketch.h"
+#include "Graphics/OCS.h"
+#include "UI/GLWidget.h"
 #include "Controls/GCodeController.h"
-#include "Common/OpenGLContext.h"
 #include <list>
 #include <map>
 #include <chrono>
 #include <random>
+#include <QPoint>
+#include <QApplication>
+#include "Common/ClipperFuncWrapper.h"
+#include "ModalEvent/EvSendCanvasTag.h"
+#include "Algorithm/RRT.h"
 
 std::vector<CNCSYS::EntityVGPU*> RoughingAlgo::s_cache;
+std::map<int, std::vector<PointClusterNode>> RoughingAlgo::pointSet;
 int RoughingAlgo::percision;
 
 std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
@@ -115,18 +121,26 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     }
     std::reverse(involute_sequence.begin(),involute_sequence.end());
     //先聚类,区分出各截断区域
-    std::map<int, std::vector<PointClusterNode>> pointSet = PointRegionCluster::kmeans(clusterNodes, clusterInitCenter, clusterInitCenter.size(), 50);
-    //for (auto& pair : pointSet)
-    //{
-    //    glm::vec4 randomColor = GetRandomColor();
-    //    for (PointClusterNode& pNode : pair.second)
-    //    {
-    //        pNode.entityParent->attribColor = randomColor;
-    //        pNode.entityParent->ResetColor();
-    //        g_canvasInstance->GetSketchShared()->AddEntity(pNode.entityParent);
-    //    }
-    //}
-    ////建图
+    pointSet = PointRegionCluster::kmeans(clusterNodes, clusterInitCenter, clusterInitCenter.size(), 50);
+
+    for (auto& pair : pointSet)
+    {
+        glm::vec4 randomColor = GetRandomColor();
+        glm::vec3 centroid = glm::vec3(0, 0, 0);
+        for (PointClusterNode& pNode : pair.second)
+        {
+            /*pNode.entityParent->attribColor = randomColor;
+            pNode.entityParent->ResetColor();
+            g_canvasInstance->GetSketchShared()->AddEntity(pNode.entityParent);*/
+            centroid += pNode.entityParent->centroid;
+        }
+        centroid /= pair.second.size();
+
+        EvSendCanvasTag* EvclusterTag = new EvSendCanvasTag(centroid, QString::number(pair.first), 20);
+        QApplication::postEvent(g_canvasInstance->GetFrontWidget(), EvclusterTag, Qt::HighEventPriority);
+    }
+
+    //建图
     VisibilityGraph graph;
     //初始障碍物,单个区域切割完成后更新
     Path64 Obstacle;
@@ -213,9 +227,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                 {
 					Point64 nearestPt;
                     double nearestDist = DBL_MAX;
-                    if (collisionLayer < 1)
-                        break;
-                    for (Point64& pt : involute_sequence[max(collisionLayer-1,0)])
+                    for (Point64& pt : involute_sequence[std::max(collisionLayer-1,0)])
                     {
                         //匹配最外层与起始点最匹配的点
                         double dist = GetDistance(marchingline[0], pt);
@@ -232,17 +244,28 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     probePts.push_back({ (float)nearestPt.x/ RoughingAlgo::percision,(float)nearestPt.y/ RoughingAlgo::percision,0.0f});
                     int depth = 0;
                     ProbePath(nearestPt,marchingline[1], involute_sequence[collisionLayer], setting.stepover * RoughingAlgo::percision, probePtsPoint64,depth);
-                    //TrimPath(probePtsPoint64, involute_sequence[collisionLayer]);
+                    TrimPath(probePtsPoint64, involute_sequence[collisionLayer]);
                     for (Point64& pt : probePtsPoint64)
                     {
                         probePts.push_back({(float)pt.x/ RoughingAlgo::percision,(float)pt.y/ RoughingAlgo::percision ,0.0f});
                     }
                     probePts.push_back(lineEd);
-                    Polyline2DGPU* probePoly = new Polyline2DGPU();
-                    probePoly->SetParameter(probePts, false);
-                    probePoly->attribColor = GetRandomColor();
-                    probePoly->ResetColor();
-                    g_canvasInstance->GetSketchShared()->AddEntity(probePoly);
+                    {
+                        Polyline2DGPU* probePoly = new Polyline2DGPU();
+                        probePoly->SetParameter(probePts, false);
+                        probePoly->attribColor = GetRandomColor();
+                        probePoly->ResetColor();
+                        g_canvasInstance->GetSketchShared()->AddEntity(probePoly);
+                        s_cache.push_back(probePoly);
+
+                        char buffer[256];
+                        for (int i = 0; i < probePts.size(); i++)
+                        {
+                            std::sprintf(buffer,"N%3d G00 X%f Y%f \n",g_MScontext.ncstep, probePts[i].x - g_MScontext.wcsAnchor.x, probePts[i].y - g_MScontext.wcsAnchor.y);
+                            gcode += buffer;
+                            g_MScontext.ncstep++;
+                        }
+                    }
                     //{
                     //    Spline2DGPU* probeSpline = new Spline2DGPU();
                     //    std::vector<float> knots = MathUtils::GenerateClampedKnots(probePts.size(),3);
@@ -250,6 +273,8 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     //    probeSpline->attribColor = GetRandomColor();
                     //    probeSpline->ResetColor();
                     //    g_canvasInstance->GetSketchShared()->AddEntity(probeSpline);
+                    //    gcode += probeSpline->GenNcSection(&g_MScontext, false);
+                    //    s_cache.push_back(probeSpline);
                     //}
 
                     Polyline2DGPU* newSection = new Polyline2DGPU();
@@ -266,14 +291,9 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             lastEnd = nodes.back();
             gcode += layer->GenNcSection(&g_MScontext, false);
             sectionPath.insert(sectionPath.end(), nodes.begin(), nodes.end());
-            //Paths64 line;
-            //line.push_back(MakePath({(int)(nodes[0].x * PRECISION),int(nodes[0].y * PRECISION),int(nodes.back().x * PRECISION),int(nodes.back().y * PRECISION)}));
-            //Paths64 removed = InflatePaths(line, setting.toolRadius, JoinType::Round, EndType::Round);
-            //auto dif = Difference({ workBox }, removed, FillRule::EvenOdd);
-            //workBox = dif[0];
             delete layer;
+            toolInited = true;
         }
-        toolInited = true;
 
         //Polyline2DGPU* remainedPoly = new Polyline2DGPU();
         //std::vector<glm::vec3> remainPolyNodes;
@@ -314,39 +334,6 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
     delete offsetAllowance;
 
     return gcode;
-}
-
-Paths64 RoughingAlgo::GetIntersections(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& pathB)
-{
-    //获取碰撞截断结果
-    Paths64 subject;
-    subject.push_back(pathA);
-
-    Paths64 clip;
-    clip.push_back(pathB);
-
-    Clipper64 clipper;
-
-    clipper.AddOpenSubject(subject);
-    clipper.AddClip(clip);
-
-    Paths64 solution_closed;
-    Paths64 solution_open;
-    clipper.Execute(ClipType::Intersection, FillRule::NonZero, solution_closed, solution_open);
-    return solution_open;
-}
-
-bool RoughingAlgo::Intersect(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& pathB)
-{
-    bool collision = (GetIntersections(pathA, pathB).size() > 0);
-    for (const Point64& vertex : pathA)
-    {
-        if (PointInPolygon(vertex, pathB) == PointInPolygonResult::IsInside)
-        {
-            collision = true;
-        }
-    }
-    return collision;
 }
 
 void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, VisibilityGraph& vGraph, std::string& gcode)
