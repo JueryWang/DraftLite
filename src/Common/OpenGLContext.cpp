@@ -19,7 +19,6 @@ namespace CNCSYS
 	glm::vec4 g_workBlankColor = glm::vec4(0.878f,0.640f,0.459f,1.0f);
 	glm::vec4 g_highlightColor = glm::vec4(171.0f / 255.0f, 228.0f / 255.0f, 243.0f / 255.0f, 1.0f);
 
-
 	float g_lineWidth = 2.0f;
 
 	bool InitializeOpenGL()

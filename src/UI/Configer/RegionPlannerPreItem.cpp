@@ -49,25 +49,12 @@ RegionPlannerPreItem::~RegionPlannerPreItem()
 {
 }
 
-RegionPlannerPreGroupPage::RegionPlannerPreGroupPage(int regionCount)
+RegionPlannerPreGroupPage::RegionPlannerPreGroupPage()
 {
 	QVBoxLayout* vlay = new QVBoxLayout();
 	preSettingList = new QListWidget();
 	vlay->addWidget(preSettingList);
 	this->setLayout(vlay);
-
-	for(int i = 0; i < regionCount; i++)
-	{
-		RegionPlannerPreItemWidget* itemWidget = new RegionPlannerPreItemWidget(i);
-		RegionPlannerPreItem* listItem = new RegionPlannerPreItem();
-		listItem->attachedWidget = itemWidget;
-		QSize itemSize = itemWidget->sizeHint();
-		items.push_back(listItem);
-		preSettingList->addItem(listItem);
-		preSettingList->setItemWidget(listItem, listItem->attachedWidget);
-		listItem->setSizeHint(itemSize);
-		this->resize(QSize(itemSize.width() + 50, preSettingList->count() * itemSize.height()));
-	}
 }
 
 RegionPlannerPreGroupPage::~RegionPlannerPreGroupPage()
@@ -81,6 +68,23 @@ RegionPlannerPreGroupPage::~RegionPlannerPreGroupPage()
 	}
 	
 	items.clear();
+}
+
+void RegionPlannerPreGroupPage::SetRegionCount(int regionCount)
+{
+	Clean();
+	for (int i = 0; i < regionCount; i++)
+	{
+		RegionPlannerPreItemWidget* itemWidget = new RegionPlannerPreItemWidget(i);
+		RegionPlannerPreItem* listItem = new RegionPlannerPreItem();
+		listItem->attachedWidget = itemWidget;
+		QSize itemSize = itemWidget->sizeHint();
+		items.push_back(listItem);
+		preSettingList->addItem(listItem);
+		preSettingList->setItemWidget(listItem, listItem->attachedWidget);
+		listItem->setSizeHint(itemSize);
+		this->resize(QSize(itemSize.width() + 50, preSettingList->count() * itemSize.height()));
+	}
 }
 
 void RegionPlannerPreGroupPage::AddItem(RegionParamSettings setting)

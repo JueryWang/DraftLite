@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <utility>
 #include "Graphics/DrawEntity.h"
+#include "Common/ProcessCraft.h"
 
 struct CircleClusterNode
 {
@@ -54,6 +55,7 @@ public:
 	CNCSYS::EntityVGPU* entityParent;
 	int cluster_id = -1;
 	bool remain = true;  //是否保留该区域
+	RegionParamSettings regionSetting;
 
 	PointClusterNode(const glm::vec3& _pt,int layer,CNCSYS::EntityVGPU* _parent) : pt(_pt), clippingLayer(layer),entityParent(_parent) {}
 };

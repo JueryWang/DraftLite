@@ -36,8 +36,9 @@ public:
 class RegionPlannerPreGroupPage : public QWidget
 {
 public:
-	RegionPlannerPreGroupPage(int regionCount);
+	RegionPlannerPreGroupPage();
 	~RegionPlannerPreGroupPage();
+	void SetRegionCount(int regionCount);
 	void AddItem(RegionParamSettings setting);
 	void RemoveItem(RegionPlannerPreItem* item);
 	void Clean();

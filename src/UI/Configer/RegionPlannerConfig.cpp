@@ -15,7 +15,7 @@ RegionPlannerConfigPage::RegionPlannerConfigPage()
 {
 	this->setWindowTitle(tr("开粗区域规划配置"));
 	this->setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-	preSetPage = new RegionPlannerPreGroupPage(4);
+	preSetPage = new RegionPlannerPreGroupPage();
 	preSetPage->show();
 
 	std::vector<RegionParamSettings> regionSettings;

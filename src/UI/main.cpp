@@ -119,8 +119,5 @@ int main(int argc, char* argv[]){
 
 	ScadaScheduler::GetInstance()->Start();
 
-	RegionPlannerConfigPage* regionConfig = RegionPlannerConfigPage::GetInstance();
-	regionConfig->show();
-
 	return app.exec();
 }

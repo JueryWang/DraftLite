@@ -135,7 +135,7 @@ RoughingConfigPage::RoughingConfigPage()
 			gcode += RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing, WorkBlankConfigPage::s_attachedRing->workBlank->bbox, RoughingConfigPage::s_setting);
 			//GCodeEditor::GetInstance()->CleanCache();
 			GCodeEditor::GetInstance()->setText(QString::fromStdString(gcode));
-
+			this->close();
 		});
 
 	btnComfirm = new QPushButton("确认");

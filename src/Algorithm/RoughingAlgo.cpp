@@ -17,9 +17,11 @@
 std::vector<CNCSYS::EntityVGPU*> RoughingAlgo::s_cache;
 std::map<int, std::vector<PointClusterNode>> RoughingAlgo::pointSet;
 int RoughingAlgo::percision;
+EntRingConnection* lastExecShape = nullptr;
 
 std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& workblank, RoughingParamSettings setting)
 {
+    lastExecShape = shape;
     if (RoughingAlgo::s_cache.size())
     {
         for (EntityVGPU* path : RoughingAlgo::s_cache)
@@ -88,8 +90,8 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             {
                 Polyline2DGPU* sectionLine = new Polyline2DGPU();
                 sectionLine->SetParameter(clippingNodes, false);
-                sectionLine->attribColor = g_yellowColor;
-                sectionLine->ResetColor();
+                //sectionLine->attribColor = g_yellowColor;
+                //sectionLine->ResetColor();
                 layerPolys.push_back(sectionLine);
                 //最内层0
                 clusterNodes.push_back(PointClusterNode(sectionLine->centroid, involute_sequence.size(), sectionLine));
@@ -129,9 +131,9 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
         glm::vec3 centroid = glm::vec3(0, 0, 0);
         for (PointClusterNode& pNode : pair.second)
         {
-            /*pNode.entityParent->attribColor = randomColor;
+            pNode.entityParent->attribColor = randomColor;
             pNode.entityParent->ResetColor();
-            g_canvasInstance->GetSketchShared()->AddEntity(pNode.entityParent);*/
+            
             centroid += pNode.entityParent->centroid;
         }
         centroid /= pair.second.size();
@@ -162,7 +164,6 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
 
         std::vector<glm::vec3> sectionPath;
         Polyline2DGPU* sectionPoly = new Polyline2DGPU();
-        glm::vec4 randomColor = GetRandomColor();
 
         for (int i = 0; i < pair.second.size(); i++)
         {
@@ -253,7 +254,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     {
                         Polyline2DGPU* probePoly = new Polyline2DGPU();
                         probePoly->SetParameter(probePts, false);
-                        probePoly->attribColor = GetRandomColor();
+                        probePoly->attribColor = g_redColor;
                         probePoly->ResetColor();
                         g_canvasInstance->GetSketchShared()->AddEntity(probePoly);
                         s_cache.push_back(probePoly);
@@ -277,12 +278,11 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
                     //    s_cache.push_back(probeSpline);
                     //}
 
-                    Polyline2DGPU* newSection = new Polyline2DGPU();
-                    newSection->SetParameter(sectionPath, false);
-                    newSection->attribColor = g_yellowColor;
-                    newSection->ResetColor();
-                    g_canvasInstance->GetSketchShared()->AddEntity(newSection);
-                    s_cache.push_back(newSection);
+                    ((Polyline2DGPU*)layer)->SetParameter(sectionPath, false);
+                    //newSection->attribColor = g_yellowColor;
+                    layer->ResetColor();
+                    g_canvasInstance->GetSketchShared()->AddEntity(layer);
+                    s_cache.push_back(layer);
                     sectionPath.clear();
                 }
 
@@ -291,7 +291,6 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             lastEnd = nodes.back();
             gcode += layer->GenNcSection(&g_MScontext, false);
             sectionPath.insert(sectionPath.end(), nodes.begin(), nodes.end());
-            delete layer;
             toolInited = true;
         }
 
@@ -324,7 +323,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, const AABB& 
             sectionPoly->SetParameter(nodes, false);
             gcode += sectionPoly->ToNcInstruction(&g_MScontext, false);
         }
-        sectionPoly->attribColor = g_yellowColor;
+        //sectionPoly->attribColor = g_yellowColor;
         sectionPoly->ResetColor();
         g_canvasInstance->GetSketchShared()->AddEntity(sectionPoly);
         s_cache.push_back(sectionPoly);
@@ -347,7 +346,7 @@ void RoughingAlgo::InterpToEscape(const glm::vec3 start, const glm::vec3 end, Vi
         path.insert(path.begin(), start);
         path.push_back(end);
         interpPoly->SetParameter(path, false);
-        interpPoly->attribColor = GetRandomColor();
+        interpPoly->attribColor = g_redColor;
         interpPoly->ResetColor();
         for (int i = 1; i < path.size(); i++)
         {

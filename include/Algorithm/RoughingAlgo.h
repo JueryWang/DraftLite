@@ -12,6 +12,7 @@ class RoughingAlgo
 {
 public:
 	static std::string GetRoughingPath(EntRingConnection* shape,const AABB& workblank,RoughingParamSettings setting);
+	static std::map<int, std::vector<PointClusterNode>> GetRegionResult() { return pointSet; }
 private:
 	//空走路径碰到工件,则插点回避碰撞
 	static void InterpToEscape(const glm::vec3 start,const glm::vec3 end, VisibilityGraph& vGraph,std::string& gcode);

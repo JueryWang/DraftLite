@@ -1,5 +1,6 @@
 #include "UI/Configer/RegionPlannerPostItem.h"
 #include "UI/Configer/RegionPlannerConfig.h"
+#include "Algorithm/RoughingAlgo.h"
 #include <QHBoxLayout>
 #include <QIcon>
 
@@ -197,6 +198,22 @@ void RegionPlannerPostItemGroup::SetGroupColor(const QColor& color)
 			background-color: rgb(%1,%2,%3);
 		}
 	)").arg(color.red()).arg(color.green()).arg(color.blue()));
+
+	RegionPlannerPostGroupPage* pageParent = RegionPlannerConfigPage::GetInstance()->postSetPage;
+	std::set<int> regionIds;
+	for (RegionPlannerPostItem* item : items)
+	{
+		regionIds.insert(item->attachedWidget->regionName->text().toInt());
+	}
+	std::map<int, std::vector<PointClusterNode>>&& clusterMap = RoughingAlgo::GetRegionResult();
+	for(int regionId : regionIds)
+	{
+		for (PointClusterNode& node : clusterMap[regionId])
+		{
+			node.entityParent->attribColor = glm::vec4(color.redF(), color.greenF(), color.blueF(),1.0f);
+			node.entityParent->ResetColor();
+		}
+	}
 }
 
 void RegionPlannerPostItemGroup::Clean()

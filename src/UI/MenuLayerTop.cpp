@@ -5,6 +5,7 @@
 #include "UI/GCodeEditor.h"
 #include "UI/Configer/WorkBlankConfig.h"
 #include "UI/Configer/RoughingConfig.h"
+#include "UI/Configer/RegionPlannerConfig.h"
 #include "IO/DxfProcessor.h"
 #include "IO/GCodeProcessor.h"
 #include "IO/XMLProcessor.h"
@@ -12,6 +13,7 @@
 #include "Graphics/Sketch.h"
 #include "Graphics/Point2D.h"
 #include "Auth/WG_Authorization.h"
+#include "Algorithm/RoughingAlgo.h"
 #include <QDir>
 #include <QGridLayout>
 #include <QCoreApplication>
@@ -98,6 +100,13 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	connect(addRoughting, &QAction::triggered, [&]() {
 		RoughingConfigPage::GetInstance()->show();
 	});
+	QAction* addRegionPlanner = CamMenu->addAction(tr("开粗区域规划"));
+	connect(addRegionPlanner, &QAction::triggered, [&]() {
+		std::map<int, std::vector<PointClusterNode>>&& pointSet = RoughingAlgo::GetRegionResult();
+		RegionPlannerConfigPage::GetInstance()->preSetPage->SetRegionCount(pointSet.size());
+		RegionPlannerConfigPage::GetInstance()->show();
+	});
+
 
 	connect(addWorkBlance, &QAction::triggered, [&]() {
 		if (g_canvasInstance->GetSelectedEntitys().size())
