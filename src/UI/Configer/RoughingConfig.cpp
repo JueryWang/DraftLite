@@ -121,7 +121,7 @@ RoughingConfigPage::RoughingConfigPage()
 				QMessageBox::warning(nullptr,"错误","未指定工件");
 				return;
 			}
-			if (WorkBlankConfigPage::s_attachedRing->workBlank == nullptr)
+			if (WorkBlankConfigPage::s_workBlank== nullptr)
 			{
 				QMessageBox::warning(nullptr, "错误", "未指定毛坯");
 				return;
@@ -132,8 +132,7 @@ RoughingConfigPage::RoughingConfigPage()
 			char buffer[256];
 			std::sprintf(buffer, "N%03d G81 X%f Y%f\n", g_MScontext.ncstep, g_MScontext.toolPos.x - g_MScontext.wcsAnchor, g_MScontext.toolPos.y - g_MScontext.wcsAnchor);
 			gcode += buffer;
-			gcode += RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing, WorkBlankConfigPage::s_attachedRing->workBlank->bbox, RoughingConfigPage::s_setting);
-			//GCodeEditor::GetInstance()->CleanCache();
+			gcode = RoughingAlgo::GetRoughingPath(WorkBlankConfigPage::s_attachedRing, WorkBlankConfigPage::s_workBlank->bbox, RoughingConfigPage::s_setting);
 			GCodeEditor::GetInstance()->setText(QString::fromStdString(gcode));
 			this->close();
 		});
@@ -144,6 +143,8 @@ RoughingConfigPage::RoughingConfigPage()
 	row4->addWidget(btnComfirm);
 	connect(btnComfirm, &QPushButton::clicked, this, [&]()
 		{
+
+
 			this->close();
 		});
 

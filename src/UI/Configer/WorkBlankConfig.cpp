@@ -13,7 +13,7 @@ using namespace CNCSYS;
 
 CNCSYS::EntRingConnection* WorkBlankConfigPage::s_attachedRing = nullptr;
 WorkBlankConfigPage* WorkBlankConfigPage::s_instance = nullptr;
-
+CNCSYS::EntityVGPU* WorkBlankConfigPage::s_workBlank = nullptr;
 
 WorkBlankConfigPage* WorkBlankConfigPage::GetInstance()
 {
@@ -77,7 +77,7 @@ WorkBlankConfigPage::WorkBlankConfigPage()
 	layout->addWidget(confirmBtn, 2, 1, 1, 1);
 	connect(confirmBtn, &QPushButton::clicked, [this]()
 	{
-		if (!WorkBlankConfigPage::s_attachedRing->workBlank)
+		if (workBlankMapper[WorkBlankConfigPage::s_attachedRing] == nullptr)
 		{
 			double width = widthEdit->text().toDouble();
 			double height = heightEdit->text().toDouble();
@@ -94,7 +94,7 @@ WorkBlankConfigPage::WorkBlankConfigPage()
 			rectangle->selectable = false;
 			rectangle->isSelected = true;
 			g_canvasInstance->GetSketchShared()->AddEntity(rectangle);
-			WorkBlankConfigPage::s_attachedRing->workBlank = rectangle;
+			WorkBlankConfigPage::s_workBlank = rectangle;
 		}
 	});
 

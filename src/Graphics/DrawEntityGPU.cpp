@@ -722,12 +722,6 @@ namespace CNCSYS
 		}
 		if (conponents.size() == 0)
 		{
-			find = std::find(sketch->entities.begin(), sketch->entities.end(), workBlank);
-			if (find != sketch->entities.end())
-			{
-				sketch->entities.erase(find);
-			}
-			delete workBlank;
 			EntGroup* parent = this->groupParent;
 			parent->EraseRingConnection(this, sketch);
 		}

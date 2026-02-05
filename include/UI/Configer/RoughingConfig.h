@@ -23,6 +23,7 @@ private:
 private:
 	static RoughingConfigPage* s_instance;
 	static RoughingParamSettings s_setting;
+
 	
 	QLabel* labelDirection = nullptr;
 	QComboBox* comboDirection = nullptr;

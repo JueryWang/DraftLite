@@ -734,7 +734,7 @@ namespace CNCSYS
 			return reflectPoint(point, A, B, C);
 		}
 
-		static glm::mat4 scaledMatrix(const glm::mat4& origin, const glm::vec3& scalar, const glm::vec3& center)
+		static glm::mat4 scaledMatrix(const glm::mat4& baseMat, const glm::vec3& scalar, const glm::vec3& center)
 		{
 			glm::vec3 offsetToOrigin = -center;
 
@@ -742,7 +742,7 @@ namespace CNCSYS
 			glm::mat4 scaledMatrix = glm::scale(glm::mat4(1.0f), scalar);
 			glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), -offsetToOrigin);
 
-			return translateBack * scaledMatrix * translateToOrigin * origin;
+			return translateBack * scaledMatrix * translateToOrigin * baseMat;
 		}
 
 		static glm::mat4 rotatedMatrix(const glm::mat4& origin, float angle, const glm::vec3& center)

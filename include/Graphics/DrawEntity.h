@@ -248,8 +248,6 @@ namespace CNCSYS
 	public:
 		std::vector<EntityVGPU*> conponents;
 		glm::vec3 centroid = glm::vec3(0,0,0);
-		//毛坯
-		EntityVGPU* workBlank = nullptr;
 		AABB bbox;
 		glm::vec3 startPoint;
 		glm::vec3 endPoint;
