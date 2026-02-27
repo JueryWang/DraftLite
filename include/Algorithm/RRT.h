@@ -33,5 +33,5 @@ private:
 	Point64 goalPos;
 	Paths64 obstacles;
 
-	int maxNodeCount = 1000;
+	int maxNodeCount = 10000;
 };

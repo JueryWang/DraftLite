@@ -11,10 +11,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
-
 namespace CNCSYS
 {
-
 	RectArrayGenDlg* RectArrayGenDlg::instance = nullptr;
 	RingArrayGenDlg* RingArrayGenDlg::instance = nullptr;
 

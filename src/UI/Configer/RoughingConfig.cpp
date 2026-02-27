@@ -116,11 +116,6 @@ RoughingConfigPage::RoughingConfigPage()
 	row4->addWidget(btnExec);
 	connect(btnExec, &QPushButton::clicked, this, [&]()
 		{
-			if (WorkBlankConfigPage::s_attachedRing == nullptr)
-			{
-				QMessageBox::warning(nullptr,"错误","未指定工件");
-				return;
-			}
 			if (WorkBlankConfigPage::s_workBlank== nullptr)
 			{
 				QMessageBox::warning(nullptr, "错误", "未指定毛坯");

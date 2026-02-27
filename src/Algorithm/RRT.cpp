@@ -10,7 +10,7 @@ void RRT::ProbePath(std::vector<Point64>& intermediate, int probeDistance, const
 	nodePool.emplace_back(startPos,-1);
 
 	std::uniform_int_distribution<int> distX(MapMin.x, MapMax.x);
-	std::uniform_int_distribution<int> distY(MapMax.y, MapMax.y);
+	std::uniform_int_distribution<int> distY(MapMin.y, MapMax.y);
 	std::random_device rd;
 	std::mt19937 gen(rd());
 

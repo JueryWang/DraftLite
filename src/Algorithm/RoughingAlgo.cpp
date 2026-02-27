@@ -155,6 +155,11 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
     char buffer[256];
     for (auto& pair : regionSet)
     {
+  //      auto it = regionSet.begin();
+  //      ++it;
+  //      ++it;
+  //      ++it;
+		//auto pair = *it;
         Path2D* path = new Path2D();
         regionPaths[pair.first] = path;
         std::vector<glm::vec3> sectionPath;
@@ -238,23 +243,40 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
                     jumpline->SetParameter(probePts,false);
                     jumpline->attribColor = g_redColor;
                     jumpline->ResetColor();
-                    g_canvasInstance->GetSketchShared()->AddEntity(jumpline);
+                    //g_canvasInstance->GetSketchShared()->AddEntity(jumpline);
                     s_cache.push_back(jumpline);
                     //regionPaths[pair.first]->AddNext(jumpline,true);
                 }
             }
             else if (toolInited)
             {
-                int collisionLayer = pair.second[i].clippingLayer;
+                int collisionLayer = pair.second[i].clippingLayer+1;
                 Path64 marchingline;
                 glm::vec3 lineS = lastEnd;
                 glm::vec3 lineEd = start;
                 marchingline.emplace_back(lineS.x* RoughingAlgo::percision, lineS.y* RoughingAlgo::percision);
                 marchingline.emplace_back(lineEd.x* RoughingAlgo::percision, lineEd.y* RoughingAlgo::percision);
-                
-                if (Intersect(marchingline, involute_sequence[collisionLayer]))
+                auto intersectPaths = GetIntersections(marchingline, involute_sequence[collisionLayer]);
+
+                if (intersectPaths.size() && intersectPaths[0].size() >= 2)
                 {
 					Point64 nearestPt;
+     //               Point2DGPU* intersectPoint = new Point2DGPU();
+     //               intersectPoint->SetParameter(glm::vec3((float)intersectPaths[0][0].x/ RoughingAlgo::percision, (float)intersectPaths[0][0].y / RoughingAlgo::percision,0.0));
+     //               
+     //               std::vector<glm::vec3> layerPath;
+     //               Polyline2DGPU* intersectionLayer = new Polyline2DGPU();
+     //               for (Clipper2Lib::Point64 layerPt : involute_sequence[collisionLayer])
+     //               {
+					//	layerPath.push_back(glm::vec3((float)layerPt.x / RoughingAlgo::percision, (float)layerPt.y / RoughingAlgo::percision, 0.0f));
+     //               }
+					//intersectionLayer->SetParameter(layerPath, true);
+     //               g_canvasInstance->GetSketchShared()->AddEntity(intersectionLayer);
+
+     //               intersectPoint->attribColor = g_yellowColor;
+     //               intersectPoint->ResetColor();
+     //               g_canvasInstance->GetSketchShared()->AddEntity(intersectPoint);
+
                     double nearestDist = DBL_MAX;
                     for (Point64& pt : involute_sequence[std::max(collisionLayer-1,0)])
                     {
@@ -297,7 +319,15 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
 
                     sectionPath.clear();
                 }
-
+				else//如果不相交,直接跳转
+                {
+					Polyline2DGPU* jumpline = new Polyline2DGPU();
+                    jumpline->SetParameter({ lineS ,lineEd }, false);
+                    jumpline->attribColor = g_redColor;
+                    jumpline->ResetColor();
+                    g_canvasInstance->GetSketchShared()->AddEntity(jumpline);
+                    s_cache.push_back(jumpline);
+                }
             }
 
             lastEnd = nodes.back();
@@ -355,7 +385,6 @@ double RoughingAlgo::GetDistance(const Point64& p1, const Point64& p2)
 
 void RoughingAlgo::ProbePath(const Point64& start, const Point64& end, const Path64& collisionShape,int probeDistance, std::vector<Point64>& intermidate, int deepth)
 {
-    //RRT 生成从起点到终点的路径
     Point64 random = start;
     bool valid = false;
     bool collision = true;

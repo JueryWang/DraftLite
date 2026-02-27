@@ -33,6 +33,7 @@ bool Intersect(const Clipper2Lib::Path64& pathA, const Clipper2Lib::Path64& path
     return collision;
 }
 
+
 double GetDistance(const Point64& p1, const Point64& p2)
 {
     double dx = static_cast<double>(p1.x - p2.x);
