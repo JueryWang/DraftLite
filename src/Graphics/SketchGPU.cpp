@@ -29,6 +29,11 @@ namespace CNCSYS
 	{
 	}
 
+	SketchGPU::SketchGPU(const std::string& fromfile)
+	{
+
+	}
+
 	SketchGPU::~SketchGPU()
 	{
 		ClearEntities();

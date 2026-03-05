@@ -1,4 +1,4 @@
-#include "Graphics/Line2D.h"
+﻿#include "Graphics/Line2D.h"
 #include "Common/ProgressInfo.h"
 #include "Controls/GCodeController.h"
 #include "UI/GCodeEditor.h"
@@ -214,7 +214,7 @@ float Line2DGPU::CurvatureRadius(float t)
 
 void Line2DGPU::SetParameter(const glm::vec3& start, const glm::vec3& end)
 {
-	bbox = AABB(start, end);;
+	bbox = AABB(start, end);
 	area = 0;
 
 	this->start = start;

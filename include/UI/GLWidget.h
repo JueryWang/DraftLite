@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "Common/OpenGLContext.h"
 #include <functional>
 #include <QKeyEvent>
@@ -10,7 +10,7 @@
 
 #include <vector>
 
-//±ê×¢½á¹¹Ìå
+//æ ‡æ³¨ç»“æž„ä½“
 struct Tag
 {
 public:

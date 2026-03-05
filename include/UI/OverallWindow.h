@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <QWidget>
 #include <Controls/ScadaNode.h>
 #include <UI/MenuLayerTop.h>
@@ -31,6 +31,7 @@ private:
 	ScadaNode* monitorAutoBusy = nullptr;
 	ScadaNode* monitorToolRadius = nullptr;
 	ScadaNode* monitorToolDistance = nullptr;
+	ScadaNode* monitorAxisX = nullptr;
 
 	QTimer heartBeatDetectTimer;
 };

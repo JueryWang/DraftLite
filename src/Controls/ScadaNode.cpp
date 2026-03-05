@@ -1,4 +1,4 @@
-#include "Controls/ScadaNode.h"
+﻿#include "Controls/ScadaNode.h"
 #include "Controls/ScadaScheduler.h"
 #include "Controls/GlobalPLCVars.h"
 #include <iostream>

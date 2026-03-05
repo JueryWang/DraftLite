@@ -1,4 +1,4 @@
-#define GLFW_EXPOSE_NATIVE_WIN32
+﻿#define GLFW_EXPOSE_NATIVE_WIN32
 #include "Graphics/Canvas.h"
 #include "Graphics/OCS.h"
 #include "Graphics/Sketch.h"
@@ -179,7 +179,7 @@ namespace CNCSYS
 		//connect(guide->longPressTimerZoomIn, &QTimer::timeout, this, &CanvasGPU::OnZoomIn);
 		//connect(guide->longPressTimerZoomOut, &QTimer::timeout, this, &CanvasGPU::OnZoomOut);
 
-		toolAnchor = Anchor::GetInstance();
+		toolAnchor = new Anchor();
 		toolAnchor->SetCoordinateSystem(ocsSys);
 		g_canvasInstance = this;
 	}
@@ -201,23 +201,18 @@ namespace CNCSYS
 
 	void CanvasGPU::UpdateOCS()
 	{
+		//更新画面
 		ocsSys->ComputeScaleFitToCanvas();
 		ocsSys->FitToZero();
 		if (isMainCanvas)
 		{
 			ocsSys->UpdateTickers();
 		}
-		for (EntGroup* group : m_currentSketch.get()->entityGroups)
+		for (EntityVGPU* ent : m_currentSketch.get()->entities)
 		{
-			group->Move(ocsSys->translationToZero);
-			for (EntRingConnection* ring : group->rings)
-			{
-				for (EntityVGPU* ent : ring->conponents)
-				{
-					ent->UpdatePaintData();
-					m_currentSketch.get()->UpdateEntityBox(ent, ent->bbox);
-				}
-			}
+			ent->Move(ocsSys->translationToZero);
+			ent->UpdatePaintData();
+			m_currentSketch.get()->UpdateEntityBox(ent, ent->bbox);
 		}
 	}
 
@@ -1753,24 +1748,20 @@ namespace CNCSYS
 		captureType = mode;
 	}
 
-	QImage CanvasGPU::GrabImage(SketchGPU* sketch, OCSGPU* ocs, int imageWidth, int imageHeight)
+	QImage CanvasGPU::GrabImage(SketchGPU* sketch, OCSGPU* ocs, int imageWidth, int imageHeight, const glm::vec4& bgcolor)
 	{
 		memset(m_windowbuf, 255, m_width * m_height * bit_per_pixel);
 
 		ocs->SetCanvasSizae(m_width, m_height);
 		ocs->ComputeScaleFitToCanvas();
 		ocs->FitToZero();
-		for (EntGroup* group : sketch->entityGroups)
+
+
+		for (EntityVGPU* entity : sketch->GetEntities())
 		{
-			group->Move(ocs->translationToZero);
-			for (EntRingConnection* ring : group->rings)
-			{
-				for (EntityVGPU* ent : ring->conponents)
-				{
-					ent->UpdatePaintData();
-					sketch->UpdateEntityBox(ent, ent->bbox);
-				}
-			}
+			entity->Move(ocs->translationToZero);
+			entity->UpdatePaintData();
+			sketch->UpdateEntityBox(entity, entity->bbox);
 		}
 
 		int widthStash, heightStash;
@@ -1780,7 +1771,7 @@ namespace CNCSYS
 		if (windowInst)
 		{
 			glfwMakeContextCurrent(windowInst);
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClearColor(bgcolor.x, bgcolor.y, bgcolor.z, bgcolor.w);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			g_lineWidth = 4.0f;
@@ -1803,6 +1794,7 @@ namespace CNCSYS
 
 			g_lineWidth = 2.0f;
 			image = QImage(m_windowbuf, m_width, m_height, QImage::Format_RGB888).mirrored(false, true);
+			image.save("SketchImage.png", "PNG");
 		}
 		return image.scaled(imageWidth, imageHeight, Qt::KeepAspectRatio);
 	}

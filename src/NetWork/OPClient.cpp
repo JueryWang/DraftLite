@@ -1,4 +1,4 @@
-#include "Controls/ScadaNode.h"
+﻿#include "Controls/ScadaNode.h"
 #include "Controls/ScadaScheduler.h"
 #include "NetWork/OPClient.h"
 #include "NetWork/MessageValidtor.h"
@@ -560,9 +560,6 @@ void OPClient::ReconnectWithHint()
 
 void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarType type)
 {
-	if (varOpc->status != UA_STATUSCODE_GOOD) {
-		g_file_logger->error("OPC 节点 读取状态异常:{}  ||调用函数{}", UA_StatusCode_name(varOpc->status), __FUNCTION__);
-	}
 
 	if (varOpc->value.type == &UA_TYPES[UA_TYPES_STRING])
 	{

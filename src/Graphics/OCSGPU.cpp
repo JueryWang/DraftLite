@@ -168,6 +168,7 @@ namespace CNCSYS
 
 	void OCSGPU::OnMouseScroll(float delta, const glm::vec2& mousePosition)
 	{
+		this;
 		glm::vec2 preOcsPos = GetOCSPosWithPixelPos(mousePosition);
 		float scalar = delta > 0 ? zoomFactor : 1.0f / zoomFactor;
 		scale *= scalar;

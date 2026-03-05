@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Graphics/DrawEntity.h"
 
 using namespace CNCSYS;

@@ -155,11 +155,6 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
     char buffer[256];
     for (auto& pair : regionSet)
     {
-  //      auto it = regionSet.begin();
-  //      ++it;
-  //      ++it;
-  //      ++it;
-		//auto pair = *it;
         Path2D* path = new Path2D();
         regionPaths[pair.first] = path;
         std::vector<glm::vec3> sectionPath;

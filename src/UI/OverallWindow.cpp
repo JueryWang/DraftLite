@@ -1,4 +1,4 @@
-#include "UI/OverallWindow.h"
+﻿#include "UI/OverallWindow.h"
 #include "Graphics/Sketch.h"
 #include "Common/ProgressInfo.h"
 #include "Controls/GlobalPLCVars.h"
@@ -29,7 +29,7 @@ void executeAfterDelay(std::chrono::milliseconds delay, std::function<void()> ta
 }
 OverallWindow::OverallWindow()
 {
-	SketchGPU* sketch = new SketchGPU();
+	SketchGPU* sketch = new SketchGPU();	
 	setWindowFlags(Qt::FramelessWindowHint);
 	this->setWindowIcon(QIcon(ICOPATH(logo.ico)));
 
@@ -175,6 +175,9 @@ OverallWindow::OverallWindow()
 				monitorToolDistance->lastValue.lastLReal = distance;
 			}
 	};
+
+	monitorAxisX = new ScadaNode();
+
 
 	ScadaScheduler::GetInstance()->AddNode(monitorIndexPage);
 	ScadaScheduler::GetInstance()->AddNode(monitorUploadFTP);

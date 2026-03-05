@@ -82,7 +82,7 @@ namespace CNCSYS
 		void SetScene(std::shared_ptr<SketchGPU> sketch, OCSGPU* ocs);
 		void SetCaptureMode(CaptureMode mode);
 		GLWidget* GetFrontWidget() { return frontWidget; }
-		QImage GrabImage(SketchGPU* sketch, OCSGPU* ocs, int imageWidth, int imageHeight);
+		QImage GrabImage(SketchGPU* sketch, OCSGPU* ocs, int imageWidth, int imageHeight,const glm::vec4& bgcolor = glm::vec4(1.0,1.0,1.0,1.0));
 		void RenderText(std::string& text, float x, float y, float scale, const glm::vec3& color);
 
 	protected:

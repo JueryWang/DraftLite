@@ -29,6 +29,7 @@ namespace CNCSYS
 
 	public:
 		SketchGPU();
+		SketchGPU(const std::string& fromfile);
 		~SketchGPU();
 
 		void AddEntity(EntityVGPU* e);

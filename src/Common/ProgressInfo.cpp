@@ -62,8 +62,8 @@ void InitPLConfig()
 		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"},   //设备自动运行中
 		{"ToolRadius","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
 		{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
-		{"AxisX","gvlGlobalData.stStatusCADWork.stCoordAxis.fPositionAxisX"},
-		{"AxisY","gvlHMI.stStatusGearChamferMachine.stStatusAxisZ1.fActPosition"}
+		{"AxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
+		{"AxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"}
 	};
 
 	g_settings = new QSettings(QDir::currentPath() + "/config.ini", QSettings::IniFormat);
