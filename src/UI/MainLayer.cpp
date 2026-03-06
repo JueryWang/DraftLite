@@ -77,6 +77,7 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 		int canvasWidth = ScreenSizeHintX(canvas_panel_width_ratio);
 		int canvasHeight = ScreenSizeHintY(canvas_panel_height_ratio);
 		CanvasGPU* canvasMain = new CanvasGPU(mSketchGPU, canvasWidth, canvasHeight, true);
+		g_canvasInstance = canvasMain;
 		glWidget = new GLWidget(canvasMain, nullptr, DYNAMIC_DRAW);
 		canvasMain->SetFrontWidget(glWidget);
 		glWidget->setFixedSize(canvasWidth, canvasHeight);

@@ -128,14 +128,13 @@ int main(int argc, char* argv[]){
 
 	OverallWindow* window = new OverallWindow();
 	window->show();
-	//TaskListWindow::GetInstance()->setParent(window);
-	//TaskListWindow::GetInstance()->setWindowFlags(Qt::Tool | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
+	TaskListWindow::GetInstance()->setParent(window);
+	TaskListWindow::GetInstance()->setWindowFlags(Qt::Tool | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 
-	//TaskFlowGuide* guide = new TaskFlowGuide(window);
-	//guide->show();
+	TaskFlowGuide* guide = new TaskFlowGuide(window);
+	guide->show();
 
 	std::shared_ptr<SketchGPU> sketch1(new SketchGPU());
-	CanvasGPU* canvas1 = new CanvasGPU(sketch1,100,100,false);
 	Spline2DGPU* spline1 = new Spline2DGPU();
 	std::vector<glm::vec3> controlPoints;
 	for (int i = 0; i < 10; i++)
@@ -145,21 +144,30 @@ int main(int argc, char* argv[]){
 	std::vector<float> knots = MathUtils::GenerateClampedKnots(controlPoints.size(), 3);
 	spline1->SetParameter(controlPoints,knots,false);
 	sketch1->AddEntity(spline1);
+	CanvasGPU* canvas1 = new CanvasGPU(sketch1, 100 * 768.0 / 375, 100,false);
 
 	SideNavigator* navigator = new SideNavigator();
 	navigator->show();
 	StationConfig config;
-	config.canvasWidth = 100;
-	config.canvasHeight = 100;
-	NavImage* navImage = navigator->AddNavItem(canvas1, sketch1.get(), config);
+	config.canvasWidth = 200;
+	config.canvasHeight = 150;
+	NavImageItem* navImage = navigator->AddNavItem(canvas1, sketch1.get(), config);
 	
 	std::shared_ptr<SketchGPU> sketch2(new SketchGPU());
-	CanvasGPU* canvas2 = new CanvasGPU(sketch2, 100, 100, false);
 	Circle2DGPU* arc = new Circle2DGPU();
 	arc->SetParameter(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0), 50);
 	sketch2->AddEntity(arc);
-	NavImage* navImage2 = navigator->AddNavItem(canvas2, sketch2.get(), config);
-
+	CanvasGPU* canvas2 = new CanvasGPU(sketch2, 100 * 768.0 / 375, 100, false);
+	NavImageItem* navImage2 = navigator->AddNavItem(canvas2, sketch2.get(), config);
+	
+	GLWidget* preview1 = new GLWidget(canvas1, sketch1.get(), DYNAMIC_DRAW);
+	preview1->setFixedSize(100 * 768.0/375,100);
+	canvas1->SetFrontWidget(preview1);
+	preview1->show();
+	GLWidget* preview2 = new GLWidget(canvas2, sketch2.get(), DYNAMIC_DRAW);
+	preview2->show();
+	preview2->setFixedSize(100 * 768.0 / 375, 100);
+	canvas2->SetFrontWidget(preview2);
 
 	return app.exec();
 }

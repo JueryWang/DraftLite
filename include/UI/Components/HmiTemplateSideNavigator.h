@@ -3,6 +3,8 @@
 #include <vector>
 #include <QWidget>
 #include <QImage>
+#include <QLabel>
+#include <QListWidgetItem>
 #include <QVBoxLayout>
 #include "Controls/ScadaNode.h"
 #include "Graphics/Canvas.h"
@@ -19,17 +21,23 @@ public:
 	int canvasHeight = 50;
 };
 
-class NavImage : public QWidget
+class SideNavigator;
+
+class NavImageItem : public QWidget
 {
 public:
-	NavImage(CanvasGPU* canvas = nullptr, SketchGPU* sketch = nullptr, const StationConfig& config = StationConfig());
-	~NavImage();
+	NavImageItem(int row = 0,CanvasGPU* canvas = nullptr, SketchGPU* sketch = nullptr, const StationConfig& config = StationConfig());
+	~NavImageItem();
 	void UpdateImage();
 public:
 	QLabel* displayImg;
+	QLabel* indexLabel;
 	StationConfig config;
 	CanvasGPU* canvas = nullptr;
 	SketchGPU* sketch = nullptr;
+	QListWidget* parent;
+	std::string fileSource;
+	int row;
 };
 
 
@@ -38,9 +46,9 @@ class SideNavigator : public QWidget
 public:
 	SideNavigator();
 	~SideNavigator();
-	NavImage* AddNavItem(CanvasGPU* canvas = nullptr, SketchGPU* sketch = nullptr,const StationConfig& config = StationConfig());
+	NavImageItem* AddNavItem(CanvasGPU* canvas = nullptr, SketchGPU* sketch = nullptr,const StationConfig& config = StationConfig());
 
 public:
-	std::vector<NavImage*> navImgs;
-	QVBoxLayout* vlayout;
+	std::vector<NavImageItem*> navImgs;
+	QListWidget* NavLists = nullptr;
 };

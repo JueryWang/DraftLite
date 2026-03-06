@@ -58,6 +58,7 @@ namespace CNCSYS
 		UpdateOCS();
 		mouseHint = new TransformBaseHint();
 		mouseHint->hide();
+		sketch->mainCanvas = this;
 
 		this->Resize(QSize(width, height));
 
@@ -181,7 +182,6 @@ namespace CNCSYS
 
 		toolAnchor = new Anchor();
 		toolAnchor->SetCoordinateSystem(ocsSys);
-		g_canvasInstance = this;
 	}
 
 	CanvasGPU::~CanvasGPU()
@@ -336,6 +336,7 @@ namespace CNCSYS
 				if (menu.actions().size() > 0)
 					menu.exec(QCursor().pos());
 			}
+			QMetaObject::invokeMethod(frontWidget, "repaint");
 			break;
 		}
 		case QEvent::MouseMove:
@@ -355,7 +356,7 @@ namespace CNCSYS
 			{
 				handleEventCapture(glwgt, mouseEvent->pos());
 			}
-
+			QMetaObject::invokeMethod(frontWidget, "repaint");
 			break;
 		}
 		case QEvent::Wheel:
@@ -372,6 +373,7 @@ namespace CNCSYS
 			{
 				handleEventCapture(glwgt, lastMousePos);
 			}
+			QMetaObject::invokeMethod(frontWidget, "repaint");
 			break;
 		}
 		case QEvent::MouseButtonRelease:
@@ -390,6 +392,7 @@ namespace CNCSYS
 			{
 				EraseSelectedEntitys();
 			}
+			QMetaObject::invokeMethod(frontWidget, "repaint");
 			break;
 		}
 		}
@@ -942,14 +945,12 @@ namespace CNCSYS
 				if (!ent->isSelected)
 				{
 					lastHoverEntity = ent;
-					hoverChangedCallback(ent->Description());
 					ent->isHover = true;
 					ent->color = g_yellowColor;
 				}
 			}
 			else
 			{
-				hoverChangedCallback(QString(""));
 			}
 		}
 		else if (captureType == CaptureMode::Point)
@@ -1431,7 +1432,10 @@ namespace CNCSYS
 	{
 		ocsSys = ocs;
 		ocs->SetSketch(sketch);
-		frontWidget->SetOCSystem(ocs);
+		if (frontWidget != nullptr)
+		{
+			frontWidget->SetOCSystem(ocs);
+		}
 		toolAnchor->SetCoordinateSystem(ocs);
 		m_currentSketch = sketch;
 		sketch->mainCanvas = this;
@@ -1774,7 +1778,7 @@ namespace CNCSYS
 			glClearColor(bgcolor.x, bgcolor.y, bgcolor.z, bgcolor.w);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			g_lineWidth = 4.0f;
+			g_lineWidth = 5.0f;
 
 			glm::mat4 ortho = ocs->camera->GetOrthoGraphicMatrix();
 			glm::mat4 view = ocs->camera->GetViewMatrix();
@@ -1794,9 +1798,8 @@ namespace CNCSYS
 
 			g_lineWidth = 2.0f;
 			image = QImage(m_windowbuf, m_width, m_height, QImage::Format_RGB888).mirrored(false, true);
-			image.save("SketchImage.png", "PNG");
 		}
-		return image.scaled(imageWidth, imageHeight, Qt::KeepAspectRatio);
+		return image.scaled(imageWidth, imageHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 	}
 
 	void CanvasGPU::RenderText(std::string& text, float x, float y, float scale, const glm::vec3& color)
@@ -2070,10 +2073,7 @@ namespace CNCSYS
 			}
 
 			////绘制坐标刻度
-			if (isMainCanvas)
-			{
-				DrawTickers();
-			}
+			DrawTickers();
 			//绘制框选框
 			if (isSelecting)
 			{

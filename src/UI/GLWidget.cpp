@@ -73,33 +73,33 @@ namespace CNCSYS
 		}
 		if (m_context->state == DYNAMIC_DRAW)
 		{
-			if (firstShow)
-			{
-				m_updateTimer.start(0);
-				try
-				{
-					m_context->window->updateGL();
-					QMetaObject::invokeMethod(this, "repaint");
-				}
-				catch (...)
-				{
+		//	if (firstShow)
+		//	{
+		//		m_updateTimer.start(0);
+		//		try
+		//		{
+		//			m_context->window->updateGL();
+		//			QMetaObject::invokeMethod(this, "repaint");
+		//		}
+		//		catch (...)
+		//		{
 
-				}
-				firstShow = false;
-			}
+		//		}
+		//		firstShow = false;
+		//	}
 
-			if (this->isVisible())
-			{
-				try
-				{
-					m_context->window->updateGL();
-					QMetaObject::invokeMethod(this, "repaint");
-				}
-				catch (...)
-				{
+		//	if (this->isVisible())
+		//	{
+		//		try
+		//		{
+		//			m_context->window->updateGL();
+		//			QMetaObject::invokeMethod(this, "repaint");
+		//		}
+		//		catch (...)
+		//		{
 
-				}
-			}
+		//		}
+		//	}
 		}
 	}
 
@@ -108,7 +108,9 @@ namespace CNCSYS
 		QPainter painter;
 		painter.begin(this);
 		QSize size = m_context->window->GetSize();
-		painter.drawImage(QRect(0, 0, size.width(), size.height()), m_context->window->grabImage());
+		int width = this->width();
+		int height = this->height();
+		painter.drawImage(QRect(0, 0, width, height), m_context->window->grabImage().scaled(width,height,Qt::KeepAspectRatio,Qt::SmoothTransformation));
 		if (ocsSys)
 		{
 			QPen pen;
@@ -143,20 +145,6 @@ namespace CNCSYS
 					str.replace(trailingDot, "");
 					painter.drawText(tickTextCoord.x, tickTextCoord.y, str);
 				}
-			}
-
-			pen.setColor(QColor(255,255,255));
-			QFont font = painter.font();
-			font.setPointSize(20);
-			font.setBold(true);
-			painter.setFont(font);
-			OCSGPU* ocsSys  = g_canvasInstance->GetOCSSystem();
-
-			for (Tag& tag : canvasTags)
-			{
-				glm::vec2 pixelPos = ocsSys->GetPixelPosWithOCSPos(tag.pixelPos);
-				painter.setPen(pen);
-				painter.drawText(pixelPos.x,pixelPos.y,tag.label);
 			}
 		}
 		painter.end();

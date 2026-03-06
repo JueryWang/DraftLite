@@ -30,6 +30,9 @@ void executeAfterDelay(std::chrono::milliseconds delay, std::function<void()> ta
 OverallWindow::OverallWindow()
 {
 	SketchGPU* sketch = new SketchGPU();	
+	Circle2DGPU* arc = new Circle2DGPU();
+	arc->SetParameter(glm::vec3(50, 50, 0), 50);
+	sketch->AddEntity(arc);
 	setWindowFlags(Qt::FramelessWindowHint);
 	this->setWindowIcon(QIcon(ICOPATH(logo.ico)));
 
