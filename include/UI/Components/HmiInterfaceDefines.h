@@ -21,6 +21,7 @@ extern float taskpanel_width_ratio;
 extern float taskpanel_height_ratio;
 extern float todoCanvas_width_ratio;
 extern float todoCanvas_height_ratio;
+extern float fixed_canvas_aspect;
 extern QMap<QString, QString> global_font_mp;
 
 constexpr float msgbox_width_refactor = 0.243;                         //470

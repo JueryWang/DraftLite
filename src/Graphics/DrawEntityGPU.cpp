@@ -412,10 +412,6 @@ namespace CNCSYS
 
 	EntRingConnection::~EntRingConnection()
 	{
-		for (EntityVGPU* conponent : conponents)
-		{
-			delete conponent;
-		}
 		conponents.clear();
 		contour.clear();
 	}
@@ -556,39 +552,39 @@ namespace CNCSYS
 		std::string s;
 		if (conponents.size() > 0)
 		{
-			char buffer[256];
+			//char buffer[256];
 
-			glm::vec3 startPoint = StartPoint();
-			glm::vec3 leftBottom = bbox.getMin();
-			g_MScontext.XAxisStart = startPoint.x - leftBottom.x;
-			g_MScontext.YAxisStart = startPoint.y - leftBottom.y;
-			g_MScontext.ZAxisStart = startPoint.z - leftBottom.z;
-			g_MScontext.wcsAnchor = startPoint;
+			//glm::vec3 startPoint = StartPoint();
+			//glm::vec3 leftBottom = bbox.getMin();
+			//g_MScontext.XAxisStart = startPoint.x - leftBottom.x;
+			//g_MScontext.YAxisStart = startPoint.y - leftBottom.y;
+			//g_MScontext.ZAxisStart = startPoint.z - leftBottom.z;
+			//g_MScontext.wcsAnchor = startPoint;
 
-			g_MScontext.objectRange = g_canvasInstance->GetOCSSystem()->objectRange;
-			g_MScontext.zoom = 1.0f;
-			g_MScontext.toolPos = glm::vec3(0.0f);
-			int step = 0;
+			//g_MScontext.objectRange = g_canvasInstance->GetOCSSystem()->objectRange;
+			//g_MScontext.zoom = 1.0f;
+			//g_MScontext.toolPos = glm::vec3(0.0f);
+			//int step = 0;
 
-			//开头写入M辅助码
-			char MBuffer[256];
-			std::sprintf(MBuffer, "N%03d M1 K%f L%f\n", g_MScontext.ncstep, g_MScontext.XAxisStart, g_MScontext.YAxisStart);
-			s += MBuffer;
-			g_MScontext.ncstep++;
-			GCodeRecord rec(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-			GCodeController::GetController()->AddRecord(rec);
+			////开头写入M辅助码
+			//char MBuffer[256];
+			//std::sprintf(MBuffer, "N%03d M1 K%f L%f\n", g_MScontext.ncstep, g_MScontext.XAxisStart, g_MScontext.YAxisStart);
+			//s += MBuffer;
+			//g_MScontext.ncstep++;
+			//GCodeRecord rec(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+			//GCodeController::GetController()->AddRecord(rec);
 
-			{
-				std::sprintf(MBuffer, "N%03d M2 K%f\n", g_MScontext.ncstep, g_MScontext.ZAxisStart);
-				s += MBuffer;
-				g_MScontext.ncstep++;
-				rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-				GCodeController::GetController()->AddRecord(rec);
-			}
-			
-			//计算刀补偏置后起点
-			float toolDistance = g_MScontext.GetToolDistance();
-			float toolRadius = g_MScontext.GetToolRadius();
+			//{
+			//	std::sprintf(MBuffer, "N%03d M2 K%f\n", g_MScontext.ncstep, g_MScontext.ZAxisStart);
+			//	s += MBuffer;
+			//	g_MScontext.ncstep++;
+			//	rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+			//	GCodeController::GetController()->AddRecord(rec);
+			//}
+			//
+			////计算刀补偏置后起点
+			//float toolDistance = g_MScontext.GetToolDistance();
+			//float toolRadius = g_MScontext.GetToolRadius();
 
 			//{
 			//	//给定进刀位置
@@ -606,28 +602,28 @@ namespace CNCSYS
 			//	s += MBuffer;
 			//}
 
-			{
-				if (direction == GeomDirection::CW)
-				{
-					sprintf(MBuffer, "N%03d G41 D%f\n", g_MScontext.ncstep, toolRadius);
-				}
-				else
-				{
-					sprintf(MBuffer, "N%03d G42 D%f\n", g_MScontext.ncstep, toolRadius);
-				}
-				g_MScontext.ncstep++;
-				s += MBuffer;
-				rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-				GCodeController::GetController()->AddRecord(rec);
-			}
+			//{
+			//	if (direction == GeomDirection::CW)
+			//	{
+			//		sprintf(MBuffer, "N%03d G41 D%f\n", g_MScontext.ncstep, toolRadius);
+			//	}
+			//	else
+			//	{
+			//		sprintf(MBuffer, "N%03d G42 D%f\n", g_MScontext.ncstep, toolRadius);
+			//	}
+			//	g_MScontext.ncstep++;
+			//	s += MBuffer;
+			//	rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+			//	GCodeController::GetController()->AddRecord(rec);
+			//}
 
-			{
-				std::sprintf(MBuffer, "N%03d G01 X0 Y0\n", g_MScontext.ncstep);
-				g_MScontext.ncstep++;
-				s += MBuffer;
-				rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
-				GCodeController::GetController()->AddRecord(rec);
-			}
+			//{
+			//	std::sprintf(MBuffer, "N%03d G01 X0 Y0\n", g_MScontext.ncstep);
+			//	g_MScontext.ncstep++;
+			//	s += MBuffer;
+			//	rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
+			//	GCodeController::GetController()->AddRecord(rec);
+			//}
 			g_MScontext.toolPos = glm::vec3(0, 0, 0);
 			for (EntityVGPU* ent : conponents)
 			{

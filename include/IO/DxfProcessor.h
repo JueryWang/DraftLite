@@ -16,6 +16,7 @@ namespace CNCSYS
 	public:
 		DXFProcessor(std::shared_ptr<SketchGPU> sketch);
 		DXFProcessor(std::shared_ptr<SketchCPU> sketch);
+		void SetSketch(std::shared_ptr<SketchGPU> sketch) { psketchGPU = sketch; };
 		void SetCompleteCallback(std::function<void(void)> callback) { onComplete = callback; }
 		~DXFProcessor();
 

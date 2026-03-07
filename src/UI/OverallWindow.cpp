@@ -188,6 +188,9 @@ OverallWindow::OverallWindow()
 	ScadaScheduler::GetInstance()->AddNode(monitorAutoBusy);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
+	ScadaScheduler::GetInstance()->AddNode(monitorAxisX);
+	ScadaScheduler::GetInstance()->AddNode(monitorAxisY);
+	ScadaScheduler::GetInstance()->AddNode(monitorCurrentRowCNC);
 }
 
 OverallWindow::~OverallWindow()

@@ -29,7 +29,6 @@ namespace CNCSYS
 
 	public:
 		SketchGPU();
-		SketchGPU(const std::string& fromfile);
 		~SketchGPU();
 
 		void AddEntity(EntityVGPU* e);
@@ -42,6 +41,8 @@ namespace CNCSYS
 		std::set<EntRingConnection*> GetParentRings(const std::vector<EntityVGPU*>& entities);
 		void ClearEntities();
 		void AddPath(Path2D* p);
+		//将图元拼接成环
+		void ReOrganize();
 		void UpdateSketch();
 		void UpdateGCode(bool sendToFtp = true);
 		void SetOrigin(const glm::vec3& origin);
@@ -54,7 +55,7 @@ namespace CNCSYS
 		double GetDistanceToSelectedItems(const glm::vec3& center);
 		std::tuple<EntityVGPU*, int, glm::vec2> QueryNearestPoint(const glm::vec3& center, float precision);
 		CanvasGPU* GetCanvas() { return mainCanvas; }
-
+		void SetCanvas(CanvasGPU* canvas);
 		std::vector<EntityVGPU*> GetEntities() { return entities; }
 
 	public slots:

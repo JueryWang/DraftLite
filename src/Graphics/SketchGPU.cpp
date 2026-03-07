@@ -19,19 +19,16 @@
 #include "UI/Configer/RoughingConfig.h"
 #include "UI/Configer/WorkBlankConfig.h"
 #include "IO/Utils.h"
+#include "IO/DxfProcessor.h"
 #include "Common/ProgressInfo.h"
 #include "Algorithm/PartClassifier.h"
+#include "Algorithm/RingDetector.h"
 #include <QDir>
 
 namespace CNCSYS
 {
 	SketchGPU::SketchGPU()
 	{
-	}
-
-	SketchGPU::SketchGPU(const std::string& fromfile)
-	{
-
 	}
 
 	SketchGPU::~SketchGPU()
@@ -173,6 +170,37 @@ namespace CNCSYS
 	void SketchGPU::AddPath(Path2D* p)
 	{
 		paths.push_back(p);
+	}
+
+	void SketchGPU::ReOrganize()
+	{
+		for (EntGroup* group : entityGroups)
+		{
+			delete group;
+		}
+		std::vector<EntRingConnection*> rings = RingDetector::RingDetect(entities);
+		PartClassifier classifier(rings);
+		std::vector<EntGroup*> groups = classifier.Execute();
+
+		for (EntGroup* group : groups)
+		{
+			AddEntityGroup(group);
+		}
+		UpdateSketch();
+
+		for (EntGroup* group : groups)
+		{
+			for (EntRingConnection* ring : group->rings)
+			{
+				if (ring->direction == GeomDirection::CW)
+				{
+					ring->Reverse();
+					ring->direction = GeomDirection::CCW;
+				}
+			}
+		}
+
+		SetOrigin(mainCanvas->GetOCSSystem()->objectRange->getMin());
 	}
 
 	void SketchGPU::UpdateSketch()
@@ -432,6 +460,12 @@ namespace CNCSYS
 			return std::tuple<EntityVGPU*, int, glm::vec2>(findEntity, findIndex, glm::vec2(result.x(), result.y()));
 
 		return std::tuple<EntityVGPU*, int, glm::vec2>(nullptr, -1, glm::vec2(0, 0));
+	}
+
+	void SketchGPU::SetCanvas(CanvasGPU* canvas)
+	{
+		mainCanvas = canvas;
+		attachedOCS = canvas->GetOCSSystem();
 	}
 }
 

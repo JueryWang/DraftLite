@@ -1,4 +1,5 @@
 #include "UI/Components/HmiTemplateStationPreview.h"
+#include "Graphics/Sketch.h"
 
 HmiTemplateStationPreview::HmiTemplateStationPreview()
 {
@@ -6,7 +7,7 @@ HmiTemplateStationPreview::HmiTemplateStationPreview()
 	this->setResizeMode(QListView::Adjust);
 	this->setWrapping(true);
 	this->setSpacing(20);
-	this->setFlow(QListView::LeftToRight);      // ´Ó×óÍùÓÒÅÅÁÐ
+	this->setFlow(QListView::LeftToRight);      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	this->setMovement(QListView::Static);
 
 	model = new QStandardItemModel();
@@ -22,9 +23,41 @@ void HmiTemplateStationPreview::AddPreview(GLWidget* preview)
 	QStandardItem* item = new QStandardItem();
 	model->appendRow(item);
 	QModelIndex index = model->index(previewlists.size(), 0);
-	previewlists.push_back(preview);
-	item->setSizeHint(QSize(200,200));
+	item->setSizeHint(QSize(preview->width(), preview->height() + 200));
 
 	this->setModel(model);
-	this->setIndexWidget(index, preview);
+	PreviewItem* previewItem = new PreviewItem(preview,previewlists.size()+1);
+	this->setIndexWidget(index, previewItem);
+	previewlists.push_back(preview);
+}
+
+PreviewItem::PreviewItem(GLWidget* preview, int id)
+{
+	QVBoxLayout* vlay = new QVBoxLayout();
+	vlay->addWidget(preview);
+	QHBoxLayout* hlay1 = new QHBoxLayout();
+	QLabel* stationHint = new QLabel("å·¥ä½å·:");
+	stationId = new QLabel(QString::number(id));
+	hlay1->addWidget(stationHint);
+	hlay1->addWidget(stationId);
+	vlay->addLayout(hlay1);
+	QLabel* fileSourceHint = new QLabel("æ–‡ä»¶æº:");
+	QHBoxLayout* hlay2 = new QHBoxLayout();
+	fileSource = new QLabel();
+	fileSource->setText(QString::fromUtf8(preview->GetCanvas()->GetSketchShared()->source));
+	hlay2->addWidget(fileSourceHint);
+	hlay2->addWidget(fileSource);
+	vlay->addLayout(hlay2);
+	QLabel* gcodeHint = new QLabel("Gä»£ç é¢„è§ˆ:");
+	vlay->addWidget(gcodeHint);
+	gcodeFileContent = new QPlainTextEdit();
+	gcodeFileContent->setPlainText(QString::fromUtf8(preview->GetCanvas()->GetSketchShared()->ToNcProgram()));
+	vlay->addWidget(gcodeFileContent);
+	vlay->setContentsMargins(0, 0, 0, 0);
+	this->setLayout(vlay);
+}
+
+PreviewItem::~PreviewItem()
+{
+
 }

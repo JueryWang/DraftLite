@@ -32,6 +32,8 @@ private:
 	ScadaNode* monitorToolRadius = nullptr;
 	ScadaNode* monitorToolDistance = nullptr;
 	ScadaNode* monitorAxisX = nullptr;
+	ScadaNode* monitorAxisY = nullptr;
+	ScadaNode* monitorCurrentRowCNC = nullptr;
 
 	QTimer heartBeatDetectTimer;
 };

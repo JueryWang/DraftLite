@@ -20,14 +20,14 @@
 #include "UI/DigitalHUD.h"
 #include "UI/TaskFlowGuide.h"
 #include "UI/CanvasGuide.h"
-#include "UI/Configer/RegionPlannerConfig.h"
 #include "UI/Components/HmiTemplateMonitorTool.h"
 #include "Controls/GlobalPLCVars.h"
 #include "NetWork/OPClient.h"
 #include "NetWork/FtpClient.h"
 #include "IO/ExcelProcessor.h"
-#include "UI/Components/HmiTemplateCraftConfig.h"
+#include "IO/DxfProcessor.h"
 #include "UI/Components/HmiTemplateSideNavigator.h"
+#include "UI/Components/HmiTemplateStationPreview.h"
 #include <QMessageBox>
 #include <QFile>
 #include <QHboxLayout>
@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <string>
 #include <Windows.h>
+
 #include <DbgHelp.h>
 #pragma comment(lib, "Dbghelp.lib")
 using namespace CNCSYS;
@@ -134,40 +135,54 @@ int main(int argc, char* argv[]){
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
 
-	std::shared_ptr<SketchGPU> sketch1(new SketchGPU());
-	Spline2DGPU* spline1 = new Spline2DGPU();
-	std::vector<glm::vec3> controlPoints;
-	for (int i = 0; i < 10; i++)
-	{
-		controlPoints.push_back(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0));
-	}
-	std::vector<float> knots = MathUtils::GenerateClampedKnots(controlPoints.size(), 3);
-	spline1->SetParameter(controlPoints,knots,false);
-	sketch1->AddEntity(spline1);
-	CanvasGPU* canvas1 = new CanvasGPU(sketch1, 100 * 768.0 / 375, 100,false);
+	//std::shared_ptr<SketchGPU> sketch1(new SketchGPU());
+	//DXFProcessor p(sketch1);
+	//std::wstring widePath = L"C:/WJH/Test/工具/测试Dxf/Labubu Keychains-DXFDOWNLOADS.COM.dxf";
 
-	SideNavigator* navigator = new SideNavigator();
-	navigator->show();
-	StationConfig config;
-	config.canvasWidth = 200;
-	config.canvasHeight = 150;
-	NavImageItem* navImage = navigator->AddNavItem(canvas1, sketch1.get(), config);
-	
-	std::shared_ptr<SketchGPU> sketch2(new SketchGPU());
-	Circle2DGPU* arc = new Circle2DGPU();
-	arc->SetParameter(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0), 50);
-	sketch2->AddEntity(arc);
-	CanvasGPU* canvas2 = new CanvasGPU(sketch2, 100 * 768.0 / 375, 100, false);
-	NavImageItem* navImage2 = navigator->AddNavItem(canvas2, sketch2.get(), config);
-	
-	GLWidget* preview1 = new GLWidget(canvas1, sketch1.get(), DYNAMIC_DRAW);
-	preview1->setFixedSize(100 * 768.0/375,100);
-	canvas1->SetFrontWidget(preview1);
-	preview1->show();
-	GLWidget* preview2 = new GLWidget(canvas2, sketch2.get(), DYNAMIC_DRAW);
-	preview2->show();
-	preview2->setFixedSize(100 * 768.0 / 375, 100);
-	canvas2->SetFrontWidget(preview2);
+	//// 转换为 std::string（UTF-8 编码）
+	//std::string utf8Path = std::filesystem::path(widePath).string();
+	//p.read(utf8Path);
+	////std::vector<glm::vec3> controlPoints;
+	////for (int i = 0; i < 10; i++)
+	////{
+	////	controlPoints.push_back(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0));
+	////}
+	////std::vector<float> knots = MathUtils::GenerateClampedKnots(controlPoints.size(), 3);
+	////spline1->SetParameter(controlPoints,knots,false);
+	////sketch1->AddEntity(spline1);
+	//CanvasGPU* canvas1 = new CanvasGPU(sketch1, 200 * fixed_canvas_aspect, 200,false);
+
+	//SideNavigator* navigator = new SideNavigator();
+	//navigator->show();
+	//StationConfig config;
+	//config.canvasWidth = 100* fixed_canvas_aspect;
+	//config.canvasHeight = 100;
+	//
+	//std::shared_ptr<SketchGPU> sketch2(new SketchGPU());
+	//p.SetSketch(sketch2);
+	//widePath = L"C:/WJH/Test/工具/测试Dxf/Red-Bull-Black-Print.dxf";
+	//utf8Path = std::filesystem::path(widePath).string();
+	//p.read(utf8Path);
+	////Circle2DGPU* arc = new Circle2DGPU();
+	////arc->SetParameter(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0), 50);
+	////sketch2->AddEntity(arc);
+	//CanvasGPU* canvas2 = new CanvasGPU(sketch2, 200 * fixed_canvas_aspect, 200, false);
+	//
+	//GLWidget* preview1 = new GLWidget(canvas1, sketch1.get(), DYNAMIC_DRAW);
+	//preview1->setFixedSize(200 * fixed_canvas_aspect,200);
+	//canvas1->SetFrontWidget(preview1);
+	//preview1->show();
+	//GLWidget* preview2 = new GLWidget(canvas2, sketch2.get(), DYNAMIC_DRAW);
+	//preview2->show();
+	//preview2->setFixedSize(200 * fixed_canvas_aspect, 200);
+	//canvas2->SetFrontWidget(preview2);
+	//NavImageItem* navImage = navigator->AddNavItem(preview1, sketch1.get(), config);
+	//NavImageItem* navImage2 = navigator->AddNavItem(preview2, sketch2.get(), config);
+
+	//HmiTemplateStationPreview* stationPreview = new HmiTemplateStationPreview();
+	//stationPreview->AddPreview(preview1);
+	//stationPreview->AddPreview(preview2);
+	//stationPreview->show();
 
 	return app.exec();
 }

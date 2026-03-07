@@ -70,16 +70,18 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 	//GPU版本
 	if (CNCSYS::InitializeOpenGL())
 	{
-
 		CNCSYS::SketchGPU* gpuInstance = (CNCSYS::SketchGPU*)sketch;
 		renderByGPU = true;
 		mSketchGPU.reset(gpuInstance);
 		int canvasWidth = ScreenSizeHintX(canvas_panel_width_ratio);
 		int canvasHeight = ScreenSizeHintY(canvas_panel_height_ratio);
+		fixed_canvas_aspect = canvasWidth / canvasHeight;
 		CanvasGPU* canvasMain = new CanvasGPU(mSketchGPU, canvasWidth, canvasHeight, true);
 		g_canvasInstance = canvasMain;
 		glWidget = new GLWidget(canvasMain, nullptr, DYNAMIC_DRAW);
 		canvasMain->SetFrontWidget(glWidget);
+		canvasMain->drawTickers = true;
+		canvasMain->drawAnchor = true;
 		glWidget->setFixedSize(canvasWidth, canvasHeight);
 		glWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 		mGLWidget.reset(glWidget);
@@ -134,6 +136,7 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 	}
 	else
 	{
+
 	}
 	this->showMaximized();
 

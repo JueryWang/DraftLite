@@ -2,7 +2,7 @@
 
 #include <QLabel>
 
-NavImageItem::NavImageItem(int row,CanvasGPU* canvas, SketchGPU* sketch, const StationConfig& config) : row(row),config(config),canvas(canvas),sketch(sketch)
+NavImageItem::NavImageItem(int row,GLWidget* preview, SketchGPU* sketch, const StationConfig& config) : row(row),config(config),preview(preview),sketch(sketch)
 {
 	this->setFixedSize(config.canvasWidth, config.canvasHeight);
 	QVBoxLayout* layout = new QVBoxLayout();
@@ -14,9 +14,9 @@ NavImageItem::NavImageItem(int row,CanvasGPU* canvas, SketchGPU* sketch, const S
 	QString htmlText = QString("<u>%1</u>").arg(formattedNum);
 	indexLabel = new QLabel(htmlText,this);
 	indexLabel->setFixedWidth(20);
-	if (canvas != nullptr && sketch != nullptr)
+	if (preview != nullptr && sketch != nullptr)
 	{
-		displayImg->setPixmap(QPixmap::fromImage(canvas->GrabImage(sketch, sketch->attachedOCS, config.canvasWidth,config.canvasHeight,glm::vec4(255.0/255,255.0/255,255.0/255,0.5))));
+		displayImg->setPixmap(preview->grab().scaled(config.canvasWidth,config.canvasHeight));
 	}
 	layout->addWidget(displayImg);
 	QHBoxLayout* hlay = new QHBoxLayout();
@@ -36,7 +36,7 @@ NavImageItem::~NavImageItem()
 
 void NavImageItem::UpdateImage()
 {
-	displayImg->setPixmap(QPixmap::fromImage(canvas->GrabImage(sketch, sketch->attachedOCS, config.canvasWidth, config.canvasHeight)));
+	displayImg->setPixmap(preview->grab());
 }
 
 SideNavigator::SideNavigator()
@@ -53,9 +53,9 @@ SideNavigator::~SideNavigator()
 
 }
 
-NavImageItem* SideNavigator::AddNavItem(CanvasGPU* canvas, SketchGPU* sketch, const StationConfig& config)
+NavImageItem* SideNavigator::AddNavItem(GLWidget* preview, SketchGPU* sketch, const StationConfig& config)
 {
-	NavImageItem* nav = new NavImageItem(NavLists->count(),canvas, sketch, config);
+	NavImageItem* nav = new NavImageItem(NavLists->count(),preview, sketch, config);
 	QListWidgetItem* itemNew = new QListWidgetItem();
 	itemNew->setSizeHint(QSize(config.canvasWidth, config.canvasHeight));
 	NavLists->addItem(itemNew);

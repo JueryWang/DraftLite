@@ -7,6 +7,7 @@
 #include <QListWidgetItem>
 #include <QVBoxLayout>
 #include "Controls/ScadaNode.h"
+#include "UI/GLWidget.h"
 #include "Graphics/Canvas.h"
 #include "Graphics/Sketch.h"
 using namespace CNCSYS;
@@ -26,14 +27,14 @@ class SideNavigator;
 class NavImageItem : public QWidget
 {
 public:
-	NavImageItem(int row = 0,CanvasGPU* canvas = nullptr, SketchGPU* sketch = nullptr, const StationConfig& config = StationConfig());
+	NavImageItem(int row = 0,GLWidget* preview = nullptr, SketchGPU* sketch = nullptr, const StationConfig& config = StationConfig());
 	~NavImageItem();
 	void UpdateImage();
 public:
 	QLabel* displayImg;
 	QLabel* indexLabel;
 	StationConfig config;
-	CanvasGPU* canvas = nullptr;
+	GLWidget* preview = nullptr;
 	SketchGPU* sketch = nullptr;
 	QListWidget* parent;
 	std::string fileSource;
@@ -46,7 +47,7 @@ class SideNavigator : public QWidget
 public:
 	SideNavigator();
 	~SideNavigator();
-	NavImageItem* AddNavItem(CanvasGPU* canvas = nullptr, SketchGPU* sketch = nullptr,const StationConfig& config = StationConfig());
+	NavImageItem* AddNavItem(GLWidget* preview = nullptr, SketchGPU* sketch = nullptr,const StationConfig& config = StationConfig());
 
 public:
 	std::vector<NavImageItem*> navImgs;

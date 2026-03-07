@@ -473,6 +473,7 @@ namespace CNCSYS
 
 	}
 
+
 	DXFProcessor::~DXFProcessor()
 	{
 	}
@@ -591,6 +592,7 @@ namespace CNCSYS
 
 	int DXFProcessor::read(const std::string& dxfFile)
 	{
+		psketchGPU.lock()->source = dxfFile;
 		QApplication::setOverrideCursor(Qt::WaitCursor);
 		DxfReader* dxfReader;
 		if (psketchGPU.lock())

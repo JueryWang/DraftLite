@@ -39,10 +39,10 @@ namespace CNCSYS
 
 		void SetWindowStatus(WindowState state);
 		void SetOCSystem(OCSGPU* _ocsSys) { ocsSys = _ocsSys; }
+		CanvasGPU* GetCanvas();
 		void AddTag(const Tag& tag) { canvasTags.push_back(tag); }
 		OpenGLWindowContext* GetContet() { return m_context; }
 		void update();
-
 	protected:
 		void paintEvent(QPaintEvent* event) override;
 

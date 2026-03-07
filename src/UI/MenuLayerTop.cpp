@@ -87,10 +87,10 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showInnerPoint = checked;
 	});
 
-	QAction* measureAct = settingMenu->addAction(tr("测量"));
-	connect(measureAct, &QAction::triggered, [&]() {
-			ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
-		});
+	//QAction* measureAct = settingMenu->addAction(tr("测量"));
+	//connect(measureAct, &QAction::triggered, [&]() {
+	//		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
+	//	});
 
 	QMenu* addMenu = topMenus->addMenu(tr("添加"));
 	QAction* addWorkBlance = addMenu->addAction(tr("毛坯"));

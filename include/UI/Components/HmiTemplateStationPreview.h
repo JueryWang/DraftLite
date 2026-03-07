@@ -1,14 +1,27 @@
 #pragma once
 
 #include "UI/GLWidget.h"
+#include <QLabel>
 #include <QListView>
 #include <QGridLayout>
 #include <Graphics/Canvas.h>
 #include <QStandardItemModel>
+#include <QPlainTextEdit>
 #include <vector>
 using namespace CNCSYS;
 
-class HmiTemplateStationPreview : QListView
+class PreviewItem : public QWidget
+{
+public:
+	PreviewItem(GLWidget* preview,int id = 0);
+	~PreviewItem();
+public:
+	QLabel* stationId = nullptr;
+	QLabel* fileSource = nullptr;
+	QPlainTextEdit* gcodeFileContent = nullptr;
+};
+
+class HmiTemplateStationPreview : public QListView
 {
 public:
 	HmiTemplateStationPreview();

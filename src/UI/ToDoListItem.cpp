@@ -126,11 +126,10 @@ ToDoListItemWidget::ToDoListItemWidget(const QString& _fileSource, TaskListWindo
 					}
 				}
 			}
-			glm::vec3 firstSecEnd = sketch.get()->GetEntityGroups()[0]->rings[0]->conponents[0]->GetTransformedNodes().back();
-			g_MScontext.XAxisStart = firstSecEnd.x;
-			g_MScontext.YAxisStart = firstSecEnd.y;
-			g_MScontext.ZAxisStart = firstSecEnd.z;
-			g_MScontext.wcsAnchor = firstSecEnd;
+			//glm::vec3 firstSecEnd = sketch.get()->GetEntityGroups()[0]->rings[0]->conponents[0]->GetTransformedNodes().back();
+			//g_MScontext.XAxisStart = firstSecEnd.x;
+			//g_MScontext.YAxisStart = firstSecEnd.y;
+			//g_MScontext.ZAxisStart = firstSecEnd.z;
 		});
 	processor.read(_fileSource.toLocal8Bit().constData());
 	ocsSys = new OCSGPU(sketch);

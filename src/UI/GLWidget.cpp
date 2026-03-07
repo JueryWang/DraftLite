@@ -4,6 +4,7 @@
 #include "Common/OpenGLContext.h"
 #include "Graphics/Sketch.h"
 #include "Graphics/OCS.h"
+#include <Graphics/Canvas.h>
 #include <QRegularExpression>
 #include <QEvent>
 #include <QMouseEvent>
@@ -57,6 +58,12 @@ namespace CNCSYS
 		this->update();
 	}
 
+	CanvasGPU* GLWidget::GetCanvas()
+	{
+		CanvasGPU* canvas = dynamic_cast<CanvasGPU*>(m_context->window);
+		return canvas;
+	}
+
 	void GLWidget::update()
 	{
 		if (m_context->state == INACTIVE)
@@ -71,36 +78,6 @@ namespace CNCSYS
 				m_context->window->updateGL();
 			}
 		}
-		if (m_context->state == DYNAMIC_DRAW)
-		{
-		//	if (firstShow)
-		//	{
-		//		m_updateTimer.start(0);
-		//		try
-		//		{
-		//			m_context->window->updateGL();
-		//			QMetaObject::invokeMethod(this, "repaint");
-		//		}
-		//		catch (...)
-		//		{
-
-		//		}
-		//		firstShow = false;
-		//	}
-
-		//	if (this->isVisible())
-		//	{
-		//		try
-		//		{
-		//			m_context->window->updateGL();
-		//			QMetaObject::invokeMethod(this, "repaint");
-		//		}
-		//		catch (...)
-		//		{
-
-		//		}
-		//	}
-		}
 	}
 
 	void GLWidget::paintEvent(QPaintEvent* event)
@@ -111,7 +88,8 @@ namespace CNCSYS
 		int width = this->width();
 		int height = this->height();
 		painter.drawImage(QRect(0, 0, width, height), m_context->window->grabImage().scaled(width,height,Qt::KeepAspectRatio,Qt::SmoothTransformation));
-		if (ocsSys)
+		CanvasGPU* canvas = dynamic_cast<CanvasGPU*>(m_context->window);
+		if (ocsSys && canvas->drawTickers)
 		{
 			QPen pen;
 			pen.setColor(QColor(255, 255, 190));

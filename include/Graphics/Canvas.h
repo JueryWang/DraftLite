@@ -114,9 +114,11 @@ namespace CNCSYS
 
 	public:
 		std::function<void(const QString&)> hoverChangedCallback;
-
+		glm::vec4 background = glm::vec4(20.0f / 255.0f, 20.0f / 255.0f, 41.0f / 255.0f, 1.0f);
 		bool showArrow = false;
 		bool showInnerPoint = false;
+		bool drawAnchor = false;
+		bool drawTickers = false;
 		ModalState operationState = ModalState::NormalInteract;
 
 	private:

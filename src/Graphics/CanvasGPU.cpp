@@ -52,6 +52,7 @@ namespace CNCSYS
 		firstResize = true;
 		ocsSys = new OCSGPU(sketch);
 		m_currentSketch = sketch;
+		sketch->SetCanvas(this);
 		ocsSys->genTickers = isMainCanvas;
 		ocsSys->canvasWidth = width;
 		ocsSys->canvasHeight = height;
@@ -1440,7 +1441,6 @@ namespace CNCSYS
 		m_currentSketch = sketch;
 		sketch->mainCanvas = this;
 		sketch->UpdateGCode();
-		this->UpdateOCS();
 		ocsSys->UpdateTickers();
 		this->updateGL();
 	}
@@ -1754,9 +1754,9 @@ namespace CNCSYS
 
 	QImage CanvasGPU::GrabImage(SketchGPU* sketch, OCSGPU* ocs, int imageWidth, int imageHeight, const glm::vec4& bgcolor)
 	{
-		memset(m_windowbuf, 255, m_width * m_height * bit_per_pixel);
+		memset(m_windowbuf, 255, this->width() * this->height() * bit_per_pixel);
 
-		ocs->SetCanvasSizae(m_width, m_height);
+		ocs->SetCanvasSizae(this->width(), this->height());
 		ocs->ComputeScaleFitToCanvas();
 		ocs->FitToZero();
 
@@ -1793,11 +1793,11 @@ namespace CNCSYS
 				ent->Paint(g_lineShader, ocs, RenderMode::Line);
 				ent->ResetColor();
 			}
-			glReadPixels(0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, m_windowbuf);
+			glReadPixels(0, 0, this->width(), this->height(), GL_RGB, GL_UNSIGNED_BYTE, m_windowbuf);
 			glfwSwapBuffers(m_window.get());
 
 			g_lineWidth = 2.0f;
-			image = QImage(m_windowbuf, m_width, m_height, QImage::Format_RGB888).mirrored(false, true);
+			image = QImage(m_windowbuf, this->width(), this->height(), QImage::Format_RGB888).mirrored(false, true);
 		}
 		return image.scaled(imageWidth, imageHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 	}
@@ -1951,7 +1951,7 @@ namespace CNCSYS
 			glfwMakeContextCurrent(windowInst);
 			glfwSwapInterval(1);
 
-			glClearColor(20.0f / 255.0f, 20.0f / 255.0f, 41.0f / 255.0f, 1.0f);
+			glClearColor(background.x, background.y, background.z, background.w);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glLineWidth(2);
 			g_lineShader->use();
@@ -2049,8 +2049,11 @@ namespace CNCSYS
 					glDisableClientState(GL_VERTEX_ARRAY);
 				}
 			}
+			if (drawAnchor)
+			{
 			//绘制刀具锚点
 			toolAnchor->Paint();
+			}
 
 			//绘制捕捉点
 			if (captureType == CaptureMode::Point)
@@ -2073,7 +2076,10 @@ namespace CNCSYS
 			}
 
 			////绘制坐标刻度
-			DrawTickers();
+			if (drawTickers)
+			{
+				DrawTickers();
+			}
 			//绘制框选框
 			if (isSelecting)
 			{
