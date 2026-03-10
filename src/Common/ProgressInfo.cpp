@@ -61,9 +61,14 @@ void InitPLConfig()
 		{"ChangeSliceDone","gvlHMI.xPCChangeDone"},								//切图PC完成信号
 		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"},   //设备自动运行中
 		{"ToolRadius","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
-		{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
+		//{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
 		{"AxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
-		{"AxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"}
+		{"AxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"},
+		{"AnimatorBufferLengthQueueA","gvlHMI.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualA"},
+		{"AnimatorBufferQueueA","gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueA"},
+		{"AnimatorBufferLengthQueueB","gvlHMI.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualB"},
+		{"AnimatorBufferQueueB","gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueB"},
+		{"AnimatorCycleTime","gvlHMI.stConfigGearChamferMachine.stConfigCADWork.dwIpoCycle"}
 	};
 
 	g_settings = new QSettings(QDir::currentPath() + "/config.ini", QSettings::IniFormat);

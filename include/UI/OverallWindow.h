@@ -28,12 +28,11 @@ private:
 	ScadaNode* monitorIndexPage = nullptr;
 	ScadaNode* monitorUploadFTP = nullptr;
 	ScadaNode* monitorHeartBeat = nullptr;
-	ScadaNode* monitorAutoBusy = nullptr;
 	ScadaNode* monitorToolRadius = nullptr;
 	ScadaNode* monitorToolDistance = nullptr;
-	ScadaNode* monitorAxisX = nullptr;
-	ScadaNode* monitorAxisY = nullptr;
 	ScadaNode* monitorCurrentRowCNC = nullptr;
-
-	QTimer heartBeatDetectTimer;
+	ScadaNode* monitorSimulateRecordBufferLengthA = nullptr;
+	ScadaNode* monitorSimulateRecordBufferLengthB = nullptr;
+	ScadaNode* monitorSimulateRecordBufferA = nullptr;
+	ScadaNode* monitorSimulateRecordBufferB = nullptr;
 };

@@ -50,9 +50,9 @@ PreviewItem::PreviewItem(GLWidget* preview, int id)
 	vlay->addLayout(hlay2);
 	QLabel* gcodeHint = new QLabel("G代码预览:");
 	vlay->addWidget(gcodeHint);
-	gcodeFileContent = new QPlainTextEdit();
-	gcodeFileContent->setPlainText(QString::fromUtf8(preview->GetCanvas()->GetSketchShared()->ToNcProgram()));
-	vlay->addWidget(gcodeFileContent);
+	editor = new QsciScintilla();
+	editor->setText(QString::fromUtf8(preview->GetCanvas()->GetSketchShared()->ToNcProgram()));
+	vlay->addWidget(editor);
 	vlay->setContentsMargins(0, 0, 0, 0);
 	this->setLayout(vlay);
 }

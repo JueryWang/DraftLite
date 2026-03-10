@@ -202,6 +202,19 @@ void ExcelProcessor::ReadPLCVariantMap()
 				PLCInitOpcInfo(plcInfo, AtomicVarType::STRING, varTag, ns.toInt(), identifier.toLocal8Bit().data());
 				regTags.push_back(varTag);
 			}
+			else if (varType == "STRUCT")
+			{
+				PLCInitOpcInfo(plcInfo, AtomicVarType::STRUCT, varTag, ns.toInt(), identifier.toLocal8Bit().data());
+				regTags.push_back(varTag);
+			}
+		}
+	}
+
+	for (auto& pair : g_ConfigableKeys)
+	{
+		if (std::find(regTags.begin(), regTags.end(), pair.second) == regTags.end())
+		{
+			g_file_logger->warn("OPC节点匹配失败,未查询到节点 - Tag:{} Identifier:{}",pair.first,pair.second);
 		}
 	}
 

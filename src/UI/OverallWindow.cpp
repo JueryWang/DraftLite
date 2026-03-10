@@ -71,6 +71,7 @@ OverallWindow::OverallWindow()
 			}
 			monitorIndexPage->lastValue.lastInt = curVal;
 		};
+
 	monitorUploadFTP = new ScadaNode();
 	monitorUploadFTP->BindParam(g_ConfigableKeys["PCFileFTP"]);
 	monitorUploadFTP->updateCallback = [&]()
@@ -98,6 +99,7 @@ OverallWindow::OverallWindow()
 			}
 			monitorUploadFTP->lastValue.lastBool = ifRequestFile;
 		};
+
 	monitorHeartBeat = new ScadaNode();
 	monitorHeartBeat->BindParam(g_ConfigableKeys["HeartbeatCount"]);
 	monitorHeartBeat->SetUpdateRate(5 * 1000);
@@ -126,27 +128,6 @@ OverallWindow::OverallWindow()
 				}
 			}
 		};
-
-	monitorAutoBusy = new ScadaNode();
-	monitorAutoBusy->BindParam(g_ConfigableKeys["AutoBusy"]);
-	monitorAutoBusy->lastValue.lastBool = false;
-	monitorAutoBusy->updateCallback = [&]()
-		{
-			static TaskListWindow* taskList = TaskListWindow::GetInstance();
-			PLC_TYPE_BOOL busy = monitorAutoBusy->GetBool();
-			if (!(busy == monitorAutoBusy->lastValue.lastBool))
-			{
-				if (busy)
-				{
-					taskList->toolBar->DisableTools();
-				}
-				else
-				{
-					taskList->toolBar->EnableTools();
-				}
-			}
-			monitorAutoBusy->lastValue.lastBool = busy;
-		};
 	if (g_settings->value("Settings/Mode") != "Debug")
 	{
 		mainWindow->GetCanvasPanel()->hide();
@@ -166,6 +147,17 @@ OverallWindow::OverallWindow()
 			}
 	};
 	
+	monitorCurrentRowCNC = new ScadaNode();
+	monitorCurrentRowCNC->BindParam(g_ConfigableKeys["CurrentRowCNC"]);
+	monitorCurrentRowCNC->lastValue.lastInt = 0;
+	monitorCurrentRowCNC->updateCallback = [&]()
+		{
+			PLC_TYPE_DINT rowNumber = monitorCurrentRowCNC->GetDint();
+			QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
+				Qt::QueuedConnection,
+				Q_ARG(int, rowNumber));
+		};
+
 	monitorToolDistance = new ScadaNode();
 	monitorToolDistance->BindParam(g_ConfigableKeys["RemainDistance"]);
 	monitorToolDistance->lastValue.lastLReal = 0.0f;
@@ -179,18 +171,47 @@ OverallWindow::OverallWindow()
 			}
 	};
 
-	monitorAxisX = new ScadaNode();
+	monitorSimulateRecordBufferLengthA = new ScadaNode();
+	monitorSimulateRecordBufferLengthA->BindParam(g_ConfigableKeys["AnimatorBufferLengthQueueA"]);
+	monitorSimulateRecordBufferLengthA->lastValue.lastInt = 0;
+	monitorSimulateRecordBufferLengthA->updateCallback = [&]()
+	{
+			PLC_TYPE_INT bufferALength = monitorSimulateRecordBufferLengthA->GetInt();
+			if (bufferALength != 0)
+			{
+				UA_Variant value;
+				UA_Variant_init(&value);
+				UA_NodeId nodeId = UA_NODEID_STRING(4, (char*)"|var|Xinje-PLC.Application.gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueA");
 
+				monitorSimulateRecordBufferLengthA->lastValue.lastInt = bufferALength;
+			}
+	};
+	monitorSimulateRecordBufferLengthB = new ScadaNode();
+	monitorSimulateRecordBufferLengthB->BindParam(g_ConfigableKeys["AnimatorBufferLengthQueueB"]);
+	monitorSimulateRecordBufferLengthB->lastValue.lastInt = 0;
+	monitorSimulateRecordBufferLengthB->updateCallback = [&]()
+		{
+			PLC_TYPE_INT bufferBLength = monitorSimulateRecordBufferLengthB->GetInt();
+			if (bufferBLength != 0)
+			{
+				monitorSimulateRecordBufferLengthB->lastValue.lastInt = bufferBLength;
+			}
+		};
+
+	monitorSimulateRecordBufferA = new ScadaNode();
+	monitorSimulateRecordBufferA->BindParam(g_ConfigableKeys["AnimatorBufferQueueA"]);
 
 	ScadaScheduler::GetInstance()->AddNode(monitorIndexPage);
 	ScadaScheduler::GetInstance()->AddNode(monitorUploadFTP);
 	ScadaScheduler::GetInstance()->AddNode(monitorHeartBeat);
-	ScadaScheduler::GetInstance()->AddNode(monitorAutoBusy);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
-	ScadaScheduler::GetInstance()->AddNode(monitorAxisX);
-	ScadaScheduler::GetInstance()->AddNode(monitorAxisY);
 	ScadaScheduler::GetInstance()->AddNode(monitorCurrentRowCNC);
+	ScadaScheduler::GetInstance()->AddNode(monitorSimulateRecordBufferLengthA);
+	ScadaScheduler::GetInstance()->AddNode(monitorSimulateRecordBufferLengthB);
+	ScadaScheduler::GetInstance()->AddNode(monitorSimulateRecordBufferA);
+	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
+	
 }
 
 OverallWindow::~OverallWindow()

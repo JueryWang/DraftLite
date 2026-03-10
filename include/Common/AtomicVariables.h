@@ -1,10 +1,13 @@
 #pragma once
+#include <open62541/client_config_default.h>
+#include <open62541/client_highlevel.h>
 #include<atomic>
 #include<string>
 #include<iostream>
 #include<cstdint>
 #include<stdexcept>
 #include <limits>
+
 
 /// <summary>
 /// PLC types Conver to C++
@@ -20,6 +23,21 @@ typedef float   PLC_TYPE_REAL;
 typedef double PLC_TYPE_LREAL;
 typedef char* PLC_TYPE_STRING;
 
+
+#pragma pack(push, 1)
+struct CNCSimulateRecord
+{
+public:
+	CNCSimulateRecord() = default;
+
+	double fX;              // 8 字节 (Offset 0)
+	double fY;              // 8 字节 (Offset 8)
+	double fZ;              // 8 字节 (Offset 16)
+	int32_t iCurrentRow;    // 4 字节 (Offset 24) - 对应 PLC DINT
+	int16_t iMoveType;      // 2 字节 (Offset 28) - 对应 PLC INT
+};
+#pragma pack(pop)
+
 enum class AtomicVarType
 {
 	None,
@@ -32,7 +50,8 @@ enum class AtomicVarType
 	LINT,       //int64_t
 	REAL,       //float
 	LREAL,      //double
-	STRING      //string
+	STRING,      //string
+	STRUCT
 };
 
 /// <summary>
@@ -176,4 +195,51 @@ private:
 
 public:
 	int length;
+};
+
+template<>
+struct AtomicVar<CNCSimulateRecord>
+{
+	AtomicVar() {
+		CNCSimulateRecord empty = { 0.0, 0.0, 0.0, 0, 0 };
+		val.store(empty, std::memory_order_release);
+	}
+
+	AtomicVar(CNCSimulateRecord initialValue) {
+		val.store(initialValue, std::memory_order_release);
+	}
+
+	AtomicVar(const AtomicVar<CNCSimulateRecord>& other) {
+		val.store(other.val.load(std::memory_order_acquire), std::memory_order_release);
+	}
+
+	AtomicVar<CNCSimulateRecord>& operator=(const CNCSimulateRecord& newValue)
+	{
+		val.store(newValue, std::memory_order_release);
+		return *this;
+	}
+
+	operator CNCSimulateRecord() const
+	{
+		return val.load(std::memory_order_acquire);
+	}
+
+	CNCSimulateRecord GetValue() const
+	{
+		return val.load(std::memory_order_acquire);
+	}
+
+	bool operator==(const AtomicVar<CNCSimulateRecord>& other) const
+	{
+		CNCSimulateRecord v1 = this->GetValue();
+		CNCSimulateRecord v2 = other.GetValue();
+		return (v1.fX == v2.fX &&
+			v1.fY == v2.fY &&
+			v1.fZ == v2.fZ &&
+			v1.iCurrentRow == v2.iCurrentRow &&
+			v1.iMoveType == v2.iMoveType);
+	}
+
+private:
+	std::atomic<CNCSimulateRecord> val;
 };

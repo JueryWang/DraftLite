@@ -9,6 +9,7 @@
 #include "UI/TaskListWindow.h"
 #include "Common/ProgressInfo.h"
 #include "Graphics/Sketch.h"
+#include "open62541/client.h"
 #include <open62541/client_config_default.h>
 #include <open62541/client_highlevel.h>
 #include <open62541/client_subscriptions.h>
@@ -108,8 +109,42 @@ UA_StatusCode OPClient::ConnectToServer(const char* url)
 		PLC_TYPE_BOOL pageInit = true;
 		WritePLC_OPCUA(g_ConfigableKeys["PageInit"].c_str(), &pageInit, AtomicVarType::BOOL);
 	}
-
 	this->url = url;
+
+	//{
+	//	UA_Variant value; /* Variants can hold scalar values and arrays of any type */
+	//	UA_Variant_init(&value);
+	//	UA_NodeId nodeId = UA_NODEID_STRING(4, (char*)"|var|Xinje-PLC.Application.gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueA");
+	//	auto retval = UA_Client_readValueAttribute(client, nodeId, &value);
+	//	if (retval == UA_STATUSCODE_GOOD && UA_Variant_hasArrayType(&value, &UA_TYPES[UA_TYPES_EXTENSIONOBJECT])) {
+	//		size_t arrayLen = value.arrayLength;
+	//		UA_ExtensionObject* eoArray = (UA_ExtensionObject*)value.data;
+
+	//		std::cout << "Successfully read array of size: " << arrayLen << std::endl;
+
+	//		for (size_t i = 0; i < arrayLen; i++) {
+	//			// 检查数据是否以 ByteString 形式存在（未解码状态）
+	//			if (eoArray[i].encoding == UA_EXTENSIONOBJECT_ENCODED_BYTESTRING) {
+	//				// 注意：如果是 C++ 环境，有时需要显式指出 union 层级
+	//				UA_ByteString* bs = &eoArray[i].content.encoded.body;
+	//				int structsize = sizeof(CNCSimulateRecord);
+	//				if (bs->length == sizeof(CNCSimulateRecord)) {
+	//					CNCSimulateRecord record;
+	//					// 确保使用 bs->data 进行拷贝
+	//					memcpy(&record, bs->data, sizeof(CNCSimulateRecord));
+
+	//					if (record.iMoveType != 0 || record.fX != 0) {
+	//						printf("[%zu] X:%.4f, Y:%.4f, Z:%.4f, Row:%d, MoveType:%d\n",
+	//							i, record.fX, record.fY, record.fZ, record.iCurrentRow, record.iMoveType);
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//	else {
+	//		printf("Read failed or not an ExtensionObject array. StatusCode: %s\n", UA_StatusCode_name(retval));
+	//	}
+	//}
 
 	return (status == UA_STATUSCODE_GOOD);
 }
@@ -170,7 +205,10 @@ void OPClient::ReadBackPLC_ProtoOpcUA(const std::vector<PLCParam_ProtocalOpc*>& 
 
 				if (addresses[(batchId * MAX_READ_BATCH_SIZE) + i] != NULL)
 				{
-					UpdateBindValue(dataValue, addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->bindVar, addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->dataType);
+					UpdateBindValue(dataValue, addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->bindVar, 
+						addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->dataType, 
+						addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->identifier
+					);
 					addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->lastUpdateTimeStamp = now;
 					addresses[(batchId * MAX_READ_BATCH_SIZE) + i]->updateUI = true;
 				}
@@ -558,10 +596,58 @@ void OPClient::ReconnectWithHint()
 	curStatus = retval;
 }
 
-void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarType type)
+void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarType type, char* identifier)
 {
-
-	if (varOpc->value.type == &UA_TYPES[UA_TYPES_STRING])
+	//自定义结构体处理
+	if (UA_Variant_hasArrayType(&varOpc->value, &UA_TYPES[UA_TYPES_EXTENSIONOBJECT]))
+	{
+		if (strstr(identifier,"astCNCQueueA") != NULL)
+		{
+			PLC_TYPE_INT bufferAlength;
+			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferAlength, AtomicVarType::INT);
+			if (bufferAlength > 0)
+			{
+				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
+				for (size_t i = 0; i < varOpc->value.arrayLength; i++)
+				{
+					if (eoArray[i].encoding == UA_EXTENSIONOBJECT_ENCODED_BYTESTRING) {
+						UA_ByteString* bs = &eoArray[i].content.encoded.body;
+						int structsize = sizeof(CNCSimulateRecord);
+						if (bs->length == structsize) {
+							CNCSimulateRecord record;
+							memcpy(&record, bs->data, sizeof(CNCSimulateRecord));
+							CNCSimulateRecord* pRecords = static_cast<CNCSimulateRecord*>(varBind);
+							pRecords[i] = record;
+						}
+					}
+				}
+			}
+		}
+		if (strstr(identifier, "astCNCQueueB") != NULL)
+		{
+			PLC_TYPE_INT bufferBlength;
+			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferBlength, AtomicVarType::INT);
+			if (bufferBlength > 0)
+			{
+				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
+				for (size_t i = 0; i < varOpc->value.arrayLength; i++)
+				{
+					if (eoArray[i].encoding == UA_EXTENSIONOBJECT_ENCODED_BYTESTRING) {
+						UA_ByteString* bs = &eoArray[i].content.encoded.body;
+						int structsize = sizeof(CNCSimulateRecord);
+						if (bs->length == structsize) {
+							CNCSimulateRecord record;
+							memcpy(&record, bs->data, sizeof(CNCSimulateRecord));
+							CNCSimulateRecord* pRecords = static_cast<CNCSimulateRecord*>(varBind);
+							pRecords[i] = record;
+						}
+						g_simRecBufferB;
+					}
+				}
+			}
+		}
+	}
+	else if (varOpc->value.type == &UA_TYPES[UA_TYPES_STRING])
 	{
 		assert(type == AtomicVarType::STRING);
 		UA_String* byteString = (UA_String*)varOpc->value.data;

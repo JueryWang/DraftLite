@@ -187,6 +187,7 @@ void ScadaScheduler::LoopTask()
 {
 	while (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_RUN_POS))
 	{
+		//auto start = std::chrono::system_clock::now();
 		if (opcClient->client)
 		{
 			if (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_OPC_CONNECT_POS))
@@ -207,7 +208,10 @@ void ScadaScheduler::LoopTask()
 
 				for (ScadaNode* node : nodesInControl)
 				{
-					node->UpdateNode();
+					if (node)
+					{
+						node->UpdateNode();
+					}
 				}
 			}
 			else
@@ -215,6 +219,8 @@ void ScadaScheduler::LoopTask()
 				opcClient->Reconnect();
 			}
 		}
+		//auto end = std::chrono::system_clock::now();
+		//auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}

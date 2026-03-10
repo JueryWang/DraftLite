@@ -5,6 +5,8 @@
 #include "Common/ProgressInfo.h"
 #include "UI/GCodeEditor.h"
 
+#define AnimateUpdateBatchSize 8
+
 Anchor* Anchor::instance = nullptr;
 
 Anchor::Anchor()
@@ -16,6 +18,8 @@ Anchor::Anchor()
 
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
+
+	last_update_time = std::chrono::steady_clock::now();
 }
 
 void Anchor::SetCoordinateSystem(OCSGPU* ocsSystem)
@@ -34,57 +38,23 @@ void Anchor::SetPosition(const glm::vec3& pos)
 
 void Anchor::UpdateNode()
 {
-	static glm::vec3 lastPosition = position;
+	auto now = std::chrono::steady_clock::now();
+	std::chrono::duration<double> diff = now - last_update_time;
+	long long diff_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
 
-	PLCParam_ProtocalOpc* XposInfo = static_cast<PLCParam_ProtocalOpc*>(g_PLCVariables["gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"]);
-	PLCParam_ProtocalOpc* YposInfo = static_cast<PLCParam_ProtocalOpc*>(g_PLCVariables["gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"]);
+	PLC_TYPE_INT cycle;
+	ReadPLC_OPCUA(g_ConfigableKeys["AnimatorCycleTime"].c_str(), &cycle, AtomicVarType::INT);
+	int timeInterval = (AnimateUpdateBatchSize * cycle);
 
-	if (XposInfo && YposInfo)
+	if (diff_milliseconds > timeInterval)
 	{
-		AtomicVar<PLC_TYPE_LREAL>* varX = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(XposInfo->bindVar);
-		AtomicVar<PLC_TYPE_LREAL>* varY = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(YposInfo->bindVar);
-		position.x = varX->GetValue();
-		position.y = varY->GetValue();
-		if (animatorOpen)
+		PLC_TYPE_INT bufferALength;
+		ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferALength, AtomicVarType::INT);
+		if (bufferALength > 0)
 		{
-			// 初始化 VAO/VBO（只在首次需要时）
-			if (vao == 0)
-			{
-				glGenVertexArrays(1, &vao);
-				glGenBuffers(1, &vbo);
-			}
-
-			// 预分配容量（如果还没有分配）
-			if (animatorPath.capacity() == 0)
-			{
-				animatorPath = std::vector<glm::vec3>(GCodeEditor::GetInstance()->lines());
-				glBindVertexArray(vao);
-				glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-				glBufferData(GL_ARRAY_BUFFER, (animatorPath.size()) * sizeof(glm::vec3), animatorPath.data(), GL_DYNAMIC_DRAW);
-
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
-				glEnableVertexAttribArray(0);
-			}
-
-			// 当位置变化时，添加新路径点
-			if (lastPosition != position)
-			{
-				animatorPath[pathIndex] = position;
-				pathIndex++;
-				lastPosition = position;
-			}
-
-		}
-		else
-		{
-			pathIndex = 0;
-			animatorPath.clear();
-			glDeleteBuffers(1, &vbo);
-			vbo = 0;
+			
 		}
 	}
-
 }
 
 void Anchor::Paint()

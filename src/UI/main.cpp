@@ -184,5 +184,7 @@ int main(int argc, char* argv[]){
 	//stationPreview->AddPreview(preview2);
 	//stationPreview->show();
 
+	ScadaScheduler::GetInstance()->Start();
+
 	return app.exec();
 }

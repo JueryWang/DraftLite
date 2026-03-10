@@ -34,7 +34,7 @@ public:
 	std::function<void(void)> reconnectCallback;
 
 private:
-	void UpdateBindValue(UA_DataValue* varOpc,void* varBind,AtomicVarType type);
+	void UpdateBindValue(UA_DataValue* varOpc,void* varBind,AtomicVarType type,char* identifier);
 	void UpdateBindValue(UA_Variant* varOpc, void* varBind);
 
 private:

@@ -11,6 +11,8 @@ std::map<std::string, void*> g_writePersistence;
 std::map<PLCAddressData*, int> g_ParamUpdateInterval;
 std::recursive_mutex g_varHandleMutex;
 std::mutex g_GCodeHandleMutex;
+std::vector<CNCSimulateRecord> g_simRecBufferA;
+std::vector<CNCSimulateRecord> g_simRecBufferB;
 OPClient* g_opcuaClient = nullptr;
 
 void ClearPLCVariablesOpcUA()
@@ -360,6 +362,35 @@ void PLCInitOpcInfo(PLCParam_ProtocalOpc* plcInfo, AtomicVarType type, const std
 		g_readPersistance[tag] = plcInfo->bindVar;
 		g_writePersistence[tag] = new AtomicVar<PLC_TYPE_STRING>("");
 		break;
+	}
+	case AtomicVarType::STRUCT:
+	{
+		plcInfo->dataType = AtomicVarType::STRUCT;
+		strcpy_s(plcInfo->identifier, identifier);
+		plcInfo->ns = ns;
+		plcInfo->protocol = PLCProtocol::OPCUA;
+		if (strstr(plcInfo->identifier, "astCNCQueueA") != NULL)
+		{
+			g_simRecBufferA.reserve(200);
+			for (int i = 0; i < 200; i++)
+			{
+				g_simRecBufferA.push_back(CNCSimulateRecord());
+			}
+			plcInfo->bindVar = g_simRecBufferA.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+		}
+		else if (strstr(plcInfo->identifier, "astCNCQueueB") != NULL)
+		{
+			g_simRecBufferB.reserve(200);
+			for (int i = 0; i < 200; i++)
+			{
+				g_simRecBufferB.push_back(CNCSimulateRecord());
+			}
+			plcInfo->bindVar = g_simRecBufferB.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+		}
 	}
 	case AtomicVarType::None:
 	default:

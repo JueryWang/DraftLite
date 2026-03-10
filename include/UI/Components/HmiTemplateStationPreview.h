@@ -8,6 +8,8 @@
 #include <QStandardItemModel>
 #include <QPlainTextEdit>
 #include <vector>
+#include <Qsci/qsciscintilla.h>
+
 using namespace CNCSYS;
 
 class PreviewItem : public QWidget
@@ -18,7 +20,7 @@ public:
 public:
 	QLabel* stationId = nullptr;
 	QLabel* fileSource = nullptr;
-	QPlainTextEdit* gcodeFileContent = nullptr;
+	QsciScintilla* editor = nullptr;
 };
 
 class HmiTemplateStationPreview : public QListView

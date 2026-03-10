@@ -44,6 +44,8 @@ extern std::map<PLCAddressData*, int> g_ParamUpdateInterval;
 extern std::recursive_mutex g_varHandleMutex;
 extern std::mutex g_GCodeHandleMutex;
 extern OPClient* g_opcuaClient;
+extern std::vector<CNCSimulateRecord> g_simRecBufferA;
+extern std::vector<CNCSimulateRecord> g_simRecBufferB;
 void ClearPLCVariablesOpcUA();
 void WritePLC_OPCUA(const char* tag,void* newValue, AtomicVarType type);
 void ReadPLC_OPCUA(const char* tag,void* storeValue, AtomicVarType type);

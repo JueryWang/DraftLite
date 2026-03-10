@@ -19,6 +19,12 @@ public:
 protected:
 	virtual void UpdateNode() override;
 
+public:
+	
+	std::chrono::steady_clock::time_point last_update_time;
+	bool animatorOpen = true;
+	int pathIndex = 0;
+
 private:
 	static Anchor* instance;
 
@@ -31,6 +37,5 @@ private:
 	Line2DGPU* crossline1 = nullptr;
 	Line2DGPU* crossline2 = nullptr;
 	std::vector<glm::vec3> animatorPath;
-	bool animatorOpen = true;
-	int pathIndex = 0;
+	std::queue<glm::vec3> cache;
 };
