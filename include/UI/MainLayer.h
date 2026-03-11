@@ -41,7 +41,6 @@ private:
 	std::shared_ptr<CNCSYS::SketchGPU> mSketchCPU;
 	OCSGPU* mOCSGPU;
 	std::shared_ptr<GLWidget> mGLWidget;
-	QLabel* m_bottomInfo;
 	QString m_qssPath;
 
 	MenuLayerTop* menu;

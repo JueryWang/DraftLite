@@ -118,7 +118,7 @@ namespace CNCSYS
 		bool showArrow = false;
 		bool showInnerPoint = false;
 		bool drawAnchor = false;
-		bool drawTickers = false;
+		bool drawTickers = true;
 		ModalState operationState = ModalState::NormalInteract;
 
 	private:

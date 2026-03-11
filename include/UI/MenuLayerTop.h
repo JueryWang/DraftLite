@@ -6,14 +6,16 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QSettings>
-
+#include <Graphics/Sketch.h>
+#include <UI/GLWidget.h>
+#include <Qsci/qsciscintilla.h>
 class OverallWindow;
 
 class MenuLayerTop : public QWidget
 {
 	Q_OBJECT
 public:
-	MenuLayerTop(OverallWindow* parent = NULL);
+	MenuLayerTop(GLWidget* window = NULL,QsciScintilla* editor = NULL);
 	~MenuLayerTop();
 
 public slots:
@@ -24,7 +26,7 @@ public slots:
 	void OnImportScene();
 
 protected:
-	bool eventFilter(QObject* obj, QEvent* event) override;\
+	bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
 	void ImportDxf(const QString& dxfFile);
@@ -36,7 +38,8 @@ private:
 	QMenu* captureMenu;
 	QHBoxLayout* layout;
 
-	OverallWindow* ovWindow;
+	GLWidget* canvasWindow = nullptr;
+	QsciScintilla* editor = nullptr;
 
 	QAction* actEntityCapture = nullptr;
 	QAction* actPointCapture = nullptr;

@@ -19,8 +19,8 @@
 #include "UI/SizeDefines.h"
 #include "UI/MenuLayerTop.h"
 #include "UI/Components/HmiTemplateWebViewer.h"
+#include "UI/Components/HmiTemplateStationPreview.h"
 #include "UI/CanvasGuide.h"
-
 #include <QApplication>
 #include <QWheelEvent>
 #include <QKeyEvent>
@@ -70,50 +70,36 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 	//GPU版本
 	if (CNCSYS::InitializeOpenGL())
 	{
-		CNCSYS::SketchGPU* gpuInstance = (CNCSYS::SketchGPU*)sketch;
+		std::shared_ptr<SketchGPU> sketch1(new SketchGPU());
 		renderByGPU = true;
-		mSketchGPU.reset(gpuInstance);
+		DXFProcessor p(sketch1);
+		std::wstring widePath = L"C:/WJH/Test/工具/测试Dxf/Labubu Keychains-DXFDOWNLOADS.COM.dxf";
+
+		// 转换为 std::string（UTF-8 编码）
+		std::string utf8Path = std::filesystem::path(widePath).string();
+		p.read(utf8Path);
+		//std::vector<glm::vec3> controlPoints;
+		//for (int i = 0; i < 10; i++)
+		//{
+		//	controlPoints.push_back(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0));
+		//}
+		//std::vector<float> knots = MathUtils::GenerateClampedKnots(controlPoints.size(), 3);
+		//spline1->SetParameter(controlPoints,knots,false);
+		//sketch1->AddEntity(spline1);
 		int canvasWidth = ScreenSizeHintX(canvas_panel_width_ratio);
 		int canvasHeight = ScreenSizeHintY(canvas_panel_height_ratio);
-		fixed_canvas_aspect = canvasWidth / canvasHeight;
-		CanvasGPU* canvasMain = new CanvasGPU(mSketchGPU, canvasWidth, canvasHeight, true);
-		g_canvasInstance = canvasMain;
-		glWidget = new GLWidget(canvasMain, nullptr, DYNAMIC_DRAW);
-		canvasMain->SetFrontWidget(glWidget);
-		canvasMain->drawTickers = true;
-		canvasMain->drawAnchor = true;
-		glWidget->setFixedSize(canvasWidth, canvasHeight);
-		glWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		mGLWidget.reset(glWidget);
+		fixed_canvas_aspect = (float)canvasWidth / canvasHeight;
+		CanvasGPU* canvas1 = new CanvasGPU(sketch1, 400 * fixed_canvas_aspect, 400, false);
 
-		m_bottomInfo = new QLabel();
-		m_bottomInfo->setFixedHeight(40);
-		m_bottomInfo->setStyleSheet("color: white;");
-		canvasMain->hoverChangedCallback = [this](const QString& str) {m_bottomInfo->setText(str); };
-		//vlay->addWidget(m_bottomInfo);
 
-		//DigitalHUD* hud = new DigitalHUD(300,200);
-		//hud->show();
-		GCodeEditor::initFont(global_font_mp["Cascadia"], 10);
-		GCodeEditor::initIntellisense();
-		editor = GCodeEditor::GetInstance();
-		editor->setFixedSize(ScreenSizeHintX(gcode_panel_width_ratio), ScreenSizeHintY(gcode_panel_height_ratio) + m_bottomInfo->height());
-		editor->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-		editor->SetSketch(gpuInstance);
-		MenuLayerTop* menuLayer = new MenuLayerTop(ovWindow);
+		GLWidget* preview1 = new GLWidget(canvas1, sketch1.get(), DYNAMIC_DRAW);
+		preview1->setFixedSize(400 * fixed_canvas_aspect, 400);
+		canvas1->SetFrontWidget(preview1);
 
-		hlayCol1->addWidget(glWidget);
-		hlayCol1->addWidget(editor);
+		PreviewItem* previewItem1 = new PreviewItem(preview1);
 
-		//MotionControl* mc = new MotionControl();
-		//mc->setFixedSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(MotionPanelHeight_Ratio));
-		//hlayCol1->setSpacing(0);
-		ovlay->addWidget(menuLayer);
-		ovlay->addLayout(hlayCol1);
-		//ovlay->setSpacing(0);
-		//ovlay->addWidget(mc);
 		ovlay->setContentsMargins(10, 0, 30, 10);
-		canvasOperationPanel->setStyleSheet(R"(.QWidget { border: 2px solid #2c80d8; border-radius: 8px; padding: 10px; })");
+		ovlay->addWidget(previewItem1);
 		canvasOperationPanel->show();
 		canvasOperationPanel->setLayout(ovlay);
 		canvasOperationPanel->setWindowFlags(Qt::SubWindow);
@@ -121,7 +107,7 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 		canvasOperationPanel->move(20, move_height_ratio * screen_resolution_y);
 
 		CanvasGuide* canvasGuide = CanvasGuide::GetInstance();
-		canvasGuide->setParent(glWidget);
+		canvasGuide->setParent(preview1);
 		canvasGuide->move(QPoint(50, 10));
 		canvasGuide->hide();
 
@@ -130,7 +116,6 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 			canvasOperationPanel->show();
 		}
 		//canvasOperationPanel->setMaximumSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(1.0f));
-		mOCSGPU = canvasMain->GetOCSSystem();
 		this->show();
 
 	}

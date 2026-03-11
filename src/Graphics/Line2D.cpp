@@ -326,6 +326,8 @@ std::string Line2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, 
 				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+			Mstatus->totalPath += glm::distance(start, Mstatus->toolPos);
+			Mstatus->idlePath += glm::distance(start, Mstatus->toolPos);
 		}
 		std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, end.x, end.y);
 		section += buffer;
@@ -336,6 +338,7 @@ std::string Line2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, 
 			GCodeController::GetController()->AddRecord(rec);
 		}
 		Mstatus->toolPos = end;
+		Mstatus->totalPath += pathLength;
 	}
 	return section;
 }

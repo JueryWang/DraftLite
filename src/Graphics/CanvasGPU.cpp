@@ -18,6 +18,7 @@
 #include "ModalEvent/EvCanvasSetNewScene.h"
 #include "ModalEvent/EvSendCanvasTag.h"
 #include "ModalEvent/MeasureDimension.h"
+#include "Controls/ScadaScheduler.h"
 #include <UI/CanvasGuide.h>
 #include <QMessageBox>
 #include <Windows.h>
@@ -183,6 +184,10 @@ namespace CNCSYS
 
 		toolAnchor = new Anchor();
 		toolAnchor->SetCoordinateSystem(ocsSys);
+		toolAnchor->SetCurrentCanvas(this);
+		toolAnchor->animatorOpen = true;
+		ScadaScheduler::GetInstance()->AddNode(toolAnchor);
+		g_canvasInstance = this;
 	}
 
 	CanvasGPU::~CanvasGPU()

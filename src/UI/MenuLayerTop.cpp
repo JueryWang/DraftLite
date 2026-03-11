@@ -28,10 +28,8 @@
 #include "Graphics/Primitives.h"
 using namespace CNCSYS;
 
-MenuLayerTop::MenuLayerTop(OverallWindow* parent)
+MenuLayerTop::MenuLayerTop(GLWidget* window, QsciScintilla* editor) : canvasWindow(window),editor(editor)
 {
-	setParent(parent);
-	this->ovWindow = parent;
 	topMenus = new QMenuBar(this);
 	topMenus->setFixedHeight(30);
 	topMenus->setObjectName("blackMenu");
@@ -58,11 +56,11 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	actPointCapture->setCheckable(true);
 	connect(actEntityCapture, &QAction::triggered, [&]() {
 		actPointCapture->setChecked(false);
-		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Entity);
+		canvasWindow->GetCanvas()->SetCaptureMode(CaptureMode::Entity);
 		});
 	connect(actPointCapture, &QAction::triggered, [&]() {
 		actEntityCapture->setChecked(false);
-		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Point);
+		canvasWindow->GetCanvas()->SetCaptureMode(CaptureMode::Point);
 		});
 	//QMenu* cncOptimizeMenu = settingMenu->addMenu(tr("CNC优化"));
 	//QAction* arcFitConfig = cncOptimizeMenu->addAction(tr("弧段优化"));
@@ -78,13 +76,13 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	actShowArrow->setCheckable(true);
 	connect(actShowArrow, &QAction::triggered, [&]() {
 		bool checked = actShowArrow->isChecked();
-		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showArrow = checked;
+		canvasWindow->GetCanvas()->showArrow = checked;
 	});
 	actShowInnerPoint = showModeMenu->addAction(tr("内部点"));
 	actShowInnerPoint->setCheckable(true);
 	connect(actShowInnerPoint, &QAction::triggered, [&]() {
 		bool checked = actShowInnerPoint->isChecked();
-		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->showInnerPoint = checked;
+		canvasWindow->GetCanvas()->showInnerPoint = checked;
 	});
 
 	//QAction* measureAct = settingMenu->addAction(tr("测量"));
@@ -121,9 +119,6 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 	QMenu* AuthMenu = topMenus->addMenu(tr("用户"));
 	actAuthInformation = AuthMenu->addAction(tr("授权信息"));
 
-	topMenus->setFixedWidth(ScreenSizeHintX(canvas_panel_width_ratio));
-	topMenus->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
 	//QToolButton* closeBtn = new QToolButton(this);
 	//closeBtn->setFixedSize(30, 30);
 	//closeBtn->setFixedSize(30, 30);
@@ -154,7 +149,7 @@ MenuLayerTop::MenuLayerTop(OverallWindow* parent)
 		//		ovWindow->showMinimized();
 		//	});
 
-	layout->addWidget(topMenus, 0, Qt::AlignLeft | Qt::AlignTop);
+	layout->addWidget(topMenus);
 	//layout->addStretch();
 	//layout->addWidget(minimizeBtn, 0, Qt::AlignTop | Qt::AlignRight);
 	//layout->addWidget(closeBtn, 0, Qt::AlignTop | Qt::AlignRight);
@@ -215,7 +210,7 @@ bool MenuLayerTop::eventFilter(QObject* obj, QEvent* event) {
 		if (e->button() == Qt::LeftButton)
 		{
 			m_isDraging = true;
-			m_offsetPoint = e->globalPosition().toPoint() - ovWindow->frameGeometry().topLeft();
+			m_offsetPoint = e->globalPosition().toPoint() - canvasWindow->frameGeometry().topLeft();
 		}
 		event->accept();
 		return true;
@@ -225,7 +220,7 @@ bool MenuLayerTop::eventFilter(QObject* obj, QEvent* event) {
 		auto e = dynamic_cast<QMouseEvent*>(event);
 		if (m_isDraging)
 		{
-			ovWindow->move(e->globalPosition().toPoint() - m_offsetPoint);
+			canvasWindow->move(e->globalPosition().toPoint() - m_offsetPoint);
 		}
 		event->accept();
 		return true;
@@ -239,14 +234,6 @@ bool MenuLayerTop::eventFilter(QObject* obj, QEvent* event) {
 		}
 		return true;
 	}
-	case QEvent::MouseButtonDblClick:
-	{
-		QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
-		if (mouseEvent->button() == Qt::LeftButton)
-		{
-			ovWindow->mainWindow->UpdateSize();
-		}
-	}
 	}
 
 	return QWidget::eventFilter(obj, event);
@@ -256,14 +243,15 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 {
 	if (!dxfFile.isEmpty())
 	{
-		DXFProcessor processor(this->ovWindow->mainWindow->mSketchGPU);
-		GCodeEditor::GetInstance()->clear();
+		auto sharedWrapper = std::shared_ptr<SketchGPU>(canvasWindow->attachedSketch, [](SketchGPU*) {});
+		DXFProcessor processor(sharedWrapper);
+		editor->clear();
 		std::string file = dxfFile.toLocal8Bit().constData();
 		processor.SetCompleteCallback([&]()
 			{
-				if (this->ovWindow->mainWindow->mSketchGPU.get()->GetEntities().size())
+				if (canvasWindow->attachedSketch->GetEntities().size())
 				{
-					auto groups = this->ovWindow->mainWindow->mSketchGPU.get()->GetEntityGroups();
+					auto groups = canvasWindow->attachedSketch->GetEntityGroups();
 					for (EntGroup* group : groups)
 					{
 						for (EntRingConnection* ring : group->rings)
@@ -275,11 +263,10 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 							}
 						}
 					}
-					this->ovWindow->mainWindow->mSketchGPU.get()->SetOrigin(this->ovWindow->mainWindow->mSketchGPU->attachedOCS->objectRange->getMin());
+					canvasWindow->attachedSketch->SetOrigin(canvasWindow->attachedSketch->attachedOCS->objectRange->getMin());
 					this->setWindowTitle(dxfFile);
-					std::string NcProgram = this->ovWindow->mainWindow->mSketchGPU.get()->ToNcProgram();
-					GCodeEditor::GetInstance()->setText(QString::fromStdString(NcProgram));
-					//Anchor::GetInstance()->ReAssignDataSize(GCodeEditor::GetInstance()->lines());
+					std::string NcProgram = canvasWindow->attachedSketch->ToNcProgram();
+					editor->setText(QString::fromStdString(NcProgram));
 				}
 			});
 		processor.read(file);
@@ -342,7 +329,7 @@ void MenuLayerTop::OnImportDwg()
 
 	QString dxfFile = FileNameFromPath(fileName) + ".dxf";
 	ImportDxf(QDir::currentPath() + "/temp/" + dxfFile);
-	this->ovWindow->mainWindow->mSketchGPU.get()->source = fileName.toStdString();
+	canvasWindow->attachedSketch->source = fileName.toStdString();
 }
 void MenuLayerTop::OnExportNC()
 {
@@ -352,7 +339,7 @@ void MenuLayerTop::OnExportNC()
 		"CNC文件(*.nc);;所有文件(*)"
 	);
 
-	GCodeProcessor processor(this->ovWindow->mainWindow->mSketchGPU.get());
+	GCodeProcessor processor(canvasWindow->attachedSketch);
 	processor.SaveToFile(ncFile.toLocal8Bit().data());
 }
 void MenuLayerTop::OnExportScene()

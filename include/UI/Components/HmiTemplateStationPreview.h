@@ -9,7 +9,8 @@
 #include <QPlainTextEdit>
 #include <vector>
 #include <Qsci/qsciscintilla.h>
-
+#include "UI/MenuLayerTop.h"
+#include "UI/SketchInformation.h"
 using namespace CNCSYS;
 
 class PreviewItem : public QWidget
@@ -18,19 +19,8 @@ public:
 	PreviewItem(GLWidget* preview,int id = 0);
 	~PreviewItem();
 public:
-	QLabel* stationId = nullptr;
-	QLabel* fileSource = nullptr;
+	GLWidget* canvas = nullptr;
 	QsciScintilla* editor = nullptr;
-};
-
-class HmiTemplateStationPreview : public QListView
-{
-public:
-	HmiTemplateStationPreview();
-	~HmiTemplateStationPreview();
-	void AddPreview(GLWidget* preview);
-public:
-	QStandardItemModel* model;
-	std::vector< GLWidget*> previewlists;
+	SketchInfoPanel* infoPanel = nullptr;
 };
 

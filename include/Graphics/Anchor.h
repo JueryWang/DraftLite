@@ -13,6 +13,10 @@ public:
 	Anchor();
 	~Anchor();
 	void SetCoordinateSystem(OCSGPU* ocsSystem);
+	void SetCurrentCanvas(CanvasGPU* _canvas)
+	{
+		canvas = _canvas;
+	}
 	void SetPosition(const glm::vec3& pos);
 	void Paint();
 
@@ -31,11 +35,14 @@ private:
 	GLuint vao = 0;
 	GLuint vbo = 0;
 
+	CanvasGPU* canvas;
 	OCSGPU* ocsSys;
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
 
+	int animUpdateBatchSize = 8;
 	Line2DGPU* crossline1 = nullptr;
 	Line2DGPU* crossline2 = nullptr;
 	std::vector<glm::vec3> animatorPath;
-	std::queue<glm::vec3> cache;
+	std::queue<glm::vec3> pointQueue;
+	std::mutex queueLocker;
 };

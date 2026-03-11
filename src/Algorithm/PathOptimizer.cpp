@@ -19,6 +19,7 @@ void PathOptimizer::Run()
 	std::vector<EntGroup*> UnvisitedGroups = groups;
 	std::vector<EntGroup*> VisistedGroups;
 
+	//查找零件间最近点
 	int order = 0;
 	while (UnvisitedGroups.size())
 	{
@@ -48,7 +49,7 @@ void PathOptimizer::Run()
 
 void PathOptimizer::OptimizeGroupInnerOrder(EntGroup* group)
 {
-	//默认从最外轮廓开始
+	//查找零件内轮廓最近点
 	std::vector<EntRingConnection*> UnvisitedRings = group->rings;
 	UnvisitedRings.erase(UnvisitedRings.begin());
 	glm::vec3 curPos = group->GetProcessStartPoint();

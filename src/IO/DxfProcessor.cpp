@@ -80,11 +80,15 @@ namespace CNCSYS
 						std::vector<EntRingConnection*> rings = RingDetector::RingDetect(blockItems);
 						PartClassifier classifier(rings);
 						std::vector<EntGroup*> groups = classifier.Execute();
-
+						
+						int ringsize = 0;
 						for (EntGroup* group : groups)
 						{
 							sketchGPU.lock()->AddEntityGroup(group);
+							ringsize += group->rings.size();
 						}
+						sketchGPU.lock()->enitiySize += sketchGPU.lock()->GetEntities().size();
+						sketchGPU.lock()->contourSize += ringsize;
 					}
 				}
 				blockItems.clear();
@@ -639,6 +643,7 @@ namespace CNCSYS
 			vertexs.clear();
 			bulges.clear();
 		}
+		
 
 
 		if (openRingDetect)
@@ -646,17 +651,26 @@ namespace CNCSYS
 			std::vector<EntRingConnection*> rings = RingDetector::RingDetect(entityStorage);
 			PartClassifier classifier(rings);
 			std::vector<EntGroup*> groups = classifier.Execute();
+			int ringsize = 0;
 
 			for (EntGroup* group : groups)
 			{
 				psketchGPU.lock()->AddEntityGroup(group);
+				ringsize += group->rings.size();
 			}
+
 			entityStorage.clear();
 			psketchGPU.lock()->UpdateSketch();
 
+			psketchGPU.lock()->enitiySize += psketchGPU.lock()->GetEntities().size();
+			psketchGPU.lock()->contourSize += ringsize;
+			//路径优化算法
 			PathOptimizer optimizer(groups);
 			optimizer.Run();
+
 		}
+
+
 
 		if (psketchGPU.lock()->GetEntities().size() == 0)
 		{

@@ -665,6 +665,8 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+			Mstatus->totalPath += glm::distance(start, Mstatus->toolPos);
+			Mstatus->idlePath += glm::distance(start, Mstatus->toolPos);
 		}
 		glm::vec3 transformed;
 		int step = 10;
@@ -726,8 +728,8 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 			GCodeRecord rec(std::string(buffer), this, splineSamples.size() - 1, transformedMatrix, Mstatus->ncstep);
 			GCodeController::GetController()->AddRecord(rec);
 		}
-
-		Mstatus->toolPos = start;
+		Mstatus->totalPath += pathLength;
+		Mstatus->toolPos = end;
 	}
 
 	return section;

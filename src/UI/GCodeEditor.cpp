@@ -36,6 +36,8 @@ using namespace CNCSYS;
 
 GCodeEditor::GCodeEditor(QWidget* parent)
 {
+	GCodeEditor::initFont(global_font_mp["Cascadia"], 10);
+	GCodeEditor::initIntellisense();
 	this->setUtf8(true);
 	this->setFont(font_global);
 	this->setBraceMatching(QsciScintilla::SloppyBraceMatch);
@@ -246,33 +248,6 @@ void GCodeEditor::onSelectionChanged()
 
 void GCodeEditor::onEditingFinished()
 {
-	//AtomicVar<PLC_TYPE_STRING>* NcFileName = static_cast<AtomicVar<PLC_TYPE_STRING>*>(g_readPersistance[g_ConfigableKeys["WorkFileName"]]);
-
-	//if (g_opcuaClient && AutoSendFTP)
-	//{
-	//	SCT_SEQUENCE_TASK* updateGCode = new SCT_SEQUENCE_TASK();
-	//	QString title = QString::fromLocal8Bit(g_mainWindow->GetSketch()->source.c_str());
-	//	QStringList parts = title.split("/");
-	//	QString fileName = parts.last();
-	//	updateGCode->params.updateRemoteFtp = new TaskUpdateRemoteFtpParam();
-	//	QString TriimedfileName = fileName.replace(" ", "");
-	//	QFileInfo fileInfo(TriimedfileName);
-	//	QString suffix = fileInfo.suffix(); // 结果："txt"
-	//	fileName = fileInfo.baseName() + ".cnc";
-	//	updateGCode->params.updateRemoteFtp->fileUrl = "Share_files_anonymity/" + fileName.trimmed().toLocal8Bit();
-	//	updateGCode->type = SCT_TASK_TYPE::UPDATE_FTP_GCODE;
-	//	ScadaScheduler::GetInstance()->AddTask(updateGCode);
-
-	//	std::string ftpFilePath = "../FTP/" + updateGCode->params.updateRemoteFtp->fileUrl;
-	//	PLC_TYPE_STRING uploadFileName = (PLC_TYPE_STRING)malloc(256 * sizeof(uchar));
-	//	strcpy_s(uploadFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
-	//	bool equal = strcmp(uploadFileName, NcFileName->GetValue());
-	//	if (equal != 0 && fileName.size())
-	//	{
-	//		WritePLC_OPCUA(g_ConfigableKeys["WorkFileName"].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
-	//	}
-	//	free(uploadFileName);
-	//}
 }
 
 void GCodeEditor::handleGCodePaste()

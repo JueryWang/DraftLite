@@ -5,8 +5,6 @@
 #include "Common/ProgressInfo.h"
 #include "UI/GCodeEditor.h"
 
-#define AnimateUpdateBatchSize 8
-
 Anchor* Anchor::instance = nullptr;
 
 Anchor::Anchor()
@@ -38,21 +36,65 @@ void Anchor::SetPosition(const glm::vec3& pos)
 
 void Anchor::UpdateNode()
 {
+	if (animatorOpen)
+	{
+		if (vao == 0)
+		{
+			glGenVertexArrays(1,&vao);
+			glGenBuffers(1, &vbo);
+		}
+
+		if (animatorPath.capacity() == 0)
+		{
+			animatorPath = std::vector<glm::vec3>(GCodeEditor::GetInstance()->lines());
+			glBindVertexArray(vao);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+			glBufferData(GL_ARRAY_BUFFER, (animatorPath.size()) * sizeof(glm::vec3), animatorPath.data(), GL_DYNAMIC_DRAW);
+
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+			glEnableVertexAttribArray(0);
+		}
+	}
+	else
+	{
+		pathIndex = 0;
+		animatorPath.clear();
+		glDeleteBuffers(1,&vbo);
+		vbo = 0;
+	}
+
 	auto now = std::chrono::steady_clock::now();
 	std::chrono::duration<double> diff = now - last_update_time;
 	long long diff_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
 
 	PLC_TYPE_INT cycle;
 	ReadPLC_OPCUA(g_ConfigableKeys["AnimatorCycleTime"].c_str(), &cycle, AtomicVarType::INT);
-	int timeInterval = (AnimateUpdateBatchSize * cycle);
+	int timeInterval = (animUpdateBatchSize * cycle);
 
 	if (diff_milliseconds > timeInterval)
 	{
-		PLC_TYPE_INT bufferALength;
+		PLC_TYPE_INT bufferALength = -1;
 		ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferALength, AtomicVarType::INT);
 		if (bufferALength > 0)
 		{
-			
+			queueLocker.lock();
+			for (int i = 0; i < bufferALength; i++)
+			{
+				pointQueue.push(glm::vec3(g_simRecBufferA[i].fX, g_simRecBufferA[i].fY, 0));
+			}
+			queueLocker.unlock();
+		}
+		PLC_TYPE_INT bufferBLength = -1;
+		ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueB"].c_str(), &bufferALength, AtomicVarType::INT);
+		if (bufferBLength > 0)
+		{
+			queueLocker.lock();
+			for (int i = 0; i < bufferALength; i++)
+			{
+				pointQueue.push(glm::vec3(g_simRecBufferB[i].fX, g_simRecBufferB[i].fY, 0));
+			}
+			queueLocker.unlock();
 		}
 	}
 }

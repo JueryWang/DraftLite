@@ -624,7 +624,6 @@ namespace CNCSYS
 			//	rec = GCodeRecord(std::string(MBuffer), nullptr, -1, glm::mat4(1.0f), g_MScontext.ncstep);
 			//	GCodeController::GetController()->AddRecord(rec);
 			//}
-			g_MScontext.toolPos = glm::vec3(0, 0, 0);
 			for (EntityVGPU* ent : conponents)
 			{
 				if (ent->createGCode)

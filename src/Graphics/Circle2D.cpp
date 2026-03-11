@@ -366,6 +366,8 @@ std::string Circle2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+			Mstatus->totalPath += glm::distance(start,Mstatus->toolPos);
+			Mstatus->idlePath += glm::distance(start, Mstatus->toolPos);
 		}
 
 		std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
@@ -375,7 +377,7 @@ std::string Circle2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 			GCodeRecord rec(std::string(buffer), this, circleSamples.size() - 1, transformedMatrix, Mstatus->ncstep);
 			GCodeController::GetController()->AddRecord(rec);
 		}
-
+		Mstatus->totalPath += pathLength;
 		Mstatus->toolPos = end;
 	}
 

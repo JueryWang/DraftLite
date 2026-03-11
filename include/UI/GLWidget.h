@@ -46,6 +46,9 @@ namespace CNCSYS
 	protected:
 		void paintEvent(QPaintEvent* event) override;
 
+	public:
+		SketchGPU* attachedSketch = nullptr;
+
 	private:
 		OpenGLWindowContext* m_context;
 		OCSGPU* ocsSys = nullptr;

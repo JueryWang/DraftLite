@@ -31,8 +31,4 @@ private:
 	ScadaNode* monitorToolRadius = nullptr;
 	ScadaNode* monitorToolDistance = nullptr;
 	ScadaNode* monitorCurrentRowCNC = nullptr;
-	ScadaNode* monitorSimulateRecordBufferLengthA = nullptr;
-	ScadaNode* monitorSimulateRecordBufferLengthB = nullptr;
-	ScadaNode* monitorSimulateRecordBufferA = nullptr;
-	ScadaNode* monitorSimulateRecordBufferB = nullptr;
 };

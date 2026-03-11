@@ -67,6 +67,8 @@ namespace CNCSYS
 		std::string source;
 		CraftConfigItems attachedConfig;
 		OCSGPU* attachedOCS = nullptr;
+		int enitiySize = 0;
+		int contourSize = 0;
 
 	private:
 		bgi::rtree<rtree_entry, bgi::quadratic<16>> rtree;

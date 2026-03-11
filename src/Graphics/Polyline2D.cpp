@@ -867,6 +867,8 @@ std::string Polyline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createReco
 				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+			Mstatus->totalPath += glm::distance(start, Mstatus->toolPos);
+			Mstatus->idlePath += glm::distance(start, Mstatus->toolPos);
 		}
 
 		int index = 0;
@@ -917,6 +919,7 @@ std::string Polyline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createReco
 			section += buffer;
 			index++;
 		}
+		Mstatus->totalPath += pathLength;
 		Mstatus->toolPos = end;
 	}
 	return section;

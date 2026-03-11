@@ -28,7 +28,7 @@ std::string double_to_string_trim(double value) {
 
 namespace CNCSYS
 {
-	GLWidget::GLWidget(OpenGLRenderWindow* glwindow, SketchGPU* sketch, WindowState state)
+	GLWidget::GLWidget(OpenGLRenderWindow* glwindow, SketchGPU* sketch, WindowState state) : attachedSketch(sketch)
 	{
 		setAttribute(Qt::WA_AcceptTouchEvents);
 		m_context = new OpenGLWindowContext(glwindow, state);

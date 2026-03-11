@@ -410,6 +410,8 @@ std::string Arc2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, S
 				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+			Mstatus->totalPath += glm::distance(start, Mstatus->toolPos);
+			Mstatus->idlePath += glm::distance(start, Mstatus->toolPos);
 		}
 
 		if (direction == GeomDirection::CCW)
@@ -432,7 +434,7 @@ std::string Arc2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord, S
 				GCodeController::GetController()->AddRecord(rec);
 			}
 		}
-
+		Mstatus->totalPath += pathLength;
 		Mstatus->toolPos = end;
 	}
 	return section;

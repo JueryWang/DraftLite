@@ -86,13 +86,13 @@ OverallWindow::OverallWindow()
 					PLC_TYPE_STRING newSliceFileName = (PLC_TYPE_STRING)malloc(256);
 					strcpy_s(newSliceFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
 					WritePLC_OPCUA(g_ConfigableKeys["WorkFileName"].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
-					ToDoListItemWidget* widget = taskList->CurrentItemWidget();
-					taskList->taskLists->setCurrentRow(taskList->currentRequestNumber);
-					EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(widget->sketch, widget->ocsSys);
-					QApplication::postEvent(g_canvasInstance->GetFrontWidget(), evSetScene, Qt::HighEventPriority);
+					//ToDoListItemWidget* widget = taskList->CurrentItemWidget();
+					//taskList->taskLists->setCurrentRow(taskList->currentRequestNumber);
+					//EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(widget->sketch, widget->ocsSys);
+					//QApplication::postEvent(g_canvasInstance->GetFrontWidget(), evSetScene, Qt::HighEventPriority);
+					//taskList->CurrentItemWidget()->AddCounter();
+					//taskList->currentRequestNumber = (taskList->currentRequestNumber + 1) % (taskList->items.size());
 					free(newSliceFileName);
-					taskList->CurrentItemWidget()->AddCounter();
-					taskList->currentRequestNumber = (taskList->currentRequestNumber + 1) % (taskList->items.size());
 				}
 				PLC_TYPE_BOOL uploadDone = true;
 				WritePLC_OPCUA(g_ConfigableKeys["PCFileFTPDone"].c_str(), &uploadDone, AtomicVarType::BOOL);
@@ -153,9 +153,12 @@ OverallWindow::OverallWindow()
 	monitorCurrentRowCNC->updateCallback = [&]()
 		{
 			PLC_TYPE_DINT rowNumber = monitorCurrentRowCNC->GetDint();
-			QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
-				Qt::QueuedConnection,
-				Q_ARG(int, rowNumber));
+			if (rowNumber > 1)
+			{
+				QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
+					Qt::QueuedConnection,
+					Q_ARG(int, rowNumber));
+			}
 		};
 
 	monitorToolDistance = new ScadaNode();
@@ -171,45 +174,12 @@ OverallWindow::OverallWindow()
 			}
 	};
 
-	monitorSimulateRecordBufferLengthA = new ScadaNode();
-	monitorSimulateRecordBufferLengthA->BindParam(g_ConfigableKeys["AnimatorBufferLengthQueueA"]);
-	monitorSimulateRecordBufferLengthA->lastValue.lastInt = 0;
-	monitorSimulateRecordBufferLengthA->updateCallback = [&]()
-	{
-			PLC_TYPE_INT bufferALength = monitorSimulateRecordBufferLengthA->GetInt();
-			if (bufferALength != 0)
-			{
-				UA_Variant value;
-				UA_Variant_init(&value);
-				UA_NodeId nodeId = UA_NODEID_STRING(4, (char*)"|var|Xinje-PLC.Application.gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueA");
-
-				monitorSimulateRecordBufferLengthA->lastValue.lastInt = bufferALength;
-			}
-	};
-	monitorSimulateRecordBufferLengthB = new ScadaNode();
-	monitorSimulateRecordBufferLengthB->BindParam(g_ConfigableKeys["AnimatorBufferLengthQueueB"]);
-	monitorSimulateRecordBufferLengthB->lastValue.lastInt = 0;
-	monitorSimulateRecordBufferLengthB->updateCallback = [&]()
-		{
-			PLC_TYPE_INT bufferBLength = monitorSimulateRecordBufferLengthB->GetInt();
-			if (bufferBLength != 0)
-			{
-				monitorSimulateRecordBufferLengthB->lastValue.lastInt = bufferBLength;
-			}
-		};
-
-	monitorSimulateRecordBufferA = new ScadaNode();
-	monitorSimulateRecordBufferA->BindParam(g_ConfigableKeys["AnimatorBufferQueueA"]);
-
 	ScadaScheduler::GetInstance()->AddNode(monitorIndexPage);
 	ScadaScheduler::GetInstance()->AddNode(monitorUploadFTP);
 	ScadaScheduler::GetInstance()->AddNode(monitorHeartBeat);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
 	ScadaScheduler::GetInstance()->AddNode(monitorCurrentRowCNC);
-	ScadaScheduler::GetInstance()->AddNode(monitorSimulateRecordBufferLengthA);
-	ScadaScheduler::GetInstance()->AddNode(monitorSimulateRecordBufferLengthB);
-	ScadaScheduler::GetInstance()->AddNode(monitorSimulateRecordBufferA);
 	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
 	
 }

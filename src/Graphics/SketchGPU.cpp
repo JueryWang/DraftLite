@@ -327,6 +327,7 @@ namespace CNCSYS
 		{
 			std::sort(entityGroups.begin(), entityGroups.end(), [&](EntGroup* g1, EntGroup* g2) {return g1->processOrder < g2->processOrder; });
 			g_MScontext.ncstep = 0;
+			g_MScontext.toolPos = glm::vec3(0, 0, 0);
 			for (EntGroup* group : entityGroups)
 			{
 				std::sort(group->rings.begin(), group->rings.end(), [&](EntRingConnection* r1, EntRingConnection* r2) { return r1->processOrder < r2->processOrder; });

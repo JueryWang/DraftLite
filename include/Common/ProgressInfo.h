@@ -49,7 +49,8 @@ struct SimulateStatus
 	double WAxisStart = 0.0;
 	double PAxisStart = 0.0;
 	double QAxisStart = 0.0;
-
+	double totalPath = 0.0;
+	double idlePath = 0.0;
 	// 默认构造函数
 	SimulateStatus()
 		: toolPos(0.0f),
