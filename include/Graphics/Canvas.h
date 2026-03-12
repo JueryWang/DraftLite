@@ -5,6 +5,7 @@
 #include "Common/Context.h"
 #include "Common/OpenGLContext.h"
 #include "UI/OpenGLRenderWindow.h"
+#include "Graphics/OCS.h"
 #include "ModalEvent/EntityRotateModal.h"
 #include "ModalEvent/EntityScaleModal.h"
 #include <QPoint>
@@ -64,7 +65,7 @@ namespace CNCSYS
 
 		Q_OBJECT
 	public:
-		CanvasGPU(std::shared_ptr<SketchGPU> sketch, int width, int height, bool isMainCanvas);
+		CanvasGPU(std::shared_ptr<SketchGPU> sketch,OCSGPU* ocs,int width, int height, bool isMainCanvas);
 		~CanvasGPU();
 
 		void UpdateOCS();
@@ -117,7 +118,6 @@ namespace CNCSYS
 		glm::vec4 background = glm::vec4(20.0f / 255.0f, 20.0f / 255.0f, 41.0f / 255.0f, 1.0f);
 		bool showArrow = false;
 		bool showInnerPoint = false;
-		bool drawAnchor = false;
 		bool drawTickers = true;
 		ModalState operationState = ModalState::NormalInteract;
 

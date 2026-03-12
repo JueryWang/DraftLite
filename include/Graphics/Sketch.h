@@ -15,6 +15,16 @@
 #include "glm/glm.hpp"
 #include <boost/geometry/index/rtree.hpp>
 
+struct SketchKeyParams
+{
+	int dimensionWidth = 0;
+	int dimensionHeight = 0;
+	int entitySize =0 ;
+	int contourSize = 0;
+	double pathLength = 0;
+	double idleLength = 0;
+};
+
 namespace CNCSYS
 {
 	class CanvasGPU;
@@ -67,8 +77,7 @@ namespace CNCSYS
 		std::string source;
 		CraftConfigItems attachedConfig;
 		OCSGPU* attachedOCS = nullptr;
-		int enitiySize = 0;
-		int contourSize = 0;
+		SketchKeyParams keyparams;
 
 	private:
 		bgi::rtree<rtree_entry, bgi::quadratic<16>> rtree;

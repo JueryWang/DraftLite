@@ -6,8 +6,11 @@
 #include<QAction>
 #include<QString>
 #include<QTimer>
+#include<QTabWidget>
 #include"Graphics/Canvas.h"
 #include "UI/GLWidget.h"
+#include "UI/SketchInformation.h"
+#include "UI/Components/HmiTemplateStationPreview.h"
 class MenuLayerTop;
 class GCodeEditor;
 
@@ -18,7 +21,7 @@ class MainLayer : public QMainWindow
 {
 	friend class MenuLayerTop;
 public:
-	MainLayer(void* sketch, OverallWindow* ovWindow);
+	MainLayer(OverallWindow* ovWindow);
 	~MainLayer();
 	QWidget* GetCanvasPanel() { return canvasOperationPanel; }
 	QWidget* GetWebView() { return webView; }
@@ -34,18 +37,23 @@ protected:
 	void changeEvent(QEvent* event) override;
 	virtual bool eventFilter(QObject* obj, QEvent* event) override;
 
-private:
+public:
 	bool renderByGPU = true;
 	//画布默认的Sketch和OCS,不可修改
 	std::shared_ptr<CNCSYS::SketchGPU> mSketchGPU;
 	std::shared_ptr<CNCSYS::SketchGPU> mSketchCPU;
 	OCSGPU* mOCSGPU;
-	std::shared_ptr<GLWidget> mGLWidget;
 	QString m_qssPath;
 
-	MenuLayerTop* menu;
-	GLWidget* glWidget;
-	QWidget* canvasOperationPanel;
-	QWidget* webView;
-	GCodeEditor* editor;
+	MenuLayerTop* menu = nullptr;
+	GLWidget* preview = nullptr;
+	QWidget* canvasOperationPanel = nullptr;
+	QWidget* webView = nullptr;
+	GCodeEditor* editor = nullptr;
+	SketchInfoPanel* infoPanel = nullptr;
+	StationSwitchTab* stationTab = nullptr;
+	QHBoxLayout* previewLayout = nullptr;
+
+	std::vector<std::shared_ptr<SketchGPU>> sketchLists;
+	int currentSketchIndex = 0;
 };

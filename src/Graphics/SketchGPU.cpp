@@ -323,6 +323,8 @@ namespace CNCSYS
 	{
 		std::string content;
 		auto groups = GetEntityGroups();
+		g_MScontext.totalPath = 0;
+		g_MScontext.idlePath = 0;
 		if (groups.size())
 		{
 			std::sort(entityGroups.begin(), entityGroups.end(), [&](EntGroup* g1, EntGroup* g2) {return g1->processOrder < g2->processOrder; });
@@ -337,6 +339,10 @@ namespace CNCSYS
 				}
 			}
 		}
+		keyparams.dimensionWidth = attachedOCS->objectRange->XRange();
+		keyparams.dimensionHeight = attachedOCS->objectRange->YRange();
+		keyparams.pathLength = g_MScontext.totalPath;
+		keyparams.idleLength = g_MScontext.idlePath;
 		//Anchor::GetInstance()->ReAssignDataSize(g_MScontext.ncstep);
 		return content;
 	}

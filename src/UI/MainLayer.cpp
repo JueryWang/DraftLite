@@ -19,8 +19,8 @@
 #include "UI/SizeDefines.h"
 #include "UI/MenuLayerTop.h"
 #include "UI/Components/HmiTemplateWebViewer.h"
-#include "UI/Components/HmiTemplateStationPreview.h"
 #include "UI/CanvasGuide.h"
+#include "Graphics/OCS.h"
 #include <QApplication>
 #include <QWheelEvent>
 #include <QKeyEvent>
@@ -34,7 +34,6 @@
 #include <memory>
 
 std::atomic<bool> g_timerThreadExit(false);
-
 
 void TimerTask(MainLayer* layer)
 {
@@ -50,7 +49,7 @@ void TimerTask(MainLayer* layer)
 	}
 }
 
-MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
+MainLayer::MainLayer(OverallWindow* ovWindow)
 {
 	g_mainWindow = this;
 	loadQssTheme();
@@ -64,42 +63,69 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 
 	canvasOperationPanel = new QWidget(webView);
 	this->setCentralWidget(webView);
-	QVBoxLayout* ovlay = new QVBoxLayout(canvasOperationPanel);
-	QHBoxLayout* hlayCol1 = new QHBoxLayout();
-
+	QHBoxLayout* ovlay = new QHBoxLayout(canvasOperationPanel);
+	QVBoxLayout* vlayCol1 = new QVBoxLayout();
 	//GPU版本
 	if (CNCSYS::InitializeOpenGL())
 	{
-		std::shared_ptr<SketchGPU> sketch1(new SketchGPU());
-		renderByGPU = true;
-		DXFProcessor p(sketch1);
-		std::wstring widePath = L"C:/WJH/Test/工具/测试Dxf/Labubu Keychains-DXFDOWNLOADS.COM.dxf";
-
-		// 转换为 std::string（UTF-8 编码）
-		std::string utf8Path = std::filesystem::path(widePath).string();
-		p.read(utf8Path);
-		//std::vector<glm::vec3> controlPoints;
-		//for (int i = 0; i < 10; i++)
-		//{
-		//	controlPoints.push_back(glm::vec3(generateRandomNumber0To300(), generateRandomNumber0To300(), 0));
-		//}
-		//std::vector<float> knots = MathUtils::GenerateClampedKnots(controlPoints.size(), 3);
-		//spline1->SetParameter(controlPoints,knots,false);
-		//sketch1->AddEntity(spline1);
 		int canvasWidth = ScreenSizeHintX(canvas_panel_width_ratio);
 		int canvasHeight = ScreenSizeHintY(canvas_panel_height_ratio);
 		fixed_canvas_aspect = (float)canvasWidth / canvasHeight;
-		CanvasGPU* canvas1 = new CanvasGPU(sketch1, 400 * fixed_canvas_aspect, 400, false);
+		renderByGPU = true;
 
+		for (int i = 0; i < 11; i++)
+		{
+			std::shared_ptr<SketchGPU> sketchNew;
+			sketchNew.reset(new SketchGPU());
+			sketchLists.push_back(sketchNew);
+			sketchNew->attachedOCS = new OCSGPU(sketchNew);
+			sketchNew->attachedOCS->SetCanvasSizae(canvasWidth, canvasHeight);
+			sketchNew->attachedOCS->ComputeScaleFitToCanvas();
+		}
 
-		GLWidget* preview1 = new GLWidget(canvas1, sketch1.get(), DYNAMIC_DRAW);
-		preview1->setFixedSize(400 * fixed_canvas_aspect, 400);
-		canvas1->SetFrontWidget(preview1);
+		mSketchGPU.reset(sketchLists[0].get());
+		
+		CanvasGPU* canvasMain = new CanvasGPU(mSketchGPU, mSketchGPU->attachedOCS,canvasWidth, canvasHeight, true);
+		preview = new GLWidget(canvasMain, mSketchGPU.get(), DYNAMIC_DRAW);
+		preview->setFixedSize(canvasWidth, canvasHeight);
+		canvasMain->SetFrontWidget(preview);
+		preview->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+		//vlay->addWidget(m_bottomInfo);
 
-		PreviewItem* previewItem1 = new PreviewItem(preview1);
+		//DigitalHUD* hud = new DigitalHUD(300,200);
+		//hud->show();
+		GCodeEditor::initFont(global_font_mp["Cascadia"], 10);
+		GCodeEditor::initIntellisense();
+		editor = GCodeEditor::GetInstance();
+		editor->setFixedWidth(preview->width());
+		editor->SetSketch(mSketchGPU.get());
+		MenuLayerTop* menuLayer = new MenuLayerTop(preview,editor);
+		vlayCol1->addWidget(menuLayer);
+		vlayCol1->addWidget(preview);
+		vlayCol1->addWidget(editor);
 
+		infoPanel = new SketchInfoPanel(this);
+		infoPanel->updateStats(sketchLists[0].get());
+		//MotionControl* mc = new MotionControl();
+		//mc->setFixedSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(MotionPanelHeight_Ratio));
+		//hlayCol1->setSpacing(0);
+		
+		QVBoxLayout* vlay2 = new QVBoxLayout();
+		vlay2->setContentsMargins(10, 10, 5, 10);
+		vlay2->addWidget(infoPanel);
+		vlay2->addStretch();
+
+		canvasOperationPanel->setStyleSheet(".QWidget{background-color: #E2E8D6; border-radius:5px;}");
+		stationTab = new StationSwitchTab(this);
+
+		ovlay->addWidget(stationTab);
+		ovlay->addLayout(vlayCol1,1);
+		ovlay->addSpacing(2);
+		ovlay->addLayout(vlay2, 0);
+
+		//ovlay->setSpacing(0);
+		//ovlay->addWidget(mc);
 		ovlay->setContentsMargins(10, 0, 30, 10);
-		ovlay->addWidget(previewItem1);
 		canvasOperationPanel->show();
 		canvasOperationPanel->setLayout(ovlay);
 		canvasOperationPanel->setWindowFlags(Qt::SubWindow);
@@ -107,7 +133,7 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 		canvasOperationPanel->move(20, move_height_ratio * screen_resolution_y);
 
 		CanvasGuide* canvasGuide = CanvasGuide::GetInstance();
-		canvasGuide->setParent(preview1);
+		canvasGuide->setParent(preview);
 		canvasGuide->move(QPoint(50, 10));
 		canvasGuide->hide();
 
@@ -116,6 +142,7 @@ MainLayer::MainLayer(void* sketch, OverallWindow* ovWindow)
 			canvasOperationPanel->show();
 		}
 		//canvasOperationPanel->setMaximumSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(1.0f));
+		mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Point);
 		this->show();
 
 	}
@@ -156,15 +183,15 @@ void MainLayer::changeEvent(QEvent* event)
 	QWidget::changeEvent(event);
 	if (event->type() == QEvent::WindowStateChange) {
 		if (windowState() & Qt::WindowMinimized) {
-			if (mGLWidget.get())
+			if (preview)
 			{
-				mGLWidget.get()->hide();
+				preview->hide();
 			}
 		}
 		else if (!(windowState() & (Qt::WindowMinimized | Qt::WindowMaximized))) {
-			if (mGLWidget.get())
+			if (preview)
 			{
-				mGLWidget.get()->show();
+				preview->show();
 			}
 		}
 	}

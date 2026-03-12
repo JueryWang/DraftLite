@@ -25,7 +25,7 @@ set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib64-msvc-14.3")
 #set(KDL_ROOT "C:/Users/Admin/Documents/lib/orocos-kdl/share/orocos_kdl/cmake")
 #set(KDL_LIBRARYDIR "C:/Users/Admin/Documents/lib/orocos-kdl/lib")
 #set(EIGEN3_ROOT "C:/Users/Admin/Documents/lib/Eigen3/cmake")
-set(QT_QPA_PLATFORM_PLUGIN_PATH "C:/Users/Admin/Documents/lib/Qt/6.7.3/msvc2022_64/plugins/platforms")
+set(QT_QPA_PLATFORM_PLUGIN_PATH "C:/Users/Admin/Documents/lib/Qt/6.7.3/msvc2022_64/platforms")
 
 find_package(open62541 REQUIRED)
 #find_package(orocos_kdl REQUIRED)

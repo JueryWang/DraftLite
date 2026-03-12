@@ -5,18 +5,21 @@
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QGroupBox>
-
+namespace CNCSYS
+{
+	class SketchGPU;
+}
 class SketchInfoPanel : public QWidget
 {
 public:
 	SketchInfoPanel(QWidget* parent = nullptr);
 	~SketchInfoPanel();
-	void updateStats(int entities, int contours, double totalLen, double idleLen, const QSize& size);
+	void updateStats(CNCSYS::SketchGPU* sketch);
 	void setupUI();
 private:
 	void applyStyle();
 
 private:
 	QGroupBox* groupBox;
-	QLabel* labelEntities, * labelContours, * labelTotalPath, * labelIdlePath, * labelIdleRatio,*labelDimension;
+	QLabel* labelEntities, * labelContours, * labelTotalPath, * labelIdlePath, *labelIdleRatio,*labelDimension, *labelSource;
 };

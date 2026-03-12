@@ -51,9 +51,9 @@ MenuLayerTop::MenuLayerTop(GLWidget* window, QsciScintilla* editor) : canvasWind
 	QMenu* captureMenu = settingMenu->addMenu(tr("开启图元捕捉"));
 	actEntityCapture = captureMenu->addAction(tr("开启图元捕捉")); 
 	actEntityCapture->setCheckable(true);
-	actEntityCapture->setChecked(true);
 	actPointCapture = captureMenu->addAction(tr("开启点捕捉"));
 	actPointCapture->setCheckable(true);
+	actPointCapture->setChecked(true);
 	connect(actEntityCapture, &QAction::triggered, [&]() {
 		actPointCapture->setChecked(false);
 		canvasWindow->GetCanvas()->SetCaptureMode(CaptureMode::Entity);
@@ -266,7 +266,9 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 					canvasWindow->attachedSketch->SetOrigin(canvasWindow->attachedSketch->attachedOCS->objectRange->getMin());
 					this->setWindowTitle(dxfFile);
 					std::string NcProgram = canvasWindow->attachedSketch->ToNcProgram();
+					g_mainWindow->infoPanel->updateStats(canvasWindow->attachedSketch);
 					editor->setText(QString::fromStdString(NcProgram));
+
 				}
 			});
 		processor.read(file);

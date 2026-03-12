@@ -1,5 +1,7 @@
 #include "UI/Components/HmiTemplateStationPreview.h"
 #include "Graphics/Sketch.h"
+#include "UI/MainLayer.h"
+
 PreviewItem::PreviewItem(GLWidget* preview, int id) : canvas(preview)
 {
     QHBoxLayout* hlay = new QHBoxLayout(this);
@@ -9,7 +11,7 @@ PreviewItem::PreviewItem(GLWidget* preview, int id) : canvas(preview)
     QVBoxLayout* vlay = new QVBoxLayout();
     vlay->setContentsMargins(0, 0, 0, 0);
 
-    editor = new QsciScintilla();
+    editor = GCodeEditor::GetInstance();
     editor->setText(QString::fromUtf8(preview->GetCanvas()->GetSketchShared()->ToNcProgram()));
     MenuLayerTop* menu = new MenuLayerTop(preview, editor);
     vlay->addWidget(menu);
@@ -21,13 +23,7 @@ PreviewItem::PreviewItem(GLWidget* preview, int id) : canvas(preview)
     vlay2->setContentsMargins(10, 10, 10, 10);
 
     infoPanel = new SketchInfoPanel(this);
-    infoPanel->setFixedWidth(200);
-    int draftWidth = preview->attachedSketch->attachedOCS->objectRange->XRange();
-    int drafHeight = preview->attachedSketch->attachedOCS->objectRange->YRange();
-    infoPanel->updateStats(preview->attachedSketch->enitiySize,
-        preview->attachedSketch->contourSize,
-        g_MScontext.totalPath,
-        g_MScontext.idlePath,QSize(draftWidth,drafHeight));
+    infoPanel->updateStats(preview->attachedSketch);
 
     vlay2->addWidget(infoPanel);
     vlay2->addStretch(); 
@@ -39,4 +35,52 @@ PreviewItem::PreviewItem(GLWidget* preview, int id) : canvas(preview)
 PreviewItem::~PreviewItem()
 {
 
+}
+
+StationSwitchTab::StationSwitchTab(MainLayer* parent) : holder(parent)
+{
+    this->setElideMode(Qt::ElideNone);
+
+    this->addTab(QString("预览"));
+    this->addTab(QString("工位1"));
+    this->addTab(QString("工位2"));
+    this->addTab(QString("工位3"));
+    this->addTab(QString("工位4"));
+    this->addTab(QString("工位5"));
+    this->addTab(QString("工位6"));
+    this->addTab(QString("工位7"));
+    this->addTab(QString("工位8"));
+    this->addTab(QString("工位9"));
+    this->addTab(QString("工位10"));
+    this->setShape(QTabBar::RoundedEast);
+
+    this->setStyleSheet(R"(
+        QTabBar {
+            min-width: 80px;
+            white-space: nowrap;
+        }
+        QTabBar::tab {
+            padding: 10px 6px;
+            text-align: left;
+            /* 关键：取消左侧标签的默认竖排 */
+            writing-mode: lr-tb;  /* 左到右、上到下（默认竖排是 tb-rl） */
+        }
+        QTabWidget::tab-bar:west {
+            alignment: left;
+        }
+    )");
+
+    connect(this, &QTabBar::currentChanged,this,&StationSwitchTab::SwitchStation);
+}
+
+StationSwitchTab::~StationSwitchTab()
+{
+
+}
+
+void StationSwitchTab::SwitchStation(int index)
+{
+    holder->preview->attachedSketch = holder->sketchLists[index].get();
+    holder->preview->GetCanvas()->SetScene(holder->sketchLists[index], holder->sketchLists[index]->attachedOCS);
+    holder->infoPanel->updateStats(holder->preview->attachedSketch);
 }

@@ -2,6 +2,7 @@
 #include "Graphics/AABB.h"
 #include "Common/MathUtils.h"
 #include "Graphics/Sketch.h"
+#include "UI/SizeDefines.h"
 #include <cmath>
 
 #define TICKER_REMAIN_SPACE 0.08
@@ -11,6 +12,8 @@ namespace CNCSYS
 	OCSGPU::OCSGPU(std::shared_ptr<SketchGPU> sketch) : sketch(sketch)
 	{
 		sketch.get()->attachedOCS = this;
+		objectRange = new AABB();
+		canvasRange = new AABB();
 	}
 	OCSGPU::~OCSGPU()
 	{
@@ -36,7 +39,7 @@ namespace CNCSYS
 	{
 		if (sketch && sketch->entities.size() > 0)
 		{
-			objectRange = new AABB((sketch->entities[0]->bbox));
+			*objectRange = AABB((sketch->entities[0]->bbox));
 
 			for (int i = 1; i < sketch->entities.size(); i++)
 			{
@@ -55,7 +58,7 @@ namespace CNCSYS
 
 			canvasLB *= scale;
 			canvasRT *= scale;
-			canvasRange = new AABB(canvasLB, canvasRT);
+			*canvasRange = AABB(canvasLB, canvasRT);
 
 			glm::vec3 centerCanvas = canvasRange->Center();
 			glm::vec3 centerObj = objectRange->Center();
@@ -63,13 +66,13 @@ namespace CNCSYS
 		}
 		else
 		{
-			objectRange = new AABB(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(canvasWidth * fitRatio * scale, canvasHeight * fitRatio * scale, 0.0f));
+			*objectRange = AABB(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(canvasWidth * fitRatio * scale, canvasHeight * fitRatio * scale, 0.0f));
 			glm::vec3 canvasCenter = objectRange->Center();
 			glm::vec3 canvasLB = glm::vec3(canvasCenter.x - objectRange->XRange() / 2 * 1 / fitRatio, canvasCenter.x - objectRange->YRange() / 2 * 1 / fitRatio, 0.0f);
 			glm::vec3 canvasRT = glm::vec3(canvasCenter.x + objectRange->XRange() / 2 * 1 / fitRatio, canvasCenter.y + objectRange->YRange() / 2 * 1 / fitRatio, 0.0f);
 			canvasLB *= scale;
 			canvasRT *= scale;
-			canvasRange = new AABB(canvasLB, canvasRT);
+			*canvasRange = AABB(canvasLB, canvasRT);
 		}
 
 		if (camera == nullptr)

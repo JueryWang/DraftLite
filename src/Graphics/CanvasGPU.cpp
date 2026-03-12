@@ -48,15 +48,12 @@ std::map<GLchar, Character> Characters;
 namespace CNCSYS
 {
 
-	CanvasGPU::CanvasGPU(std::shared_ptr<SketchGPU> sketch, int width, int height, bool isMainCanvas) : OpenGLRenderWindow(width, height, ""), isMainCanvas(isMainCanvas)
+	CanvasGPU::CanvasGPU(std::shared_ptr<SketchGPU> sketch, OCSGPU* ocs, int width, int height, bool isMainCanvas) : OpenGLRenderWindow(width, height, ""), isMainCanvas(isMainCanvas)
 	{
 		firstResize = true;
-		ocsSys = new OCSGPU(sketch);
+		ocsSys = ocs;
 		m_currentSketch = sketch;
 		sketch->SetCanvas(this);
-		ocsSys->genTickers = isMainCanvas;
-		ocsSys->canvasWidth = width;
-		ocsSys->canvasHeight = height;
 		UpdateOCS();
 		mouseHint = new TransformBaseHint();
 		mouseHint->hide();
@@ -2054,11 +2051,8 @@ namespace CNCSYS
 					glDisableClientState(GL_VERTEX_ARRAY);
 				}
 			}
-			if (drawAnchor)
-			{
 			//绘制刀具锚点
 			toolAnchor->Paint();
-			}
 
 			//绘制捕捉点
 			if (captureType == CaptureMode::Point)

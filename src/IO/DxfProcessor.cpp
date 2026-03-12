@@ -87,8 +87,8 @@ namespace CNCSYS
 							sketchGPU.lock()->AddEntityGroup(group);
 							ringsize += group->rings.size();
 						}
-						sketchGPU.lock()->enitiySize += sketchGPU.lock()->GetEntities().size();
-						sketchGPU.lock()->contourSize += ringsize;
+						sketchGPU.lock()->keyparams.entitySize += sketchGPU.lock()->GetEntities().size();
+						sketchGPU.lock()->keyparams.contourSize += ringsize;
 					}
 				}
 				blockItems.clear();
@@ -662,12 +662,11 @@ namespace CNCSYS
 			entityStorage.clear();
 			psketchGPU.lock()->UpdateSketch();
 
-			psketchGPU.lock()->enitiySize += psketchGPU.lock()->GetEntities().size();
-			psketchGPU.lock()->contourSize += ringsize;
+			psketchGPU.lock()->keyparams.entitySize += psketchGPU.lock()->GetEntities().size();
+			psketchGPU.lock()->keyparams.contourSize += ringsize;
 			//路径优化算法
 			PathOptimizer optimizer(groups);
 			optimizer.Run();
-
 		}
 
 

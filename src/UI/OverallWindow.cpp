@@ -29,10 +29,6 @@ void executeAfterDelay(std::chrono::milliseconds delay, std::function<void()> ta
 }
 OverallWindow::OverallWindow()
 {
-	SketchGPU* sketch = new SketchGPU();	
-	Circle2DGPU* arc = new Circle2DGPU();
-	arc->SetParameter(glm::vec3(50, 50, 0), 50);
-	sketch->AddEntity(arc);
 	setWindowFlags(Qt::FramelessWindowHint);
 	this->setWindowIcon(QIcon(ICOPATH(logo.ico)));
 
@@ -41,7 +37,7 @@ OverallWindow::OverallWindow()
 			HmiTemplateWebViewer::Reload();
 		};
 
-	mainWindow = new MainLayer(sketch, this);
+	mainWindow = new MainLayer(this);
 	//menu = new MenuLayerTop(this);
 	QVBoxLayout* hbox = new QVBoxLayout();
 	hbox->setContentsMargins(0, 0, 0, 0);
@@ -49,6 +45,7 @@ OverallWindow::OverallWindow()
 	hbox->addWidget(mainWindow);
 	this->setLayout(hbox);
 	this->showMaximized();
+
 	monitorIndexPage = new ScadaNode();
 	monitorIndexPage->BindParam(g_ConfigableKeys["IndexTargetMainArea"]);
 	monitorIndexPage->updateCallback = [&]()
@@ -149,15 +146,16 @@ OverallWindow::OverallWindow()
 	
 	monitorCurrentRowCNC = new ScadaNode();
 	monitorCurrentRowCNC->BindParam(g_ConfigableKeys["CurrentRowCNC"]);
-	monitorCurrentRowCNC->lastValue.lastInt = 0;
+	monitorCurrentRowCNC->lastValue.lastDInt = 0;
 	monitorCurrentRowCNC->updateCallback = [&]()
 		{
 			PLC_TYPE_DINT rowNumber = monitorCurrentRowCNC->GetDint();
-			if (rowNumber > 1)
+			if (rowNumber > 1 && rowNumber != monitorCurrentRowCNC->lastValue.lastDInt)
 			{
 				QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
 					Qt::QueuedConnection,
 					Q_ARG(int, rowNumber));
+				monitorCurrentRowCNC->lastValue.lastDInt = rowNumber;
 			}
 		};
 

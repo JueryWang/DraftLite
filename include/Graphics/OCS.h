@@ -52,7 +52,7 @@ namespace CNCSYS
 		float YOffset;
 		float XTickUnit;
 		float YTickUnit;
-		bool genTickers = false;
+		bool genTickers = true;
 	};
 
 	class OCSCPU

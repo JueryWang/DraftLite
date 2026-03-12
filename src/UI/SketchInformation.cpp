@@ -1,4 +1,5 @@
 #include "UI/SketchInformation.h"
+#include "Graphics/Sketch.h"
 #include <QGraphicsDropShadowEffect>
 #include <qgroupbox.h>
 
@@ -33,17 +34,17 @@ SketchInfoPanel::~SketchInfoPanel()
 
 }
 
-void SketchInfoPanel::updateStats(int entities, int contours, double totalLen, double idleLen,const QSize& size)
+void SketchInfoPanel::updateStats(CNCSYS::SketchGPU* sketch)
 {
     static QList<QLabel*> label = { labelEntities,labelContours,labelTotalPath ,labelIdlePath,labelDimension };
-    labelEntities->setText(QString::number(entities));
-    labelContours->setText(QString::number(contours));
-    labelTotalPath->setText(QString::asprintf("%.2f", totalLen));
-    labelIdlePath->setText(QString::asprintf("%.2f", idleLen));
-    labelDimension->setText(QString::asprintf("%d x %d", size.width(),size.height()));
-    double ratio = (totalLen > 0) ? (idleLen / totalLen * 100.0) : 0.0;
+    labelEntities->setText(QString::number(sketch->keyparams.entitySize));
+    labelContours->setText(QString::number(sketch->keyparams.entitySize));
+    labelTotalPath->setText(QString::asprintf("%.2f", sketch->keyparams.pathLength));
+    labelIdlePath->setText(QString::asprintf("%.2f", sketch->keyparams.idleLength));
+    labelDimension->setText(QString::asprintf("%d x %d", sketch->keyparams.dimensionWidth, sketch->keyparams.dimensionHeight));
+    double ratio = (sketch->keyparams.pathLength > 0) ? (sketch->keyparams.idleLength / sketch->keyparams.pathLength * 100.0) : 0.0;
     labelIdleRatio->setText(QString::asprintf("%.1f", ratio));
-
+    
     QFont font = groupBox->font();
     // 如果 QSS 中设置了更大的字号，需要手动调整 font
     font.setPointSize(12);
@@ -59,7 +60,7 @@ void SketchInfoPanel::updateStats(int entities, int contours, double totalLen, d
             longestValue = lb->text();
         }
     }
-
+    labelSource->setText(QString::fromLocal8Bit(sketch->source.c_str()));
     int totalWidth = calculateRequiredWidth(longestTitle, longestValue, longestUnit, font);
     this->setFixedWidth(totalWidth);
 }
@@ -100,26 +101,31 @@ void SketchInfoPanel::setupUI()
     auto addInfoRow = [&](const QString& title, QLabel*& valueLabel, const QString& unit, int row) {
         auto* tLabel = new QLabel(title, this);
         tLabel->setObjectName("titleLabel");
-
         tLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
         valueLabel = new QLabel("0", this);
         valueLabel->setObjectName("valueLabel");
-        valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        valueLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+        valueLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        valueLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        valueLabel->setWordWrap(true); // 全局开启换行
 
-        layout->addWidget(tLabel, row, 0);
-        layout->addWidget(valueLabel, row, 1);
-
-        if (!unit.isEmpty()) {
-            auto* uLabel = new QLabel(unit, this);
-            uLabel->setObjectName("unitLabel");
-            uLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-            layout->addWidget(uLabel, row, 2);
+        // 来源栏合并列，充分利用宽度
+        if (title == QStringLiteral("来源")) {
+            layout->addWidget(tLabel, row, 0, 1, 1);
+            layout->addWidget(valueLabel, row, 1, 1, 2); // 占2列
+            // 给来源标签单独加右内边距
+            valueLabel->setStyleSheet("padding-right: 5px;");
         }
-        layout->setColumnStretch(0, 0); // 标题列：不拉伸，按内容大小
-        layout->setColumnStretch(1, 1); // 数值列：自动拉伸，填充剩余空间
-        layout->setColumnStretch(2, 0); // 单位列：不拉伸
+        else {
+            layout->addWidget(tLabel, row, 0);
+            layout->addWidget(valueLabel, row, 1);
+            if (!unit.isEmpty()) {
+                auto* uLabel = new QLabel(unit, this);
+                uLabel->setObjectName("unitLabel");
+                uLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+                layout->addWidget(uLabel, row, 2);
+            }
+        }
     };
 
     addInfoRow(QStringLiteral("尺寸"), labelDimension, "mm", 0);
@@ -127,7 +133,8 @@ void SketchInfoPanel::setupUI()
     addInfoRow(QStringLiteral("轮廓数量"), labelContours, "个", 2);
     addInfoRow(QStringLiteral("路径总度"), labelTotalPath, "mm", 3);
     addInfoRow(QStringLiteral("空走长度"), labelIdlePath, "mm", 4);
-    addInfoRow(QStringLiteral("空走比例"), labelIdleRatio, "%", 5);
+    addInfoRow(QStringLiteral("空走占比"), labelIdleRatio, "%", 5);
+    addInfoRow(QStringLiteral("来源"),labelSource,"", 6);
 
     QHBoxLayout* layout2 = new QHBoxLayout(this);
     layout2->addWidget(groupBox);
