@@ -1,11 +1,25 @@
 ﻿#include "Graphics/Anchor.h"
 #include "Graphics/AABB.h"
+#include "Graphics/Canvas.h"
 #include "Controls/GlobalPLCVars.h"
 #include "Controls/ScadaScheduler.h"
 #include "Common/ProgressInfo.h"
 #include "UI/GCodeEditor.h"
+#include "UI/GLWidget.h"
 
 Anchor* Anchor::instance = nullptr;
+
+Anchor* Anchor::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new Anchor();
+		ScadaScheduler::GetInstance()->AddNode(instance);
+	}
+
+	return instance;
+}
+
 
 Anchor::Anchor()
 {
@@ -46,11 +60,10 @@ void Anchor::UpdateNode()
 
 		if (animatorPath.capacity() == 0)
 		{
-			animatorPath = std::vector<glm::vec3>(GCodeEditor::GetInstance()->lines());
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-			glBufferData(GL_ARRAY_BUFFER, (animatorPath.size()) * sizeof(glm::vec3), animatorPath.data(), GL_DYNAMIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
 
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 			glEnableVertexAttribArray(0);
@@ -70,32 +83,43 @@ void Anchor::UpdateNode()
 
 	PLC_TYPE_INT cycle;
 	ReadPLC_OPCUA(g_ConfigableKeys["AnimatorCycleTime"].c_str(), &cycle, AtomicVarType::INT);
-	int timeInterval = (animUpdateBatchSize * cycle);
+	int timeInterval = (animUpdateBatchSize * (cycle/1000));
 
-	if (diff_milliseconds > timeInterval)
+	queueLocker.lock();
+	while (pointQueue.size())
 	{
-		PLC_TYPE_INT bufferALength = -1;
-		ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferALength, AtomicVarType::INT);
-		if (bufferALength > 0)
+		animatorPath.push_back(pointQueue.front());
+		pointQueue.pop();
+	}
+	queueLocker.unlock();
+	last_update_time = now;
+}
+
+void Anchor::ReadFromQueueBuffer(int index, int length)
+{
+	if (index == 0)
+	{
+		queueLocker.lock();
+		for (int i = 1; i < length+1;i++)
 		{
-			queueLocker.lock();
-			for (int i = 0; i < bufferALength; i++)
+			if (g_simRecBufferA[i].fX != 0 || g_simRecBufferA[i].fY != 0)
 			{
-				pointQueue.push(glm::vec3(g_simRecBufferA[i].fX, g_simRecBufferA[i].fY, 0));
+				pointQueue.push(glm::vec3(g_simRecBufferA[i].fX,g_simRecBufferA[i].fY,0));
 			}
-			queueLocker.unlock();
 		}
-		PLC_TYPE_INT bufferBLength = -1;
-		ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueB"].c_str(), &bufferALength, AtomicVarType::INT);
-		if (bufferBLength > 0)
+		queueLocker.unlock();
+	}
+	else
+	{
+		queueLocker.lock();
+		for (int i = 1; i < length+1;i++)
 		{
-			queueLocker.lock();
-			for (int i = 0; i < bufferALength; i++)
+			if (g_simRecBufferB[i].fX != 0 || g_simRecBufferB[i].fY != 0)
 			{
 				pointQueue.push(glm::vec3(g_simRecBufferB[i].fX, g_simRecBufferB[i].fY, 0));
 			}
-			queueLocker.unlock();
 		}
+		queueLocker.unlock();
 	}
 }
 
@@ -104,12 +128,14 @@ void Anchor::Paint()
 	const glm::vec3 zero = glm::vec3(0.0f, 0.0f, 0.0f);
 	float half = ocsSys->canvasRange->MinRange() * 0.03f;
 
+	if (animatorPath.size())
+	{
+		position = animatorPath.back();
+	}
 	crossline1->SetParameter(glm::vec3(position.x - half, position.y + half, 1.0f), glm::vec3(position.x + half, position.y - half, 1.0f));
 	crossline1->Paint(g_lineShader, ocsSys, RenderMode::Line);
 	crossline2->SetParameter(glm::vec3(position.x + half, position.y + half, 1.0f), glm::vec3(position.x - half, position.y - half, 1.0f));
 	crossline2->Paint(g_lineShader, ocsSys, RenderMode::Line);
-
-	static bool firstUpdate = true;
 
 	if (animatorOpen && !animatorPath.empty())
 	{
@@ -123,20 +149,26 @@ void Anchor::Paint()
 		g_lineShader->setMat4("model", glm::mat4(1.0f));
 		g_lineShader->setVec4("PaintColor", g_yellowColor);
 
-		glLineWidth(4);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glPointSize(4);
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-		glBufferData(GL_ARRAY_BUFFER, animatorPath.size() * sizeof(glm::vec3), animatorPath.data(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW); // 先置空
+		// 3. 上传当前帧完整数据（使用GL_DYNAMIC_DRAW，适配频繁更新）
+		glBufferData(GL_ARRAY_BUFFER, animatorPath.size() * sizeof(glm::vec3),
+			animatorPath.data(), GL_DYNAMIC_DRAW);
 
 		// 确保 vertex attrib pointer 已设置
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 		glEnableVertexAttribArray(0);
-
 		// 绘制所有已添加的顶点
-		glDrawArrays(GL_LINE_STRIP, 0, pathIndex);
+		glDrawArrays(GL_POINTS, 0, animatorPath.size());
 
-		glLineWidth(2);
+		glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑VBO
 		glBindVertexArray(0);
+		glPointSize(2);
+
+		animatorPath.clear();
 	}
 }

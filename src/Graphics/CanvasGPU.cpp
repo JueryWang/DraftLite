@@ -63,7 +63,7 @@ namespace CNCSYS
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+		glDisable(GL_DEPTH);
 
 		tickerRuleRenderShader = new Shader("Shader/drawTick.vert", "Shader/drawTick.frag");
 		tickerTextRenderShader = new Shader("Shader/drawTickText.vert", "Shader/drawTickText.frag");
@@ -179,7 +179,7 @@ namespace CNCSYS
 		//connect(guide->longPressTimerZoomIn, &QTimer::timeout, this, &CanvasGPU::OnZoomIn);
 		//connect(guide->longPressTimerZoomOut, &QTimer::timeout, this, &CanvasGPU::OnZoomOut);
 
-		toolAnchor = new Anchor();
+		toolAnchor = Anchor::GetInstance();
 		toolAnchor->SetCoordinateSystem(ocsSys);
 		toolAnchor->SetCurrentCanvas(this);
 		toolAnchor->animatorOpen = true;
@@ -339,7 +339,7 @@ namespace CNCSYS
 				if (menu.actions().size() > 0)
 					menu.exec(QCursor().pos());
 			}
-			QMetaObject::invokeMethod(frontWidget, "repaint");
+			frontWidget->repaint();
 			break;
 		}
 		case QEvent::MouseMove:
@@ -359,7 +359,7 @@ namespace CNCSYS
 			{
 				handleEventCapture(glwgt, mouseEvent->pos());
 			}
-			QMetaObject::invokeMethod(frontWidget, "repaint");
+			frontWidget->repaint();
 			break;
 		}
 		case QEvent::Wheel:
@@ -376,7 +376,7 @@ namespace CNCSYS
 			{
 				handleEventCapture(glwgt, lastMousePos);
 			}
-			QMetaObject::invokeMethod(frontWidget, "repaint");
+			frontWidget->repaint();
 			break;
 		}
 		case QEvent::MouseButtonRelease:
@@ -395,7 +395,7 @@ namespace CNCSYS
 			{
 				EraseSelectedEntitys();
 			}
-			QMetaObject::invokeMethod(frontWidget, "repaint");
+			frontWidget->repaint();
 			break;
 		}
 		}
@@ -1951,7 +1951,6 @@ namespace CNCSYS
 		if (windowInst)
 		{
 			glfwMakeContextCurrent(windowInst);
-			glfwSwapInterval(1);
 
 			glClearColor(background.x, background.y, background.z, background.w);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2051,9 +2050,6 @@ namespace CNCSYS
 					glDisableClientState(GL_VERTEX_ARRAY);
 				}
 			}
-			//绘制刀具锚点
-			toolAnchor->Paint();
-
 			//绘制捕捉点
 			if (captureType == CaptureMode::Point)
 			{
@@ -2084,7 +2080,11 @@ namespace CNCSYS
 			{
 				selectBox->Paint();
 			}
+			
+			//绘制刀具锚点
+			toolAnchor->Paint();
 
+			glfwSwapInterval(1);
 			glfwSwapBuffers(m_window.get());
 			glReadPixels(0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, m_windowbuf);
 		}

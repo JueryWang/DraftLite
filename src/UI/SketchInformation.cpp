@@ -18,7 +18,7 @@ int calculateRequiredWidth(const QString& maxTitle, const QString& maxValue, con
     int spacings = 6 * 2;  // 两处列间距
 
     // 3. 加上 QGroupBox 自身的 padding (来自 QSS)
-    int padding = 10 + 10; // padding-left + padding-right
+    int padding = 10; // padding-left + padding-right
 
     return col0_width + col1_width + col2_width + margins + spacings + padding + 10; // +10 作为安全余量
 }
@@ -114,7 +114,6 @@ void SketchInfoPanel::setupUI()
             layout->addWidget(tLabel, row, 0, 1, 1);
             layout->addWidget(valueLabel, row, 1, 1, 2); // 占2列
             // 给来源标签单独加右内边距
-            valueLabel->setStyleSheet("padding-right: 5px;");
         }
         else {
             layout->addWidget(tLabel, row, 0);
@@ -131,7 +130,7 @@ void SketchInfoPanel::setupUI()
     addInfoRow(QStringLiteral("尺寸"), labelDimension, "mm", 0);
     addInfoRow(QStringLiteral("图元数量"), labelEntities, "个", 1);
     addInfoRow(QStringLiteral("轮廓数量"), labelContours, "个", 2);
-    addInfoRow(QStringLiteral("路径总度"), labelTotalPath, "mm", 3);
+    addInfoRow(QStringLiteral("路径总长"), labelTotalPath, "mm", 3);
     addInfoRow(QStringLiteral("空走长度"), labelIdlePath, "mm", 4);
     addInfoRow(QStringLiteral("空走占比"), labelIdleRatio, "%", 5);
     addInfoRow(QStringLiteral("来源"),labelSource,"", 6);

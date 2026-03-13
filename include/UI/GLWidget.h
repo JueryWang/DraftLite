@@ -36,7 +36,10 @@ namespace CNCSYS
 	public:
 		GLWidget(OpenGLRenderWindow* glwindow, SketchGPU* sketch, WindowState state = STATIC_DRAW);
 		~GLWidget();
-
+		//开始即时绘制
+		void OpenSimulation();
+		//关闭即时绘制
+		void CloseSimulation();
 		void SetWindowStatus(WindowState state);
 		void SetOCSystem(OCSGPU* _ocsSys) { ocsSys = _ocsSys; }
 		CanvasGPU* GetCanvas();

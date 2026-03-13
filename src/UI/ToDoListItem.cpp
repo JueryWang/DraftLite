@@ -6,6 +6,7 @@
 #include "Graphics/OCS.h"
 #include "UI/Components/HmiInterfaceDefines.h"
 #include "UI/Components/HmiTemplateCraftConfig.h"
+#include "UI/MainLayer.h"
 #include "Controls/GlobalPLCVars.h"
 #include "NetWork/FtpClient.h"
 #include <QLabel>
@@ -236,6 +237,8 @@ void ToDoListItemWidget::mouseDoubleClickEvent(QMouseEvent* event)
 {
 	if (event->button() == Qt::LeftButton)
 	{
+		g_mainWindow->stationTab->setCurrentIndex(0);
+		g_mainWindow->infoPanel->updateStats(sketch.get());
 		g_canvasInstance->SetScene(sketch, ocsSys);
 		parentListWindow->taskLists->setCurrentRow(row);
 	}

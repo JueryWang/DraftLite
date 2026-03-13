@@ -52,6 +52,25 @@ namespace CNCSYS
 		delete m_context;
 	}
 
+	void GLWidget::OpenSimulation()
+	{
+		m_updateTimer.start(0);
+		try
+		{
+			m_context->window->updateGL();
+			QMetaObject::invokeMethod(this, "repaint");
+		}
+		catch (...)
+		{
+
+		}
+	}
+
+	void GLWidget::CloseSimulation()
+	{
+		m_updateTimer.stop();
+	}
+
 	void GLWidget::SetWindowStatus(WindowState state)
 	{
 		m_context->state = state;
@@ -76,6 +95,36 @@ namespace CNCSYS
 			for (int i = 0; i < 2; i++)
 			{
 				m_context->window->updateGL();
+			}
+		}
+		if (m_context->state == DYNAMIC_DRAW)
+		{
+			if (firstShow)
+			{
+				m_updateTimer.start(0);
+				try
+				{
+					m_context->window->updateGL();
+					QMetaObject::invokeMethod(this, "repaint");
+				}
+				catch (...)
+				{
+
+				}
+				firstShow = false;
+			}
+
+			if (this->isVisible())
+			{
+				try
+				{
+					m_context->window->updateGL();
+					QMetaObject::invokeMethod(this, "repaint");
+				}
+				catch (...)
+				{
+
+				}
 			}
 		}
 	}

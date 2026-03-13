@@ -61,6 +61,7 @@ void InitPLConfig()
 		{"ChangeSliceDone","gvlHMI.xPCChangeDone"},								//切图PC完成信号
 		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"},   //设备自动运行中
 		{"ToolRadius","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
+		{"AutoStart","gvlHMI.stCommandGearChamferMachine.stCommandCADWork.xAutoStart"},
 		//{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
 		{"AxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
 		{"AxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"},

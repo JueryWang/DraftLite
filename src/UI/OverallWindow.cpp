@@ -172,12 +172,33 @@ OverallWindow::OverallWindow()
 			}
 	};
 
+	monitorAutoStart = new ScadaNode();
+	monitorAutoStart->BindParam(g_ConfigableKeys["AutoStart"]);
+	monitorAutoStart->lastValue.lastBool = false;
+	monitorAutoStart->updateCallback = [&]()
+	{
+		PLC_TYPE_BOOL startCNC = monitorToolDistance->GetBool();
+		if (!(startCNC == monitorAutoStart->lastValue.lastBool))
+		{
+			if (startCNC)
+			{
+				g_canvasInstance->GetFrontWidget()->OpenSimulation();
+			}
+			else
+			{
+				g_canvasInstance->GetFrontWidget()->CloseSimulation();
+			}
+			monitorAutoStart->lastValue.lastBool = startCNC;
+		}
+	};
+
 	ScadaScheduler::GetInstance()->AddNode(monitorIndexPage);
 	ScadaScheduler::GetInstance()->AddNode(monitorUploadFTP);
 	ScadaScheduler::GetInstance()->AddNode(monitorHeartBeat);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
 	ScadaScheduler::GetInstance()->AddNode(monitorCurrentRowCNC);
+	ScadaScheduler::GetInstance()->AddNode(monitorAutoStart);
 	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
 	
 }

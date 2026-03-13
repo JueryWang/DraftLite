@@ -7,6 +7,7 @@
 #include "UI/Components/HmiInterfaceDefines.h"
 #include "UI/Components/HmiTemplateTableMonitor.h"
 #include "UI/TaskListWindow.h"
+#include "Graphics/Anchor.h"
 #include "Common/ProgressInfo.h"
 #include "Graphics/Sketch.h"
 #include "open62541/client.h"
@@ -608,7 +609,8 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 			if (bufferAlength > 0)
 			{
 				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
-				for (size_t i = 0; i < varOpc->value.arrayLength; i++)
+				int validCount = 0;
+				for (size_t i = 1; i < bufferAlength+1; i++)
 				{
 					if (eoArray[i].encoding == UA_EXTENSIONOBJECT_ENCODED_BYTESTRING) {
 						UA_ByteString* bs = &eoArray[i].content.encoded.body;
@@ -616,21 +618,27 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 						if (bs->length == structsize) {
 							CNCSimulateRecord record;
 							memcpy(&record, bs->data, sizeof(CNCSimulateRecord));
+							if (record.fX != 0)
+							{
+								validCount++;
+							}
 							CNCSimulateRecord* pRecords = static_cast<CNCSimulateRecord*>(varBind);
 							pRecords[i] = record;
 						}
 					}
 				}
+				Anchor::GetInstance()->ReadFromQueueBuffer(0, bufferAlength);
 			}
 		}
 		if (strstr(identifier, "astCNCQueueB") != NULL)
 		{
 			PLC_TYPE_INT bufferBlength;
-			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferBlength, AtomicVarType::INT);
+			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueB"].c_str(), &bufferBlength, AtomicVarType::INT);
 			if (bufferBlength > 0)
 			{
+				int validCount = 0;
 				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
-				for (size_t i = 0; i < varOpc->value.arrayLength; i++)
+				for (size_t i = 1; i < bufferBlength+1; i++)
 				{
 					if (eoArray[i].encoding == UA_EXTENSIONOBJECT_ENCODED_BYTESTRING) {
 						UA_ByteString* bs = &eoArray[i].content.encoded.body;
@@ -638,12 +646,16 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 						if (bs->length == structsize) {
 							CNCSimulateRecord record;
 							memcpy(&record, bs->data, sizeof(CNCSimulateRecord));
+							if (record.fX != 0)
+							{
+								validCount++;
+							}
 							CNCSimulateRecord* pRecords = static_cast<CNCSimulateRecord*>(varBind);
 							pRecords[i] = record;
 						}
-						g_simRecBufferB;
 					}
 				}
+				Anchor::GetInstance()->ReadFromQueueBuffer(1, bufferBlength);
 			}
 		}
 	}

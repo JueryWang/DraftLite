@@ -7,11 +7,10 @@
 
 using namespace CNCSYS;
 
-class Anchor : public ScadaNode
+class Anchor : public ScadaNode,public QObject
 {
 public:
-	Anchor();
-	~Anchor();
+	static Anchor* GetInstance();
 	void SetCoordinateSystem(OCSGPU* ocsSystem);
 	void SetCurrentCanvas(CanvasGPU* _canvas)
 	{
@@ -20,14 +19,21 @@ public:
 	void SetPosition(const glm::vec3& pos);
 	void Paint();
 
+public:
+	void ReadFromQueueBuffer(int index, int length);
+
+private:
+	Anchor();
+	~Anchor();
+
 protected:
 	virtual void UpdateNode() override;
 
 public:
-	
 	std::chrono::steady_clock::time_point last_update_time;
 	bool animatorOpen = true;
 	int pathIndex = 0;
+	std::vector<glm::vec3> animatorPath;
 
 private:
 	static Anchor* instance;
@@ -42,7 +48,6 @@ private:
 	int animUpdateBatchSize = 8;
 	Line2DGPU* crossline1 = nullptr;
 	Line2DGPU* crossline2 = nullptr;
-	std::vector<glm::vec3> animatorPath;
 	std::queue<glm::vec3> pointQueue;
 	std::mutex queueLocker;
 };

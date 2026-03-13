@@ -31,4 +31,5 @@ private:
 	ScadaNode* monitorToolRadius = nullptr;
 	ScadaNode* monitorToolDistance = nullptr;
 	ScadaNode* monitorCurrentRowCNC = nullptr;
+	ScadaNode* monitorAutoStart = nullptr;
 };
