@@ -241,6 +241,7 @@ void ToDoListItemWidget::mouseDoubleClickEvent(QMouseEvent* event)
 		g_mainWindow->infoPanel->updateStats(sketch.get());
 		g_canvasInstance->SetScene(sketch, ocsSys);
 		parentListWindow->taskLists->setCurrentRow(row);
+		parentListWindow->currentRequestNumber = row;
 	}
 }
 

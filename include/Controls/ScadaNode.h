@@ -108,7 +108,6 @@ public:
 
 protected:
 	virtual void UpdateNode() { if (updateCallback) { updateCallback(); } };
-	virtual void UpdateNode() { updateCallback(); };
 	void BindParam(AtomicVar<PLC_TYPE_BOOL>* address);
 	void BindParam(AtomicVar<PLC_TYPE_WORD>* address);
 	void BindParam(AtomicVar<PLC_TYPE_DWORD>* address);

@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <set>
+#include <unordered_set>
 #include "Controls/SchedulerTask.h"
 
 class ScadaNode;
@@ -55,7 +56,7 @@ private:
 
 	std::vector<ScadaNode*> nodesInControl;
 
-	std::set<std::string> regTags;
+	std::unordered_set<std::string> regTags;
 	std::queue<SCT_SEQUENCE_TASK*> taskQueue;
 
 	OPClient* opcClient = nullptr;

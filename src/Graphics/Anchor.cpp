@@ -81,15 +81,23 @@ void Anchor::UpdateNode()
 	std::chrono::duration<double> diff = now - last_update_time;
 	long long diff_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
 
-	PLC_TYPE_INT cycle;
-	ReadPLC_OPCUA(g_ConfigableKeys["AnimatorCycleTime"].c_str(), &cycle, AtomicVarType::INT);
-	int timeInterval = (animUpdateBatchSize * (cycle/1000));
-
 	queueLocker.lock();
-	while (pointQueue.size())
+	for(int i = 0; i < ceil((float)diff_milliseconds/4);i++)
 	{
-		animatorPath.push_back(pointQueue.front());
-		pointQueue.pop();
+		if (!pointQueue.empty())
+		{
+			
+			animatorPath.push_back(glm::vec3(pointQueue.front().fX,pointQueue.front().fY,pointQueue.front().fZ));
+			pointQueue.pop();
+		}
+	}
+	if (pointQueue.size())
+	{
+		int currentRowCNC = pointQueue.front().iCurrentRow - 1;
+		if (currentRowCNC > 0)
+		{
+			QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine", Qt::QueuedConnection, Q_ARG(int, currentRowCNC));
+		}
 	}
 	queueLocker.unlock();
 	last_update_time = now;
@@ -97,29 +105,34 @@ void Anchor::UpdateNode()
 
 void Anchor::ReadFromQueueBuffer(int index, int length)
 {
-	if (index == 0)
+	static int lastReadIndex = index;
+	if (index != lastReadIndex)
 	{
-		queueLocker.lock();
-		for (int i = 1; i < length+1;i++)
+		if (index == 0)
 		{
-			if (g_simRecBufferA[i].fX != 0 || g_simRecBufferA[i].fY != 0)
+			queueLocker.lock();
+			for (int i = 1; i < length+1;i++)
 			{
-				pointQueue.push(glm::vec3(g_simRecBufferA[i].fX,g_simRecBufferA[i].fY,0));
+				if (g_simRecBufferA[i].fX != 0 || g_simRecBufferA[i].fY != 0)
+				{
+					pointQueue.push(g_simRecBufferA[i]);
+				}
 			}
+			queueLocker.unlock();
 		}
-		queueLocker.unlock();
-	}
-	else
-	{
-		queueLocker.lock();
-		for (int i = 1; i < length+1;i++)
+		else
 		{
-			if (g_simRecBufferB[i].fX != 0 || g_simRecBufferB[i].fY != 0)
+			queueLocker.lock();
+			for (int i = 1; i < length+1;i++)
 			{
-				pointQueue.push(glm::vec3(g_simRecBufferB[i].fX, g_simRecBufferB[i].fY, 0));
+				if (g_simRecBufferB[i].fX != 0 || g_simRecBufferB[i].fY != 0)
+				{
+					pointQueue.push(g_simRecBufferB[i]);
+				}
 			}
+			queueLocker.unlock();
 		}
-		queueLocker.unlock();
+		lastReadIndex = index;
 	}
 }
 
@@ -163,12 +176,15 @@ void Anchor::Paint()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 		glEnableVertexAttribArray(0);
 		// 绘制所有已添加的顶点
-		glDrawArrays(GL_POINTS, 0, animatorPath.size());
+		glDrawArrays(GL_LINE_STRIP, 0, animatorPath.size());
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑VBO
 		glBindVertexArray(0);
 		glPointSize(2);
-
-		animatorPath.clear();
 	}
+}
+
+void Anchor::CleanCache()
+{
+	animatorPath.clear();
 }

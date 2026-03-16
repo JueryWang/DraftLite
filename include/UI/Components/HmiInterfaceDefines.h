@@ -11,6 +11,8 @@
 
 extern int screen_resolution_x;
 extern int screen_resolution_y;
+extern int canvasAnchorX;
+extern int canvasAnchorY;
 extern float blank_height_ratio;
 extern float canvas_panel_width_ratio;
 extern float canvas_panel_height_ratio;

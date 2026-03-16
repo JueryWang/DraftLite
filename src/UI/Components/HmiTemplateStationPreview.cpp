@@ -80,6 +80,7 @@ StationSwitchTab::~StationSwitchTab()
 
 void StationSwitchTab::SwitchStation(int index)
 {
+    g_mainWindow->currentSketchIndex = index;
     holder->preview->attachedSketch = holder->sketchLists[index].get();
     holder->preview->GetCanvas()->SetScene(holder->sketchLists[index], holder->sketchLists[index]->attachedOCS);
     holder->infoPanel->updateStats(holder->preview->attachedSketch);

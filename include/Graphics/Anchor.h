@@ -18,6 +18,7 @@ public:
 	}
 	void SetPosition(const glm::vec3& pos);
 	void Paint();
+	void CleanCache();
 
 public:
 	void ReadFromQueueBuffer(int index, int length);
@@ -48,6 +49,6 @@ private:
 	int animUpdateBatchSize = 8;
 	Line2DGPU* crossline1 = nullptr;
 	Line2DGPU* crossline2 = nullptr;
-	std::queue<glm::vec3> pointQueue;
+	std::queue<CNCSimulateRecord> pointQueue;
 	std::mutex queueLocker;
 };

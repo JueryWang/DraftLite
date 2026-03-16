@@ -9,6 +9,27 @@ namespace CNCSYS
 {
 	class SketchGPU;
 }
+
+class StatusBar : public QWidget
+{
+	Q_OBJECT
+public:
+	enum Status {
+		Idle,
+		Running,
+		Pause,
+		Finish,
+		Error
+	};
+
+	explicit StatusBar(QWidget* parent = nullptr);
+	void setStatus(Status status,const QString &text);
+
+public:
+	QLabel* m_label;
+	Status m_currentStatus;
+};
+
 class SketchInfoPanel : public QWidget
 {
 public:
@@ -19,7 +40,9 @@ public:
 private:
 	void applyStyle();
 
-private:
+public:
 	QGroupBox* groupBox;
 	QLabel* labelEntities, * labelContours, * labelTotalPath, * labelIdlePath, *labelIdleRatio,*labelDimension, *labelSource;
+	StatusBar* statusInfo;
 };
+

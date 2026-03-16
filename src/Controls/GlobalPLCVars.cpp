@@ -144,91 +144,91 @@ void ReadPLC_OPCUA(const char* tag, void* storeValue, AtomicVarType type)
 			break;
 		case AtomicVarType::BOOL:
 		{
-			AtomicVar<PLC_TYPE_BOOL>* writeValue = static_cast<AtomicVar<PLC_TYPE_BOOL>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_BOOL>* readValue = static_cast<AtomicVar<PLC_TYPE_BOOL>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_BOOL*)storeValue) = *writeValue;
+				*((PLC_TYPE_BOOL*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::WORD:
 		{
-			AtomicVar<PLC_TYPE_WORD>* writeValue = static_cast<AtomicVar<PLC_TYPE_WORD>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_WORD>* readValue = static_cast<AtomicVar<PLC_TYPE_WORD>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_WORD*)storeValue) = *writeValue;
+				*((PLC_TYPE_WORD*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::DWORD:
 		{
-			AtomicVar<PLC_TYPE_DWORD>* writeValue = static_cast<AtomicVar<PLC_TYPE_DWORD>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_DWORD>* readValue = static_cast<AtomicVar<PLC_TYPE_DWORD>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_DWORD*)storeValue) = *writeValue;
+				*((PLC_TYPE_DWORD*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::LWORD:
 		{
-			AtomicVar<PLC_TYPE_LWORD>* writeValue = static_cast<AtomicVar<PLC_TYPE_LWORD>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_LWORD>* readValue = static_cast<AtomicVar<PLC_TYPE_LWORD>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_LWORD*)storeValue) = *writeValue;
+				*((PLC_TYPE_LWORD*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::INT:
 		{
-			AtomicVar<PLC_TYPE_INT>* writeValue = static_cast<AtomicVar<PLC_TYPE_INT>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_INT>* readValue = static_cast<AtomicVar<PLC_TYPE_INT>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_INT*)storeValue) = *writeValue;
+				*((PLC_TYPE_INT*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::DINT:
 		{
-			AtomicVar<PLC_TYPE_DINT>* writeValue = static_cast<AtomicVar<PLC_TYPE_DINT>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_DINT>* readValue = static_cast<AtomicVar<PLC_TYPE_DINT>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_DINT*)storeValue) = *writeValue;
+				*((PLC_TYPE_DINT*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::LINT:
 		{
-			AtomicVar<PLC_TYPE_LINT>* writeValue = static_cast<AtomicVar<PLC_TYPE_LINT>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_LINT>* readValue = static_cast<AtomicVar<PLC_TYPE_LINT>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_LINT*)storeValue) = *writeValue;
+				*((PLC_TYPE_LINT*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::REAL:
 		{
-			AtomicVar<PLC_TYPE_REAL>* writeValue = static_cast<AtomicVar<PLC_TYPE_REAL>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_REAL>* readValue = static_cast<AtomicVar<PLC_TYPE_REAL>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_REAL*)storeValue) = *writeValue;
+				*((PLC_TYPE_REAL*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::LREAL:
 		{
-			AtomicVar<PLC_TYPE_LREAL>* writeValue = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_LREAL>* readValue = static_cast<AtomicVar<PLC_TYPE_LREAL>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				*((PLC_TYPE_LREAL*)storeValue) = *writeValue;
+				*((PLC_TYPE_LREAL*)storeValue) = *readValue;
 			}
 			break;
 		}
 		case AtomicVarType::STRING:
 		{
-			AtomicVar<PLC_TYPE_STRING>* writeValue = static_cast<AtomicVar<PLC_TYPE_STRING>*>(g_readPersistance[tag]);
-			if (writeValue)
+			AtomicVar<PLC_TYPE_STRING>* readValue = static_cast<AtomicVar<PLC_TYPE_STRING>*>(g_readPersistance[tag]);
+			if (readValue)
 			{
-				storeValue = writeValue;
+				storeValue = readValue;
 			}
 			break;
 		}

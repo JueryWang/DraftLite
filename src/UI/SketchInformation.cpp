@@ -135,8 +135,11 @@ void SketchInfoPanel::setupUI()
     addInfoRow(QStringLiteral("空走占比"), labelIdleRatio, "%", 5);
     addInfoRow(QStringLiteral("来源"),labelSource,"", 6);
 
-    QHBoxLayout* layout2 = new QHBoxLayout(this);
+    statusInfo = new StatusBar();
+
+    QVBoxLayout* layout2 = new QVBoxLayout(this);
     layout2->addWidget(groupBox);
+    layout2->addWidget(statusInfo);
     layout2->setContentsMargins(0, 10, 0, 10);
     this->setLayout(layout2);
 }
@@ -170,4 +173,60 @@ void SketchInfoPanel::applyStyle()
         font-size: 11px;
     }
 )");
+}
+
+StatusBar::StatusBar(QWidget* parent) : QWidget(parent)
+{
+    setMinimumWidth(70);
+
+    m_label = new QLabel(this);
+    m_label->setAlignment(Qt::AlignCenter);
+    m_label->setStyleSheet(R"(
+        font-size: 24px;
+        font-weight: bold;
+    )");
+
+    QHBoxLayout* layout = new QHBoxLayout(this);
+    layout->addWidget(m_label);
+    layout->setContentsMargins(20,10,20,10);
+    setLayout(layout);
+
+    setStatus(Idle,"系统空闲");
+}
+
+void StatusBar::setStatus(Status status, const QString& text)
+{
+    m_currentStatus = status;
+    m_label->setText(text);
+
+    QString bgColor;
+    QString textColor = "#FFFFFF";
+
+    switch (status) {
+    case Idle:
+        bgColor = "#555555";
+        break;
+    case Running:
+        bgColor = "#2E8B57";
+        break;
+    case Pause:
+        bgColor = "#CC8800";
+        break;
+    case Finish:
+        bgColor = "#1E90FF";
+        break;
+    case Error:
+        bgColor = "#CC0000";
+        break;
+    default:
+        bgColor = "#FFFFFF";
+    }
+
+    setStyleSheet(QString(R"(
+        QWidget{
+            background-color: %1;
+            color: %2;
+            border-radius: 10px;
+        }
+    )").arg(bgColor).arg(textColor));
 }

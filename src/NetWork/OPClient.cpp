@@ -606,8 +606,14 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 		{
 			PLC_TYPE_INT bufferAlength;
 			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferAlength, AtomicVarType::INT);
+			static std::chrono::time_point last_update_time = std::chrono::steady_clock::now();
 			if (bufferAlength > 0)
 			{
+				auto now = std::chrono::steady_clock::now();
+				std::chrono::duration<double> diff = now - last_update_time;
+				long long diff_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
+				std::cout << "ellapsed time = " << diff_milliseconds << "ms" << std::endl;
+
 				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
 				int validCount = 0;
 				for (size_t i = 1; i < bufferAlength+1; i++)
@@ -627,7 +633,27 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 						}
 					}
 				}
+				//if (bufferAlength != 50)
+				//{
+				//	std::cout << "BufferLength != 50" << std::endl;
+				//}
 				Anchor::GetInstance()->ReadFromQueueBuffer(0, bufferAlength);
+				bufferAlength = 0;
+				{
+					//缓冲区大小置0
+					UA_Int32 valueToWrite = 0;
+					UA_Variant variant;
+					UA_Variant_setScalar(&variant, &valueToWrite, &UA_TYPES[UA_TYPES_INT32]);
+					std::string bufferLenTag = g_ConfigableKeys["AnimatorBufferLengthQueueA"];
+					PLCParam_ProtocalOpc* info = (PLCParam_ProtocalOpc*)g_PLCVariables[bufferLenTag];
+					UA_NodeId nodeId = UA_NODEID_STRING(info->ns, info->identifier);
+					UA_StatusCode code = UA_Client_writeValueAttribute(client, nodeId, &variant);
+					if (code != UA_STATUSCODE_GOOD)
+					{
+						std::cout << "Write Buffer Length Error, Code: " << UA_StatusCode_name(code) << " (" << code << ")" << std::endl;
+					}
+				}
+				last_update_time = now;
 			}
 		}
 		if (strstr(identifier, "astCNCQueueB") != NULL)
@@ -655,7 +681,20 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 						}
 					}
 				}
+				//if (bufferBlength != 50)
+				//{
+				//	std::cout << "BufferLength != 50" << std::endl;
+				//}
 				Anchor::GetInstance()->ReadFromQueueBuffer(1, bufferBlength);
+				bufferBlength = 0;
+				//缓冲区大小置0
+				UA_Int32 valueToWrite = 0;
+				UA_Variant variant;
+				UA_Variant_setScalar(&variant, &valueToWrite, &UA_TYPES[UA_TYPES_INT32]);
+				std::string bufferLenTag = g_ConfigableKeys["AnimatorBufferLengthQueueB"];
+				PLCParam_ProtocalOpc* info = (PLCParam_ProtocalOpc*)g_PLCVariables[bufferLenTag];
+				UA_NodeId nodeId = UA_NODEID_STRING(info->ns, info->identifier);
+				UA_StatusCode code = UA_Client_writeValueAttribute(client, nodeId, &variant);
 			}
 		}
 	}

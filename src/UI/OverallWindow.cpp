@@ -10,6 +10,7 @@
 #include "UI/Components/HmiTemplateWebViewer.h"
 #include "UI/Components/HmiTemplateMsgBox.h"
 #include "UI/TaskListWindow.h"
+#include "Graphics/Anchor.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
 #include "Common/ProgressInfo.h"
 #include <QApplication>
@@ -55,7 +56,7 @@ OverallWindow::OverallWindow()
 			PLC_TYPE_INT SubNavIndex;
 			ReadPLC_OPCUA(g_ConfigableKeys["IndexSubArea"].c_str(), &SubNavIndex, AtomicVarType::INT);
 
-			if (curVal == 3 && SubNavIndex == 1)
+			if (curVal == -1 && SubNavIndex == 1)
 			{
 				executeAfterDelay(std::chrono::milliseconds(200), [this]() {
 					// 确保在主线程调用 SetShow
@@ -149,14 +150,14 @@ OverallWindow::OverallWindow()
 	monitorCurrentRowCNC->lastValue.lastDInt = 0;
 	monitorCurrentRowCNC->updateCallback = [&]()
 		{
-			PLC_TYPE_DINT rowNumber = monitorCurrentRowCNC->GetDint();
-			if (rowNumber > 1 && rowNumber != monitorCurrentRowCNC->lastValue.lastDInt)
-			{
-				QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
-					Qt::QueuedConnection,
-					Q_ARG(int, rowNumber));
-				monitorCurrentRowCNC->lastValue.lastDInt = rowNumber;
-			}
+			//PLC_TYPE_DINT rowNumber = monitorCurrentRowCNC->GetDint();
+			//if (rowNumber > 1 && rowNumber != monitorCurrentRowCNC->lastValue.lastDInt)
+			//{
+			//	QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
+			//		Qt::QueuedConnection,
+			//		Q_ARG(int, rowNumber));
+			//	monitorCurrentRowCNC->lastValue.lastDInt = rowNumber;
+			//}
 		};
 
 	monitorToolDistance = new ScadaNode();
@@ -172,23 +173,24 @@ OverallWindow::OverallWindow()
 			}
 	};
 
-	monitorAutoStart = new ScadaNode();
-	monitorAutoStart->BindParam(g_ConfigableKeys["AutoStart"]);
-	monitorAutoStart->lastValue.lastBool = false;
-	monitorAutoStart->updateCallback = [&]()
+	monitorAutoBusy = new ScadaNode();
+	monitorAutoBusy->BindParam(g_ConfigableKeys["AutoBusy"]);
+	monitorAutoBusy->lastValue.lastBool = false;
+	monitorAutoBusy->updateCallback = [&]()
 	{
-		PLC_TYPE_BOOL startCNC = monitorToolDistance->GetBool();
-		if (!(startCNC == monitorAutoStart->lastValue.lastBool))
+		PLC_TYPE_BOOL startCNC = monitorAutoBusy->GetBool();
+		if (!(startCNC == monitorAutoBusy->lastValue.lastBool))
 		{
+			Anchor::GetInstance()->CleanCache();
+			monitorAutoBusy->lastValue.lastBool = startCNC;
 			if (startCNC)
 			{
-				g_canvasInstance->GetFrontWidget()->OpenSimulation();
+				g_mainWindow->infoPanel->statusInfo->setStatus(StatusBar::Status::Running, "模拟运行中");
 			}
 			else
 			{
-				g_canvasInstance->GetFrontWidget()->CloseSimulation();
+				g_mainWindow->infoPanel->statusInfo->setStatus(StatusBar::Status::Finish, "模拟完成");
 			}
-			monitorAutoStart->lastValue.lastBool = startCNC;
 		}
 	};
 
@@ -198,7 +200,7 @@ OverallWindow::OverallWindow()
 	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
 	ScadaScheduler::GetInstance()->AddNode(monitorCurrentRowCNC);
-	ScadaScheduler::GetInstance()->AddNode(monitorAutoStart);
+	ScadaScheduler::GetInstance()->AddNode(monitorAutoBusy);
 	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
 	
 }

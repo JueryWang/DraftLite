@@ -22,11 +22,13 @@
 #include "UI/CanvasGuide.h"
 #include "UI/Components/HmiTemplateMonitorTool.h"
 #include "Controls/GlobalPLCVars.h"
+#include "Controls/GCodeParseHelper.h"
 #include "NetWork/OPClient.h"
 #include "NetWork/FtpClient.h"
 #include "IO/ExcelProcessor.h"
 #include "IO/DxfProcessor.h"
 #include "UI/SketchInformation.h"
+#include "Controls/GCodeController.h"
 #include <QMessageBox>
 #include <QFile>
 #include <QHboxLayout>
@@ -133,6 +135,9 @@ int main(int argc, char* argv[]){
 
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
+
+	GCodeParseHelper parser(g_mainWindow->GetSketch());
+	parser.ParseFileToSketch("C:/Users/Admin/Desktop/gear.cnc");
 
 	ScadaScheduler::GetInstance()->Start();
 

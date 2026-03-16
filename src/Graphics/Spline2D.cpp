@@ -763,13 +763,18 @@ void Spline2DGPU::GenerateSplineSamplePoints(const std::vector<glm::vec3>& contr
 	samplesT.push_back(1.0f);
 	bbox.Union(lastPoint);
 
+	lastPoint = splineSamples[0];
 	for (int i = 0; i < splineSamples.size(); i++)
 	{
 		PathNode p;
 		p.Node = splineSamples[i];
 		p.Normal = this->Normal(samplesT[i]);
 		p.Tangent = this->Tangent(samplesT[i]);
-		pathNodes.push_back(p);
+		if (i == 0 || lastPoint != splineSamples[i])
+		{
+			pathNodes.push_back(p);
+		}
+		lastPoint = splineSamples[i];
 	}
 
 	indexRange = { 0,samples.size() - 1 };

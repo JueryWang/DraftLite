@@ -21,17 +21,10 @@ public:
 
 	void AddRecord(GCodeRecord& rec);
 	void CleanCache();
-	void UpdateGCode(const std::vector<EntityVGPU*> entities);
-	void ParseGCodeToEntities(const QString& content, std::vector<EntityVGPU*>& entities);
 	void SetSketch(SketchGPU* _sketch) { holdSketch = _sketch; }
 private:
 	GCodeController();
 	~GCodeController();
-	bool TryParseG00(const QString& line);
-	bool TryParseG01(const QString& line);
-	bool TryParseG02(const QString& line);
-	bool TryParseG03(const QString& line);
-	bool TryParseG05(const QString& line);
 
 private:
 	static GCodeController* s_controller;

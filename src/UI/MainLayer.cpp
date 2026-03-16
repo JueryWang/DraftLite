@@ -130,7 +130,7 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 		canvasOperationPanel->setLayout(ovlay);
 		canvasOperationPanel->setWindowFlags(Qt::SubWindow);
 		canvasOperationPanel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		canvasOperationPanel->move(20, move_height_ratio * screen_resolution_y);
+		canvasOperationPanel->move(canvasAnchorX, canvasAnchorY);
 
 		CanvasGuide* canvasGuide = CanvasGuide::GetInstance();
 		canvasGuide->setParent(preview);

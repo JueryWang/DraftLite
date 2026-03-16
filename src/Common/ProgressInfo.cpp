@@ -52,23 +52,23 @@ void InitPLConfig()
 		{"PositionAxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
 		{"PositionAxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"},
 		{"WorkFileName","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.sWorkFileName"},	//当前G代码文件名
-		{"PCFileFTPDone","gvlHMI.xPCFileFTPDone"},								//PC相应G代码上传FTP完成
-		{"PCFileFTP","gvlHMI.stIOGearChamferMachine.xPCFileFTP"},				//PLC请求G代码上传FTP
+		{"PCFileFTPDone","gvlGlobalData.stIOGearChamferMachine.xPCFileFTPDone"},								//PC相应G代码上传FTP完成
+		{"PCFileFTP","gvlGlobalData.stIOGearChamferMachine.xPCFileFTP"},				//PLC请求G代码上传FTP
 		{"HeartbeatCount","gvlHMI.udiHeartbeatCount"},							//心跳包检测
 		{"IndexSubArea","gvlHMI.stCommandGearChamferMachine.iIndexSubArea"},	//绘图区显示信号
 		{"PageInit","gvlHMI.stCommandGearChamferMachine.xPageInit"},			//初始化界面
-		{"ChangeSlice","gvlHMI.stIOGearChamferMachine.xPCChange"},				//PLC请求多计划切图
-		{"ChangeSliceDone","gvlHMI.xPCChangeDone"},								//切图PC完成信号
+		{"ChangeSlice","gvlGlobalData.stIOGearChamferMachine.xPCChange"},				//PLC请求多计划切图
+		{"ChangeSliceDone","gvlGlobalData.stIOGearChamferMachine.xPCChangeDone"},								//切图PC完成信号
 		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"},   //设备自动运行中
 		{"ToolRadius","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
 		{"AutoStart","gvlHMI.stCommandGearChamferMachine.stCommandCADWork.xAutoStart"},
 		//{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
 		{"AxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
 		{"AxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"},
-		{"AnimatorBufferLengthQueueA","gvlHMI.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualA"},
-		{"AnimatorBufferQueueA","gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueA"},
-		{"AnimatorBufferLengthQueueB","gvlHMI.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualB"},
-		{"AnimatorBufferQueueB","gvlHMI.stIOGearChamferMachine.stCNCVisual.astCNCQueueB"},
+		{"AnimatorBufferLengthQueueA","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualA"},
+		{"AnimatorBufferQueueA","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.astCNCQueueA"},
+		{"AnimatorBufferLengthQueueB","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualB"},
+		{"AnimatorBufferQueueB","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.astCNCQueueB"},
 		{"AnimatorCycleTime","gvlHMI.stConfigGearChamferMachine.stConfigCADWork.dwIpoCycle"}
 	};
 
@@ -76,6 +76,8 @@ void InitPLConfig()
 
 	screen_resolution_x = g_settings->value("Screen/Width").toInt();
 	screen_resolution_y = g_settings->value("Screen/Height").toInt();
+	canvasAnchorX = g_settings->value("Screen/CanvasAnchor.X").toInt();
+	canvasAnchorY = g_settings->value("Screen/CanvasAnchor.Y").toInt();
 	if (g_settings->value("Layout/DrawPanelWidthFactor").toFloat() != 0)
 	{
 		canvas_panel_width_ratio = g_settings->value("Layout/DrawPanelWidthFactor").toFloat();
@@ -120,17 +122,17 @@ void InitPLConfig()
 	g_plcVarCnfigExcelUrl = g_settings->value("PLC/VarConfig").toString();
 	g_plcSearchRootNode = g_settings->value("PLC/ParseVarRoot").toString();
 
-	g_settings->beginGroup("ConfigableKeys");
-	QStringList allKeys = g_settings->allKeys();
-	for (const QString& key : allKeys)
-	{
-		QVariant value = g_settings->value(key);
-		std::string _key = key.toStdString();
-		std::string _value = value.toString().toStdString();
-		g_ConfigableKeys[_key] = _value;
-		//g_ConfigableKeys.insert(key.toStdString(), value.toString().toStdString());
-	}
-	g_settings->endGroup();
+	//g_settings->beginGroup("ConfigableKeys");
+	//QStringList allKeys = g_settings->allKeys();
+	//for (const QString& key : allKeys)
+	//{
+	//	QVariant value = g_settings->value(key);
+	//	std::string _key = key.toStdString();
+	//	std::string _value = value.toString().toStdString();
+	//	g_ConfigableKeys[_key] = _value;
+	//	//g_ConfigableKeys.insert(key.toStdString(), value.toString().toStdString());
+	//}
+	//g_settings->endGroup();
 
 	ExcelProcessor reader;
 	g_opcuaClient = new OPClient();

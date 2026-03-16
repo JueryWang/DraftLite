@@ -17,6 +17,8 @@ float taskpanel_height_ratio = 0.74;
 float todoCanvas_width_ratio = 0.053;
 float todoCanvas_height_ratio;
 float fixed_canvas_aspect;
+int canvasAnchorX = 0;
+int canvasAnchorY = 0;
 
 QMap<QString, QString> global_font_mp;
 

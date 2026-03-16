@@ -44,31 +44,12 @@ namespace CNCSYS
 		this->update();
 
 		font = QFont(global_font_mp["Comic"], 9);
-
+		m_updateTimer.start(0);
 		this->installEventFilter(m_context->window);
 	}
 	GLWidget::~GLWidget()
 	{
 		delete m_context;
-	}
-
-	void GLWidget::OpenSimulation()
-	{
-		m_updateTimer.start(0);
-		try
-		{
-			m_context->window->updateGL();
-			QMetaObject::invokeMethod(this, "repaint");
-		}
-		catch (...)
-		{
-
-		}
-	}
-
-	void GLWidget::CloseSimulation()
-	{
-		m_updateTimer.stop();
 	}
 
 	void GLWidget::SetWindowStatus(WindowState state)
@@ -97,34 +78,16 @@ namespace CNCSYS
 				m_context->window->updateGL();
 			}
 		}
-		if (m_context->state == DYNAMIC_DRAW)
+		else
 		{
-			if (firstShow)
+			try
 			{
-				m_updateTimer.start(0);
-				try
-				{
-					m_context->window->updateGL();
-					QMetaObject::invokeMethod(this, "repaint");
-				}
-				catch (...)
-				{
-
-				}
-				firstShow = false;
+				m_context->window->updateGL();
+				QMetaObject::invokeMethod(this, "repaint");
 			}
-
-			if (this->isVisible())
+			catch (...)
 			{
-				try
-				{
-					m_context->window->updateGL();
-					QMetaObject::invokeMethod(this, "repaint");
-				}
-				catch (...)
-				{
 
-				}
 			}
 		}
 	}
