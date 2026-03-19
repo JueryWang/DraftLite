@@ -32,6 +32,7 @@ class MainLayer;
 
 class StationSwitchTab : public QTabBar
 {
+    Q_OBJECT
 public:
 	StationSwitchTab(MainLayer* parent);
 	~StationSwitchTab();

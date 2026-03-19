@@ -136,9 +136,6 @@ int main(int argc, char* argv[]){
 	TaskFlowGuide* guide = new TaskFlowGuide(window);
 	guide->show();
 
-	GCodeParseHelper parser(g_mainWindow->GetSketch());
-	parser.ParseFileToSketch("C:/Users/Admin/Desktop/gear.cnc");
-
 	ScadaScheduler::GetInstance()->Start();
 
 	return app.exec();

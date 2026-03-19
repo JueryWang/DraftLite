@@ -106,8 +106,6 @@ GCodeEditor::GCodeEditor(QWidget* parent)
 	connect(this, &GCodeEditor::linesChanged, this, &GCodeEditor::updateLineNumberMargin);
 	connect(this, &GCodeEditor::cursorPositionChanged, this, &GCodeEditor::onCursorPositionChanged);
 	connect(this, &GCodeEditor::selectionChanged, this, &GCodeEditor::onSelectionChanged);
-
-	ScadaScheduler::GetInstance()->RegisterReadBackVarKey("gvlHMI.stParameterGearChamferMachine.stParameterCADWork.sWorkFileName");
 }
 
 GCodeEditor::~GCodeEditor()

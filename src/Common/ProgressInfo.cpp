@@ -9,6 +9,7 @@
 #include "Common/ProgressInfo.h"
 #include "NetWork/FtpClient.h"
 #include "NetWork/OPClient.h"
+#include <unordered_map>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QClipBoard>
@@ -28,7 +29,7 @@ QString g_plcUrl;
 QString g_plcVarCnfigExcelUrl;
 QString g_plcSearchRootNode;
 std::vector<std::string> g_preRegKeys;
-std::map<std::string, std::string> g_ConfigableKeys;
+std::unordered_map<std::string, std::string> g_ConfigableKeys;
 std::string g_ftpDir = "Share_files_anonymity";
 GeomDirection g_defaultDir = GeomDirection::CCW;
 GeomDirection g_defaultDirReverse = GeomDirection::CW;
@@ -44,32 +45,33 @@ void InitPLConfig()
 {
 	g_ConfigableKeys =
 	{
-		{"ActVelocityCNC","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.fActVelocityCNC"},
-		{"CurrentRowCNC","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.iCurrentRowCNC"},
+		{"CurrentRowCNC","gvlHMI.stStatusCADWork.iCurrentRowCNC"},
 		{"IndexTargetMainArea","gvlHMI.stStatusGearChamferMachine.iIndexTargetMainArea"},			//网页往前分页索引
 		{"PChmiCheck","gvlHMI.stStatusGearChamferMachine.xPChmiCheck"},
 		{"PChmiReady","gvlHMI.stCommandGearChamferMachine.xPChmiReady"},
-		{"PositionAxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
-		{"PositionAxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"},
-		{"WorkFileName","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.sWorkFileName"},	//当前G代码文件名
-		{"PCFileFTPDone","gvlGlobalData.stIOGearChamferMachine.xPCFileFTPDone"},								//PC相应G代码上传FTP完成
-		{"PCFileFTP","gvlGlobalData.stIOGearChamferMachine.xPCFileFTP"},				//PLC请求G代码上传FTP
+		{"WorkFileStation0","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[0].sWorkFileName"},	//工位0文件名
+		{"WorkFileStation1","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[1].sWorkFileName"},	//工位1文件名
+		{"WorkFileStation2","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[2].sWorkFileName"},	//工位2文件名
+		{"WorkFileStation3","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[3].sWorkFileName"},	//工位4文件名
+		{"WorkFileStation4","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[4].sWorkFileName"},	//工位5文件名
+		{"PCFileFTPDone","gvlGlobalData.stIOGearChamferMachine.axPCFileFTPDone"},								//PC相应G代码上传FTP完成
+		{"PCFileFTP","gvlGlobalData.stIOGearChamferMachine.axPCFileFTP"},				//PLC请求G代码上传FTP
 		{"HeartbeatCount","gvlHMI.udiHeartbeatCount"},							//心跳包检测
 		{"IndexSubArea","gvlHMI.stCommandGearChamferMachine.iIndexSubArea"},	//绘图区显示信号
 		{"PageInit","gvlHMI.stCommandGearChamferMachine.xPageInit"},			//初始化界面
-		{"ChangeSlice","gvlGlobalData.stIOGearChamferMachine.xPCChange"},				//PLC请求多计划切图
-		{"ChangeSliceDone","gvlGlobalData.stIOGearChamferMachine.xPCChangeDone"},								//切图PC完成信号
-		{"AutoBusy","gvlHMI.stStatusGearChamferMachine.stStatusCADWork.xAutoBusy"},   //设备自动运行中
-		{"ToolRadius","gvlHMI.stParameterGearChamferMachine.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
-		{"AutoStart","gvlHMI.stCommandGearChamferMachine.stCommandCADWork.xAutoStart"},
+		{"ChangeSlice","gvlGlobalData.stIOGearChamferMachine.axPCChange"},				//PLC请求多计划切图
+		{"ChangeSliceDone","gvlGlobalData.stIOGearChamferMachine.axPCChangeDone"},		//切图PC完成信号
+		{"AutoBusy","gvlHMI.stStatusCADWork.xAutoBusy"},   //设备自动运行中
+		{"ToolRadius","gvlHMI.stParameterCADWork.stParaNCInterpreter.fToolRadius"},
+		{"AutoStart","gvlHMI.stCommandGearChamferMachine.xAutoStart"},
+		{"AutoPause","gvlHMI.stStatusCADWork.xAutoPause"},
 		//{"RemainDistance","gvlHMI.stParameterGearChamferMachine.fRemainDistance"},
-		{"AxisX","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisX"},
-		{"AxisY","gvlHMI.stStatusGearChamferMachine.stCoordAxis.fPositionAxisY"},
-		{"AnimatorBufferLengthQueueA","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualA"},
-		{"AnimatorBufferQueueA","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.astCNCQueueA"},
-		{"AnimatorBufferLengthQueueB","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.iIndexCNCVisualB"},
-		{"AnimatorBufferQueueB","gvlGlobalData.stIOGearChamferMachine.stCNCVisual.astCNCQueueB"},
-		{"AnimatorCycleTime","gvlHMI.stConfigGearChamferMachine.stConfigCADWork.dwIpoCycle"}
+		{"AnimatorBufferLengthQueueA","gvlHMI.stCNCVisualCADWork.iIndexCNCVisualA"},
+		{"AnimatorBufferQueueA","gvlHMI.stCNCVisualCADWork.astCNCQueueA"},
+		{"AnimatorBufferLengthQueueB","gvlHMI.stCNCVisualCADWork.iIndexCNCVisualB"},
+		{"AnimatorBufferQueueB","gvlHMI.stCNCVisualCADWork.astCNCQueueB"},
+		{"AnimatorCycleTime","gvlHMI.stConfigGearChamferMachine.dwIpoCycle"},
+		{"StationIndex","gvlHMI.stCommandGearChamferMachine.iIndexStation"}
 	};
 
 	g_settings = new QSettings(QDir::currentPath() + "/config.ini", QSettings::IniFormat);
@@ -78,6 +80,10 @@ void InitPLConfig()
 	screen_resolution_y = g_settings->value("Screen/Height").toInt();
 	canvasAnchorX = g_settings->value("Screen/CanvasAnchor.X").toInt();
 	canvasAnchorY = g_settings->value("Screen/CanvasAnchor.Y").toInt();
+	CANVAS_WIDTH = g_settings->value("Screen/CanvasWidth").toInt();
+	CANVAS_HEIGHT = g_settings->value("Screen/CanvasHeight").toInt();
+	stationSize = g_settings->value("Settings/StationSize").toInt();
+
 	if (g_settings->value("Layout/DrawPanelWidthFactor").toFloat() != 0)
 	{
 		canvas_panel_width_ratio = g_settings->value("Layout/DrawPanelWidthFactor").toFloat();

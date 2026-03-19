@@ -542,7 +542,7 @@ namespace CNCSYS
 		}
 
 
-		static std::vector<glm::vec3> CatmullRomSmooth(const std::vector<glm::vec3>& controlPoints, int segmentPerInterval = 10)
+		static std::vector<glm::vec3> CatmullRomSmooth(const std::vector<glm::vec3>& controlPoints,int segmentPerInterval = 10)
 		{
 			std::vector<glm::vec3> result;
 			if (controlPoints.size() < 4)

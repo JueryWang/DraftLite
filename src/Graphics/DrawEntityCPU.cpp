@@ -390,7 +390,7 @@ namespace CNCSYS
 		}
 		else
 		{
-			this->splineSamples = MathUtils::CatmullRomSmooth(controlPoints, 100);
+			this->splineSamples = MathUtils::CatmullRomSmooth(controlPoints,100);
 		}
 
 		bbox = new AABB(splineSamples[0], splineSamples[1]);

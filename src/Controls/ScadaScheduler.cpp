@@ -193,15 +193,24 @@ void ScadaScheduler::LoopTask()
 			if (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_OPC_CONNECT_POS))
 			{
 				g_varHandleMutex.lock();
+				//前后处理一次写请求
 				if (mtx.try_lock())
 				{
 					handleTaskRequest();
 					mtx.unlock();
 				}
+
 				std::vector<PLCParam_ProtocalOpc*> opcAddresses;
 				for (const std::string& tag : regTags)
 				{
-					opcAddresses.push_back((PLCParam_ProtocalOpc*)g_PLCVariables[tag]);
+					if (g_PLCVariables[tag] != NULL)
+					{
+						opcAddresses.push_back((PLCParam_ProtocalOpc*)g_PLCVariables[tag]);
+					}
+					else
+					{
+						/*std::cout << "unread: " << tag << std::endl;*/
+					}
 				}
 				opcClient->ReadBackPLC_ProtoOpcUA(opcAddresses);
 				g_varHandleMutex.unlock();

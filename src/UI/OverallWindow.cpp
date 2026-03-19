@@ -4,6 +4,7 @@
 #include "Controls/GlobalPLCVars.h"
 #include "Controls/ScadaScheduler.h"
 #include "NetWork/OPClient.h"
+#include "NetWork/FtpClient.h"
 #include "Graphics/Primitives.h"
 #include <Controls/ScadaMessageHandler.h>
 #include "UI/GCodeEditor.h"
@@ -56,7 +57,7 @@ OverallWindow::OverallWindow()
 			PLC_TYPE_INT SubNavIndex;
 			ReadPLC_OPCUA(g_ConfigableKeys["IndexSubArea"].c_str(), &SubNavIndex, AtomicVarType::INT);
 
-			if (curVal == -1 && SubNavIndex == 1)
+			if (curVal == 1 && SubNavIndex == 1)
 			{
 				executeAfterDelay(std::chrono::milliseconds(200), [this]() {
 					// 确保在主线程调用 SetShow
@@ -74,28 +75,38 @@ OverallWindow::OverallWindow()
 	monitorUploadFTP->BindParam(g_ConfigableKeys["PCFileFTP"]);
 	monitorUploadFTP->updateCallback = [&]()
 		{
-			PLC_TYPE_BOOL ifRequestFile = monitorUploadFTP->GetBool();
-			if (ifRequestFile && !(ifRequestFile == monitorUploadFTP->lastValue.lastBool))
+		
+			static std::array<bool, 10> oldRequest = g_stationPCFileFTP;
+			bool ifRequest = false;
+			for (int i = 0; i < stationSize;i++)
 			{
-				static TaskListWindow* taskList = TaskListWindow::GetInstance();
-				if (taskList->items.size() > 0)
+				if (g_stationPCFileFTP[i] && (g_stationPCFileFTP[i] != oldRequest[i]))
 				{
-					std::string ftpFilePath = "../FTP/" + taskList->items[taskList->currentRequestNumber]->attachedWidget->ftpUploadSource;
+					std::string ftpFilePath = "../FTP/" + extractFTPFileName(QString::fromLocal8Bit(g_mainWindow->sketchLists[i+1]->source.c_str()));
 					PLC_TYPE_STRING newSliceFileName = (PLC_TYPE_STRING)malloc(256);
 					strcpy_s(newSliceFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
-					WritePLC_OPCUA(g_ConfigableKeys["WorkFileName"].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
-					//ToDoListItemWidget* widget = taskList->CurrentItemWidget();
-					//taskList->taskLists->setCurrentRow(taskList->currentRequestNumber);
-					//EvCanvasSetNewScene* evSetScene = new EvCanvasSetNewScene(widget->sketch, widget->ocsSys);
-					//QApplication::postEvent(g_canvasInstance->GetFrontWidget(), evSetScene, Qt::HighEventPriority);
-					//taskList->CurrentItemWidget()->AddCounter();
-					//taskList->currentRequestNumber = (taskList->currentRequestNumber + 1) % (taskList->items.size());
+
+					WritePLC_OPCUA(g_ConfigableKeys[QString("WorkFileStation%1").arg(i).toStdString()].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
+
 					free(newSliceFileName);
+					ifRequest = true;
 				}
-				PLC_TYPE_BOOL uploadDone = true;
-				WritePLC_OPCUA(g_ConfigableKeys["PCFileFTPDone"].c_str(), &uploadDone, AtomicVarType::BOOL);
+				oldRequest[i] = g_stationPCFileFTP[i];
 			}
-			monitorUploadFTP->lastValue.lastBool = ifRequestFile;
+			if(ifRequest)
+			{
+				static int enterCount = 0;
+				for (int i = 0; i < stationSize; i++)
+				{
+					std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["PCFileFTPDone"].c_str()]);
+					if (writeArray)
+					{
+						writeArray->data()[i] = TRUE;
+					}
+				}
+				WritePLC_OPCUA(g_ConfigableKeys["PCFileFTPDone"].c_str(), nullptr, AtomicVarType::ARRAY_BOOL);
+				ifRequest = false;
+			}
 		};
 
 	monitorHeartBeat = new ScadaNode();
@@ -144,21 +155,6 @@ OverallWindow::OverallWindow()
 				monitorToolRadius->lastValue.lastLReal = radius;
 			}
 	};
-	
-	monitorCurrentRowCNC = new ScadaNode();
-	monitorCurrentRowCNC->BindParam(g_ConfigableKeys["CurrentRowCNC"]);
-	monitorCurrentRowCNC->lastValue.lastDInt = 0;
-	monitorCurrentRowCNC->updateCallback = [&]()
-		{
-			//PLC_TYPE_DINT rowNumber = monitorCurrentRowCNC->GetDint();
-			//if (rowNumber > 1 && rowNumber != monitorCurrentRowCNC->lastValue.lastDInt)
-			//{
-			//	QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine",
-			//		Qt::QueuedConnection,
-			//		Q_ARG(int, rowNumber));
-			//	monitorCurrentRowCNC->lastValue.lastDInt = rowNumber;
-			//}
-		};
 
 	monitorToolDistance = new ScadaNode();
 	monitorToolDistance->BindParam(g_ConfigableKeys["RemainDistance"]);
@@ -185,22 +181,55 @@ OverallWindow::OverallWindow()
 			monitorAutoBusy->lastValue.lastBool = startCNC;
 			if (startCNC)
 			{
-				g_mainWindow->infoPanel->statusInfo->setStatus(StatusBar::Status::Running, "模拟运行中");
+				QMetaObject::invokeMethod(g_mainWindow->infoPanel->statusInfo, "setStatus",
+					Qt::QueuedConnection,
+					Q_ARG(int, StatusBar::Status::Running),
+					Q_ARG(QString, "模拟运行中"));
 			}
 			else
 			{
-				g_mainWindow->infoPanel->statusInfo->setStatus(StatusBar::Status::Finish, "模拟完成");
+				QMetaObject::invokeMethod(g_mainWindow->infoPanel->statusInfo, "setStatus",
+					Qt::QueuedConnection,
+					Q_ARG(int, StatusBar::Status::Finish),
+					Q_ARG(QString, "模拟完成"));
 			}
 		}
 	};
+
+	monitorStationIndex = new ScadaNode();
+	monitorStationIndex->BindParam(g_ConfigableKeys["StationIndex"]);
+	monitorStationIndex->lastValue.lastInt = -1;
+	monitorStationIndex->updateCallback = [&]()
+	{
+		PLC_TYPE_INT currentStationId = monitorStationIndex->GetInt();
+		if (!(currentStationId == monitorStationIndex->lastValue.lastInt))
+		{
+			monitorStationIndex->lastValue.lastInt = currentStationId;
+			bool ok = QMetaObject::invokeMethod(
+				g_mainWindow->stationTab,
+				"setCurrentIndex",
+				Qt::QueuedConnection,
+				Q_ARG(int, currentStationId+1)
+			);
+		}
+	};
+
+	//初始清理所有历史文件
+	PLC_TYPE_STRING empty = (PLC_TYPE_STRING)malloc(1);
+	empty[0] = '\0';
+	WritePLC_OPCUA(g_ConfigableKeys["WorkFileStation0"].c_str(), (void*)empty, AtomicVarType::STRING);
+	WritePLC_OPCUA(g_ConfigableKeys["WorkFileStation1"].c_str(), (void*)empty, AtomicVarType::STRING);
+	WritePLC_OPCUA(g_ConfigableKeys["WorkFileStation2"].c_str(), (void*)empty, AtomicVarType::STRING);
+	WritePLC_OPCUA(g_ConfigableKeys["WorkFileStation3"].c_str(), (void*)empty, AtomicVarType::STRING);
+	WritePLC_OPCUA(g_ConfigableKeys["WorkFileStation4"].c_str(), (void*)empty, AtomicVarType::STRING);
 
 	ScadaScheduler::GetInstance()->AddNode(monitorIndexPage);
 	ScadaScheduler::GetInstance()->AddNode(monitorUploadFTP);
 	ScadaScheduler::GetInstance()->AddNode(monitorHeartBeat);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolRadius);
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
-	ScadaScheduler::GetInstance()->AddNode(monitorCurrentRowCNC);
 	ScadaScheduler::GetInstance()->AddNode(monitorAutoBusy);
+	ScadaScheduler::GetInstance()->AddNode(monitorStationIndex);
 	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
 	
 }
@@ -220,8 +249,8 @@ void OverallWindow::SetShow()
 
 void OverallWindow::SetHide()
 {
-	if (g_settings->value("Settings/Mode") != "Debug")
-	{
+	//if (g_settings->value("Settings/Mode") != "Debug")
+	//{
 		mainWindow->GetCanvasPanel()->hide();
-	}
+	//}
 }

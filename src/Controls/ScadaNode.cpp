@@ -5,7 +5,7 @@
 
 ScadaNode::ScadaNode()
 {
-
+	lastExecTime = std::chrono::system_clock::now();
 }
 
 ScadaNode::~ScadaNode()
@@ -90,6 +90,15 @@ void ScadaNode::BindParam(const std::string& tag)
 			{
 				AtomicVar<PLC_TYPE_STRING>* var = static_cast<AtomicVar<PLC_TYPE_STRING>*>(plcInfo->bindVar);
 				this->BindParam(var);
+				break;
+			}
+			case AtomicVarType::ARRAY_BOOL:
+			{
+				if (tag == "gvlGlobalData.stIOGearChamferMachine.axPCFileFTP")
+				{
+					param = &g_stationPCFileFTP;
+					varType = AtomicVarType::ARRAY_BOOL;
+				}
 				break;
 			}
 		default:

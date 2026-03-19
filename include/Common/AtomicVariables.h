@@ -40,7 +40,7 @@ public:
 
 enum class AtomicVarType
 {
-	None,
+	None = 0,
 	BOOL,       //bool
 	WORD,       //uint16_t
 	DWORD,      //uint32_t
@@ -51,7 +51,10 @@ enum class AtomicVarType
 	REAL,       //float
 	LREAL,      //double
 	STRING,      //string
-	STRUCT
+	STRUCT,
+	ARRAY,
+	ARRAY_BOOL,
+	ARRAY_STRING,
 };
 
 /// <summary>

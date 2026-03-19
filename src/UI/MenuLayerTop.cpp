@@ -268,7 +268,6 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 					std::string NcProgram = canvasWindow->attachedSketch->ToNcProgram();
 					g_mainWindow->infoPanel->updateStats(canvasWindow->attachedSketch);
 					editor->setText(QString::fromStdString(NcProgram));
-
 				}
 			});
 		processor.read(file);

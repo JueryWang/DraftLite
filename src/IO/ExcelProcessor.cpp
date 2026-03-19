@@ -207,6 +207,11 @@ void ExcelProcessor::ReadPLCVariantMap()
 				PLCInitOpcInfo(plcInfo, AtomicVarType::STRUCT, varTag, ns.toInt(), identifier.toLocal8Bit().data());
 				regTags.push_back(varTag);
 			}
+			else if (varType == "ARRAY_BOOL")
+			{
+				PLCInitOpcInfo(plcInfo, AtomicVarType::ARRAY_BOOL, varTag, ns.toInt(), identifier.toLocal8Bit().data());
+				regTags.push_back(varTag);
+			}
 		}
 	}
 

@@ -2,6 +2,7 @@
 #include "Controls/ScadaScheduler.h"
 #include "Controls//ScadaScheduler.h"
 #include "NetWork/FtpClient.h"
+#include "Common/ProgressInfo.h"
 #include <QString>
 #include <QFileInfo>
 
@@ -13,6 +14,11 @@ std::recursive_mutex g_varHandleMutex;
 std::mutex g_GCodeHandleMutex;
 std::vector<CNCSimulateRecord> g_simRecBufferA;
 std::vector<CNCSimulateRecord> g_simRecBufferB;
+std::array<bool, 10> g_stationPCChange;
+std::array<bool, 10>g_stationPCChangeDone;
+std::array<bool, 10> g_stationPCFileFTP;
+std::array<bool, 10> g_stationPCFileFTPDone;
+int stationSize = 0;
 OPClient* g_opcuaClient = nullptr;
 
 void ClearPLCVariablesOpcUA()
@@ -228,7 +234,7 @@ void ReadPLC_OPCUA(const char* tag, void* storeValue, AtomicVarType type)
 			AtomicVar<PLC_TYPE_STRING>* readValue = static_cast<AtomicVar<PLC_TYPE_STRING>*>(g_readPersistance[tag]);
 			if (readValue)
 			{
-				storeValue = readValue;
+				strcpy((char*)storeValue,readValue->GetValue());
 			}
 			break;
 		}
@@ -391,6 +397,57 @@ void PLCInitOpcInfo(PLCParam_ProtocalOpc* plcInfo, AtomicVarType type, const std
 			g_PLCVariables[tag] = plcInfo;
 			g_readPersistance[tag] = plcInfo->bindVar;
 		}
+		break;
+	}
+	case AtomicVarType::ARRAY_BOOL:
+	{
+		plcInfo->dataType = AtomicVarType::ARRAY_BOOL;
+		strcpy_s(plcInfo->identifier, identifier);
+		plcInfo->ns = ns;
+		plcInfo->protocol = PLCProtocol::OPCUA;
+		if (strstr(plcInfo->identifier, "xPCChangeDone") != NULL)
+		{
+			for (int i = 0; i < 10;i++)
+			{
+				g_stationPCChangeDone[i] = false;
+			}
+			plcInfo->bindVar = g_stationPCChangeDone.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+			g_writePersistence[tag] = new std::array<bool, 10>();
+		}
+		else if (strstr(plcInfo->identifier,"xPCChange") != NULL)
+		{
+			for (int i = 0; i < 10;i++)
+			{
+				g_stationPCChange[i] = false;
+			}
+			plcInfo->bindVar = g_stationPCChangeDone.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+		}
+		else if(strstr(plcInfo->identifier,"xPCFileFTPDone") != NULL)
+		{
+			for (int i = 0; i < 10;i++)
+			{
+				g_stationPCFileFTPDone[i] = false;
+			}
+			plcInfo->bindVar = g_stationPCFileFTPDone.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+			g_writePersistence[tag] = new std::array<bool,10>();
+		}
+		else if (strstr(plcInfo->identifier, "xPCFileFTP") != NULL)
+		{
+			for (int i = 0; i < 10;i++)
+			{
+				g_stationPCFileFTP[i] = false;
+			}
+			plcInfo->bindVar = g_stationPCFileFTP.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+		}
+		break;
 	}
 	case AtomicVarType::None:
 	default:

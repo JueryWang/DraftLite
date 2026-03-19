@@ -23,6 +23,8 @@ public:
 	};
 
 	explicit StatusBar(QWidget* parent = nullptr);
+
+public slots:
 	void setStatus(Status status,const QString &text);
 
 public:

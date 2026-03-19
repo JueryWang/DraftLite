@@ -48,6 +48,7 @@ public:
 	{
 
 	}
+	void* sender = nullptr;
 	void* writeValue;
 	char tag[256];
 };
@@ -63,8 +64,8 @@ public:
 		free(tags);
 	}
 
-	void** writeValueBatch;
-	char** tags;
+	void* writeValueBatch;
+	char* tags;
 	int count;
 };
 

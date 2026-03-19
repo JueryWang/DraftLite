@@ -68,8 +68,8 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 	//GPU版本
 	if (CNCSYS::InitializeOpenGL())
 	{
-		int canvasWidth = ScreenSizeHintX(canvas_panel_width_ratio);
-		int canvasHeight = ScreenSizeHintY(canvas_panel_height_ratio);
+		int canvasWidth = CANVAS_WIDTH;
+		int canvasHeight = CANVAS_HEIGHT;
 		fixed_canvas_aspect = (float)canvasWidth / canvasHeight;
 		renderByGPU = true;
 
@@ -118,7 +118,6 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 		canvasOperationPanel->setStyleSheet(".QWidget{background-color: #E2E8D6; border-radius:5px;}");
 		stationTab = new StationSwitchTab(this);
 
-		ovlay->addWidget(stationTab);
 		ovlay->addLayout(vlayCol1,1);
 		ovlay->addSpacing(2);
 		ovlay->addLayout(vlay2, 0);

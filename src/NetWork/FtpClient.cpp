@@ -21,8 +21,7 @@ std::string extractFTPFileName(const QString& _file)
 {
 	QStringList parts = _file.split("/");
 	QString fileName = parts.last();
-	QString trimmedFileName = fileName.replace(" ", "");
-	QFileInfo fileInfo(trimmedFileName);
+	QFileInfo fileInfo(fileName);
 	QString suffix = fileInfo.suffix(); // 结果："txt"
 	fileName = fileInfo.baseName() + ".cnc";
 	fileName = "Share_files_anonymity/" + fileName.trimmed();

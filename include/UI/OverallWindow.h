@@ -30,6 +30,6 @@ private:
 	ScadaNode* monitorHeartBeat = nullptr;
 	ScadaNode* monitorToolRadius = nullptr;
 	ScadaNode* monitorToolDistance = nullptr;
-	ScadaNode* monitorCurrentRowCNC = nullptr;
 	ScadaNode* monitorAutoBusy = nullptr;
+	ScadaNode* monitorStationIndex = nullptr;
 };

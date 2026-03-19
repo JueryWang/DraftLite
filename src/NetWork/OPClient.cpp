@@ -378,6 +378,21 @@ void OPClient::WriteOpcSingle(TaskWriteValueParam* param)
 			hintValueStr = QString::fromLocal8Bit(str);
 			break;
 		}
+		case AtomicVarType::ARRAY_BOOL:
+		{
+
+			if (strstr(param->tag,"PCFileFTPDone"))
+			{
+				static int enterCount = 0;
+				std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["PCFileFTPDone"].c_str()]);
+				if (writeArray)
+				{
+					UA_Variant_setArray(&variant, writeArray, 5, &UA_TYPES[UA_TYPES_BOOLEAN]);
+					status = UA_Client_writeValueAttribute(client, nodeId, &variant);
+				}
+			}
+			break;
+		}
 		}
 		if (status != UA_STATUSCODE_GOOD && status != curStatus)
 		{
@@ -394,10 +409,9 @@ void OPClient::WriteOpcSingle(TaskWriteValueParam* param)
 			g_file_logger->critical("写入节点{}失败:{},error code:{}  ||调用函数{}", param->tag, UA_StatusCode_name(status), __FUNCTION__);
 		}
 		curStatus = status;
-
 	}
-
 }
+
 void OPClient::WriteOpcBatch(TaskWriteValueBatchParam* param)
 {
 	//std::vector<UA_NodeId> nodeIds;
@@ -552,8 +566,6 @@ void OPClient::InitDirTable(int ns, const std::string& directory)
 		int assignCostsInMilliSec = std::chrono::duration_cast<std::chrono::milliseconds>(assignDuration).count();
 		g_file_logger->info("分配OPCUA变量耗时:{}  ||调用函数{}", assignCostsInMilliSec, __FUNCTION__);
 		QApplication::restoreOverrideCursor();
-
-		ScadaScheduler::GetInstance()->RegisterReadBackVarKey("gvlHMI.stParameterGearChamferMachine.stParameterCADWork.sWorkFileName");
 	}
 }
 
@@ -609,11 +621,6 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 			static std::chrono::time_point last_update_time = std::chrono::steady_clock::now();
 			if (bufferAlength > 0)
 			{
-				auto now = std::chrono::steady_clock::now();
-				std::chrono::duration<double> diff = now - last_update_time;
-				long long diff_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
-				std::cout << "ellapsed time = " << diff_milliseconds << "ms" << std::endl;
-
 				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
 				int validCount = 0;
 				for (size_t i = 1; i < bufferAlength+1; i++)
@@ -653,7 +660,6 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 						std::cout << "Write Buffer Length Error, Code: " << UA_StatusCode_name(code) << " (" << code << ")" << std::endl;
 					}
 				}
-				last_update_time = now;
 			}
 		}
 		if (strstr(identifier, "astCNCQueueB") != NULL)
@@ -773,10 +779,45 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 	}
 	else if (varOpc->value.type == &UA_TYPES[UA_TYPES_BOOLEAN])
 	{
-		assert(type == AtomicVarType::BOOL);
-		UA_Boolean newValue = *(UA_Boolean*)varOpc->value.data;
-		AtomicVar<PLC_TYPE_BOOL>* oldValue = static_cast<AtomicVar<PLC_TYPE_BOOL>*>(varBind);
-		*oldValue = newValue;
+		if (strstr(identifier, "axPCChangeDone") != NULL)
+		{
+			UA_Boolean* array = (UA_Boolean*)varOpc->value.data;
+			for (int i = 0; i < stationSize;i++)
+			{
+				g_stationPCChangeDone[i] = array[i];
+			}
+			
+		}
+		else if (strstr(identifier,"axPCChange"))
+		{
+			UA_Boolean* array = (UA_Boolean*)varOpc->value.data;
+			for (int i = 0; i < stationSize;i++)
+			{
+				g_stationPCChange[i] = array[i];
+			}
+		}
+		else if (strstr(identifier, "xPCFileFTPDone"))
+		{
+			UA_Boolean* array = (UA_Boolean*)varOpc->value.data;
+			for (int i = 0; i < stationSize;i++)
+			{
+				g_stationPCFileFTPDone[i] = array[i];
+			}
+		}
+		else if (strstr(identifier, "xPCFileFTP"))
+		{
+			UA_Boolean* array = (UA_Boolean*)varOpc->value.data;
+			for (int i = 0; i < stationSize;i++)
+			{
+				g_stationPCFileFTP[i] = array[i];
+			}
+		}
+		else
+		{
+			UA_Boolean newValue = *(UA_Boolean*)varOpc->value.data;
+			AtomicVar<PLC_TYPE_BOOL>* oldValue = static_cast<AtomicVar<PLC_TYPE_BOOL>*>(varBind);
+			*oldValue = newValue;
+		}
 	}
 }
 
