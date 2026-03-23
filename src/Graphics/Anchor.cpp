@@ -3,7 +3,7 @@
 #include "Graphics/Canvas.h"
 #include "Controls/GlobalPLCVars.h"
 #include "Controls/ScadaScheduler.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "UI/GCodeEditor.h"
 #include "UI/GLWidget.h"
 

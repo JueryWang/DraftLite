@@ -168,6 +168,8 @@ void InitPLConfig();
 void InitLogger();
 int InitProgressContext();
 int CheckAuth(bool popUpMsg = true);
+void AfterInitProgressContext();
+
 
 #define LOG_FILE_INFO(...) g_file_logger->info(__VA_ARGS__)
 #define LOG_FILE_ERROR(...) g_file_logger->error(__VA_ARGS__)

@@ -8,7 +8,7 @@
 #include "Graphics/Canvas.h"
 #include "Common/OpenGLContext.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "UI/MainLayer.h"
 #include <iostream>
 #include <QFileDialog>

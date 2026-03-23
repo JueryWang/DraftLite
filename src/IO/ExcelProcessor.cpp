@@ -1,6 +1,6 @@
 #include "IO/ExcelProcessor.h"
 #include "Controls/GlobalPLCVars.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "QXlsxQt6/xlsxworksheet.h"
 #include "QXlsxQt6/xlsxworkbook.h"
 #include "Controls/ScadaScheduler.h"

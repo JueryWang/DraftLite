@@ -167,3 +167,31 @@ static bool DecompressProject(const QString& sourceProj, const QString& targetDi
 
 	return true;
 }
+
+static bool createFileIfNotExists(const QString& filePath) {
+	if (QFile::exists(filePath)) {
+		qDebug() << "文件已存在：" << filePath;
+		return true;
+	}
+
+	QFileInfo fileInfo(filePath);
+	QString dirPath = fileInfo.absolutePath();
+	QDir dir;
+	if (!dir.exists(dirPath)) {
+		if (!dir.mkpath(dirPath)) {
+			qDebug() << "创建目录失败：" << dirPath;
+			return false;
+		}
+		qDebug() << "创建目录成功：" << dirPath;
+	}
+
+	QFile file(filePath);
+	if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+		qDebug() << "创建文件失败：" << filePath << "，错误信息：" << file.errorString();
+		return false;
+	}
+
+	file.close();
+	qDebug() << "创建文件成功：" << filePath;
+	return true;
+}

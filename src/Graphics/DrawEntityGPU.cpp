@@ -405,7 +405,7 @@ namespace CNCSYS
 		startPoint = conponents[0]->GetTransformedNodes()[0];
 		endPoint = conponents.back()->GetTransformedNodes()[0];
 		glm::vec3 midPoint = conponents[conponents.size() / 2]->GetTransformedNodes()[0];
-		direction = MathUtils::GetDirection(midPoint, startPoint, endPoint);
+		direction = area > 0 ? GeomDirection::CCW : GeomDirection::CW;
 
 		ringId = EntRingConnection::counter++;
 	}

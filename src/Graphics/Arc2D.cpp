@@ -1,5 +1,5 @@
 #include "Graphics/Arc2D.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Controls/GCodeController.h"
 #include "Graphics/Sketch.h"
 #include "UI/GCodeEditor.h"

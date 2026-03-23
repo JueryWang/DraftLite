@@ -23,6 +23,7 @@
 #include "UI/CanvasGuide.h"
 #include "Graphics/OCS.h"
 #include <QApplication>
+#include <QQuickWidget>
 #include <QWheelEvent>
 #include <QKeyEvent>
 #include <QDir>
@@ -61,6 +62,23 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 	webView = HmiTemplateWebViewer::GetWidget();
 	webView->installEventFilter(this);
 	webView->show();
+	//QQuickWidget* quickWidget = qobject_cast<QQuickWidget*>(webView);
+	//if (!quickWidget)
+	//{
+	//}
+
+	//QObject* qmlObj = quickWidget->rootObject();
+	//if (qmlObj) {
+	//	QObject* webRoot = quickWidget->rootObject();
+	//	if (!webRoot) {
+	//		return;
+	//	}
+	//	bool success = QMetaObject::invokeMethod(
+	//		webRoot,
+	//		"refreshWebPage",
+	//		Qt::DirectConnection
+	//	);
+	//}
 
 	canvasOperationPanel = new QWidget(webView);
 	this->setCentralWidget(webView);
@@ -142,7 +160,7 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 			canvasOperationPanel->show();
 		}
 		//canvasOperationPanel->setMaximumSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(1.0f));
-		mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Point);
+		g_canvasInstance->SetCaptureMode(CaptureMode::Point);
 		this->show();
 	}
 	else
@@ -151,8 +169,6 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 	}
 	this->showMaximized();
 
-	//std::thread timerThread(TimerTask, this);
-	//timerThread.detach();
 
 }
 MainLayer::~MainLayer()

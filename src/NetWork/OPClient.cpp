@@ -8,7 +8,7 @@
 #include "UI/Components/HmiTemplateTableMonitor.h"
 #include "UI/TaskListWindow.h"
 #include "Graphics/Anchor.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Graphics/Sketch.h"
 #include "open62541/client.h"
 #include <open62541/client_config_default.h>

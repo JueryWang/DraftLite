@@ -20,7 +20,7 @@
 #include "UI/Configer/WorkBlankConfig.h"
 #include "IO/Utils.h"
 #include "IO/DxfProcessor.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Algorithm/PartClassifier.h"
 #include "Algorithm/RingDetector.h"
 #include <QDir>
@@ -43,7 +43,7 @@ namespace CNCSYS
 			auto find = std::find(entities.begin(), entities.end(), e);
 			if (find == entities.end())
 			{
-				e->SetHoldCanvas(mainCanvas);
+				e->SetHoldCanvas(g_canvasInstance);
 				e->UpdatePaintData();
 				bg::model::box<BoostPoint> bbox;
 				bg::envelope(e->boostPath, bbox);
@@ -128,7 +128,7 @@ namespace CNCSYS
 
 	std::vector<EntityVGPU*> SketchGPU::GetSelectedEntities()
 	{
-		return mainCanvas->selectedItems;
+		return g_canvasInstance->selectedItems;
 	}
 
 	std::set<EntRingConnection*> SketchGPU::GetParentRings(const std::vector<EntityVGPU*>& entities)
@@ -164,10 +164,7 @@ namespace CNCSYS
 		GCodeController::GetController()->CleanCache();
 		GCodeEditor::GetInstance()->CleanCache();
 		g_MScontext.ncstep = 0;
-		if (mainCanvas)
-		{
-			mainCanvas->ResetCanvas();
-		}
+		g_canvasInstance->ResetCanvas();
 
 		WorkBlankConfigPage::s_attachedRing = nullptr;
 	}
@@ -205,14 +202,19 @@ namespace CNCSYS
 			}
 		}
 
-		SetOrigin(mainCanvas->GetOCSSystem()->objectRange->getMin());
+		SetOrigin(g_canvasInstance->GetOCSSystem()->objectRange->getMin());
 	}
 
 	void SketchGPU::UpdateSketch()
 	{
-		if (mainCanvas)
+		attachedOCS->ComputeScaleFitToCanvas();
+		attachedOCS->FitToZero();
+		attachedOCS->UpdateTickers();
+		for (EntityVGPU* ent : entities)
 		{
-			mainCanvas->UpdateOCS();
+			ent->Move(attachedOCS->translationToZero);
+			ent->UpdatePaintData();
+			UpdateEntityBox(ent,ent->bbox);
 		}
 		GCodeController::GetController()->CleanCache();
 		GCodeEditor::GetInstance()->CleanCache();
@@ -252,13 +254,12 @@ namespace CNCSYS
 		{
 			this->UpdateEntityBox(ent, ent->bbox);
 		}
-		attachedOCS->ComputeScaleFitToCanvas();
 		this->UpdateGCode(true);
 	}
 
 	void SketchGPU::GenRectArray(RectArrayParam arrayParam)
 	{
-		std::vector<EntityVGPU*> selectedItems = mainCanvas->GetSelectedEntitys();
+		std::vector<EntityVGPU*> selectedItems = g_canvasInstance->GetSelectedEntitys();
 		for (int i = 0; i < arrayParam.rowCount; i++)
 		{
 			for (int j = 0; j < arrayParam.colCount; j++)
@@ -283,7 +284,7 @@ namespace CNCSYS
 		glm::vec3 RotCenter;
 		glm::vec3 worldCentroid = glm::vec3(0.0f);
 
-		std::vector<EntityVGPU*> selectedItems = mainCanvas->GetSelectedEntitys();
+		std::vector<EntityVGPU*> selectedItems = g_canvasInstance->GetSelectedEntitys();
 		for (EntityVGPU* ent : selectedItems)
 		{
 			worldCentroid += ent->GetTransformedCentroid();
@@ -476,7 +477,7 @@ namespace CNCSYS
 
 	void SketchGPU::SetCanvas(CanvasGPU* canvas)
 	{
-		mainCanvas = canvas;
+		g_canvasInstance = canvas;
 		attachedOCS = canvas->GetOCSSystem();
 	}
 }

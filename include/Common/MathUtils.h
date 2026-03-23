@@ -341,7 +341,7 @@ namespace CNCSYS
 				size_t j = (i + 1) % n; // 下一个顶点索引（最后一个顶点的下一个是第一个）
 				sum += polypoints[i].x * polypoints[j].y - polypoints[j].x * polypoints[i].y;
 			}
-			return std::fabs(sum) * 0.5;
+			return sum * 0.5;
 		}
 
 		static std::tuple<glm::vec3, float, float, float> CalculateCircleByThreePoints(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3)

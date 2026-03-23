@@ -1,8 +1,11 @@
 #include "Controls/ScadaMessageHandler.h"
 #include "Controls/ScadaScheduler.h"
 #include "UI/Components/HmiInterfaceDefines.h"
+#include "UI/MainLayer.h"
 #include "NetWork/OPClient.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
+#include "IO/Database.h"
+#include "IO/DxfProcessor.h"
 #include <QGridLayout>
 #include <QApplication>
 #include <functional>
@@ -11,6 +14,7 @@
 
 ScadaMessageHandler* ScadaMessageHandler::instance = nullptr;
 std::mutex ScadaMessageHandler::mtx;
+using namespace CNCSYS;
 
 ScadaMessageHandler* ScadaMessageHandler::GetInstance()
 {
@@ -136,6 +140,50 @@ void ScadaMessageHandler::handleAuthNotMatch(MenuLayerTop* menu,const std::strin
 	QString message = QString("认证信息: \r\n当前加密狗ID: %1  \r\n 当前Host: %2\r\n 请联系管理员重新授权!").arg(QString::fromStdString(local_chipId)).arg(QString::fromStdString(local_uuid));
 	hint.setText(message);
 	hint.exec();
+}
+
+void ScadaMessageHandler::handleResoreHistory()
+{
+	std::vector<std::tuple<int, QString>> records = DataBaseCNC::GetInstance()->GetDraftOpenRecords();
+	std::vector<std::function<void(void)>> callbacks;
+	callbacks.push_back(nullptr);
+	callbacks.push_back([&]() {
+		for (std::tuple<int, QString>& rec : records)
+		{
+			auto [stationId, filePath] = rec;
+			std::shared_ptr sketch = g_mainWindow->sketchLists[stationId + 1];
+			DXFProcessor processor(sketch);
+			std::string file = filePath.toLocal8Bit().constData();
+			processor.SetCompleteCallback([&]()
+			{
+				if(sketch->GetEntities().size())
+				{
+					auto groups = sketch->GetEntityGroups();
+					for (EntGroup* group : groups)
+					{
+						for (EntRingConnection* ring : group->rings)
+						{
+							if (ring->direction == GeomDirection::CW)
+							{
+								ring->Reverse();
+								ring->direction = GeomDirection::CCW;
+							}
+						}
+					}
+					sketch->SetOrigin(sketch->attachedOCS->objectRange->getMin());
+					std::string NcProgram = sketch->ToNcProgram();
+					g_mainWindow->infoPanel->updateStats(sketch.get());
+					GCodeEditor::GetInstance()->setText(QString::fromStdString(NcProgram));
+				}
+			});
+			bool success = processor.read(file);
+		}
+	});
+	callbacks.push_back(nullptr);
+	if (records.size())
+	{
+		HmiTemplateMsgBox::question(nullptr, QString("提示"), QString("检测到上次关闭的工程,是否恢复打开?"), { "","确定","取消" }, callbacks);
+	}
 }
 
 void ScadaMessageHandler::showAuthWindow()

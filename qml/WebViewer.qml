@@ -7,11 +7,23 @@ import QtQuick.Window
 import QtWebEngine
 
 Rectangle {
+    id: root
+    objectName: "webRoot"
     visible: true          
     width: 1024
     height: 768
 
-    
+    function refreshWebPage() {
+        // 先获取Loader加载的WebEngineView实例
+        let webView = webLoader.item;
+        if (webView) {
+            webView.reload();
+            console.log("刷新函数调用成功");
+        } else {
+            console.log("WebView还没加载好");
+        }
+    }
+
     // 定义WebView组件
     Component {
         id: tabComponent

@@ -93,11 +93,11 @@ namespace CNCSYS
 		QAction* actionRotate = new QAction("旋转",dropDownTransformMenu);
 
 		connect(actionMove, &QAction::triggered, [this]() {
-			mSketch.get()->GetCanvas()->EnterModal(ModalState::EntityMove);
+			g_canvasInstance->EnterModal(ModalState::EntityMove);
 		});
 		connect(actionZoom, &QAction::triggered, this, [this]()
 		{
-			mSketch.get()->GetCanvas()->EnterModal(ModalState::EntityScale);
+			g_canvasInstance->EnterModal(ModalState::EntityScale);
 		});
 		//connect(actionVerticalFlip, &QAction::triggered,[this](){
 		//	mSketch.get()->GetCanvas()->EnterModal(ModalState::EntityVerticalFlip);
@@ -107,10 +107,10 @@ namespace CNCSYS
 		//});
 		connect(actionAngleFlip, &QAction::triggered, [this]()
 		{
-			mSketch.get()->GetCanvas()->EnterModal(ModalState::EntityMirror);
+			g_canvasInstance->EnterModal(ModalState::EntityMirror);
 		});
 		connect(actionRotate, &QAction::triggered, [this] {
-			mSketch.get()->GetCanvas()->EnterModal(ModalState::EntityRotate);
+			g_canvasInstance->EnterModal(ModalState::EntityRotate);
 		});
 
 		actionZoom->setIcon(QIcon(ICOPATH(Zoom.png)));
@@ -226,26 +226,26 @@ namespace CNCSYS
 	}
 	void ToolPanel::CreateLine()
 	{
-		mSketch.get()->GetCanvas()->EnterModal(ModalState::CreateLine);
+		g_canvasInstance->EnterModal(ModalState::CreateLine);
 	}
 	void ToolPanel::CreatePolyline()
 	{
-		mSketch.get()->GetCanvas()->EnterModal(ModalState::CreatePolyline);
+		g_canvasInstance->EnterModal(ModalState::CreatePolyline);
 	}
 	void ToolPanel::CreateCircle()
 	{
-		mSketch.get()->GetCanvas()->EnterModal(ModalState::CreateCircle);
+		g_canvasInstance->EnterModal(ModalState::CreateCircle);
 	}
 	void ToolPanel::CreateArc()
 	{
-		mSketch.get()->GetCanvas()->EnterModal(ModalState::CreateArc);
+		g_canvasInstance->EnterModal(ModalState::CreateArc);
 	}
 	void ToolPanel::CreateRectangle()
 	{
-		mSketch.get()->GetCanvas()->EnterModal(ModalState::CreateRectangle);
+		g_canvasInstance->EnterModal(ModalState::CreateRectangle);
 	}
 	void ToolPanel::CreateSpline()
 	{
-		mSketch.get()->GetCanvas()->EnterModal(ModalState::CreateSpline);
+		g_canvasInstance->EnterModal(ModalState::CreateSpline);
 	}
 }

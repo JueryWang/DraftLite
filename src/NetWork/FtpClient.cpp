@@ -1,6 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "NetWork/FtpClient.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include <sys/stat.h>
 #include <QFile>
 #include <QDir>

@@ -23,6 +23,7 @@ public slots:
 	void handleOpcWriteFailed(OPClient* client,const QString& targetNode,const QString& targetValue,const QString& errorCode);
 	void handleDogPullOut();
 	void handleAuthNotMatch(MenuLayerTop* menu,const std::string& origin_chipId,const std::string& local_chipId,const std::string& origin_uuid,const std::string& local_uuid);
+	void handleResoreHistory();
 	void showAuthWindow();
 private:
 	ScadaMessageHandler();

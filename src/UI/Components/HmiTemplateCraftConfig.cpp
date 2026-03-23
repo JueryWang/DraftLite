@@ -1,5 +1,5 @@
 #include "UI/Components/HmiTemplateCraftConfig.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "NetWork/MessageValidtor.h"
 #include "UI/Components/HmiInterfaceDefines.h"
 #include "Graphics/Sketch.h"

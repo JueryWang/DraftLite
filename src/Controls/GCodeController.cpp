@@ -1,7 +1,7 @@
 #include "Graphics/Sketch.h"
 #include "Controls/GCodeController.h"
 #include "UI/GCodeEditor.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Graphics/Primitives.h"
 #include <QRegularExpression>
 

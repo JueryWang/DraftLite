@@ -9,7 +9,7 @@
 #include "NetWork/FtpClient.h"
 #include "Controls/GlobalPLCVars.h"
 #include <iostream>
-#include <Common/ProgressInfo.h>
+#include <Common/Program.h>
 
 ScadaScheduler* ScadaScheduler::instance = nullptr;
 std::mutex ScadaScheduler::mtx;

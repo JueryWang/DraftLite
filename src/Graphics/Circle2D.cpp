@@ -1,5 +1,5 @@
 #include "Graphics/Circle2D.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Controls/GCodeController.h"
 #include "UI/GCodeEditor.h"
 #include "Graphics/Sketch.h"

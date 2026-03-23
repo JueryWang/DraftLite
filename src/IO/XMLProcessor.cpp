@@ -5,7 +5,7 @@
 #include "UI/TaskFlowGuide.h"
 #include "UI/TaskListWindow.h"
 #include "UI/MainLayer.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Common/CraftParamConfig.h"
 #include "Controls/GlobalPLCVars.h"
 #include "NetWork/MessageValidtor.h"

@@ -2,7 +2,7 @@
 #include "Controls/ScadaScheduler.h"
 #include "Controls//ScadaScheduler.h"
 #include "NetWork/FtpClient.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include <QString>
 #include <QFileInfo>
 

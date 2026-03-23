@@ -20,7 +20,7 @@ namespace CNCSYS
 		void SetCompleteCallback(std::function<void(void)> callback) { onComplete = callback; }
 		~DXFProcessor();
 
-		int read(const std::string& dxfFile);
+		bool read(const std::string& dxfFile);
 		int write(const std::string& dxfFile);
 	private:
 		std::weak_ptr<SketchGPU> psketchGPU;

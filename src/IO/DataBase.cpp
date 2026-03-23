@@ -1,4 +1,5 @@
 #include "IO/DataBase.h"
+#include "IO/Utils.h"
 #include <iostream>
 
 DataBaseCNC* DataBaseCNC::s_instance = nullptr;
@@ -13,11 +14,12 @@ DataBaseCNC::DataBaseCNC()
 	{
 		m_db = QSqlDatabase::addDatabase("QSQLITE", "DrafConn");
 	}
+	createFileIfNotExists(DB_PATH);
 
-	m_db.setDatabaseName("db/runtime.db");
+	m_db.setDatabaseName(DB_PATH);
 
 	if (!m_db.open()) {
-		qCritical() << "打开数据库失败" << m_db.lastError().text();
+		g_file_logger->critical("错误: 本地数据库连接失败");
 	}
 
 	QSqlQuery query(m_db);
@@ -26,7 +28,7 @@ DataBaseCNC::DataBaseCNC()
 		  station_id INTEGER NOT NULL,
 		  file_path TEXT NOT NULL,
 		  open_time DATETIME NOT NULL DEFAULT current_timestamp,
-		  UNIQUE(station_id,file_path)
+		  UNIQUE(station_id)
 		);
 	)";
 
@@ -63,6 +65,27 @@ void DataBaseCNC::AddOpenDraftRecord(int stationId, const QString& filePath)
 	{
 		g_file_logger->error("错误: 数据库插入图纸记录失败,插入参数: 工位号:{} 图纸来源:{}",stationId,std::string(filePath.toUtf8()));
 	}
+}
+
+std::vector<std::tuple<int, QString>> DataBaseCNC::GetDraftOpenRecords()
+{
+	std::vector<std::tuple<int, QString>> res;
+
+	QString extractDraftRecSql = "SELECT * FROM DraftRecord ORDER BY station_id ASC";
+	QSqlQuery query(m_db);
+	if (!query.exec(extractDraftRecSql))
+	{
+		g_file_logger->error("错误: 提取图纸数据失败! 执行sql语句:{}",extractDraftRecSql.toStdString());
+	}
+
+	while (query.next())
+	{
+		int stationId = query.value("station_id").toInt();
+		QString filePath = query.value("file_path").toString();
+		res.push_back({ stationId,filePath });
+	}
+
+	return res;
 }
 
 DataBaseCNC::~DataBaseCNC()

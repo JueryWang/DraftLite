@@ -8,7 +8,7 @@
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Canvas.h"
 #include "Graphics/OCS.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Common/CraftParamConfig.h"
 #include "UI/ArrayGenerationDlg.h"
 #include "Path/Path.h"
@@ -64,7 +64,6 @@ namespace CNCSYS
 		EntityVGPU* QueryNearsetEntity(const glm::vec3& center, float precision);
 		double GetDistanceToSelectedItems(const glm::vec3& center);
 		std::tuple<EntityVGPU*, int, glm::vec2> QueryNearestPoint(const glm::vec3& center, float precision);
-		CanvasGPU* GetCanvas() { return mainCanvas; }
 		void SetCanvas(CanvasGPU* canvas);
 		std::vector<EntityVGPU*> GetEntities() { return entities; }
 
@@ -73,7 +72,6 @@ namespace CNCSYS
 		void GenRingArray(RingArrayParam param);
 
 	public:
-		CanvasGPU* mainCanvas = nullptr;
 		std::string source;
 		CraftConfigItems attachedConfig;
 		OCSGPU* attachedOCS = nullptr;

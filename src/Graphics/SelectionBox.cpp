@@ -54,8 +54,8 @@ namespace CNCSYS
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_DYNAMIC_DRAW);
 
-		glm::mat4 ortho = mSketch.get()->GetCanvas()->GetOCSSystem()->camera->GetOrthoGraphicMatrix();
-		glm::mat4 view = mSketch.get()->GetCanvas()->GetOCSSystem()->camera->GetViewMatrix();
+		glm::mat4 ortho = g_canvasInstance->GetOCSSystem()->camera->GetOrthoGraphicMatrix();
+		glm::mat4 view = g_canvasInstance->GetOCSSystem()->camera->GetViewMatrix();
 		selectBoxShader->setMat4("projection", ortho);
 		selectBoxShader->setMat4("view", view);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

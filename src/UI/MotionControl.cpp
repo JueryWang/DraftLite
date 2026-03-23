@@ -5,7 +5,7 @@
 #include <UI/Components/HmiInterfaceDefines.h>
 #include "UI/SizeDefines.h"
 #include "UI/GCodeEditor.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "NetWork/FTPClient.h"
 #include "Graphics/Anchor.h"
 #include <QGridLayout>

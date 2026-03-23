@@ -57,7 +57,6 @@ namespace CNCSYS
 		UpdateOCS();
 		mouseHint = new TransformBaseHint();
 		mouseHint->hide();
-		sketch->mainCanvas = this;
 
 		this->Resize(QSize(width, height));
 
@@ -69,7 +68,6 @@ namespace CNCSYS
 		tickerTextRenderShader = new Shader("Shader/drawTickText.vert", "Shader/drawTickText.frag");
 		if (isMainCanvas)
 		{
-			sketch.get()->mainCanvas = this;
 			glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(this->width()), 0.0f, static_cast<float>(this->height()));
 			tickerTextRenderShader->use();
 			glUniformMatrix4fv(glGetUniformLocation(tickerTextRenderShader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -1441,7 +1439,6 @@ namespace CNCSYS
 		}
 		toolAnchor->SetCoordinateSystem(ocs);
 		m_currentSketch = sketch;
-		sketch->mainCanvas = this;
 		sketch->UpdateGCode();
 		ocsSys->UpdateTickers();
 		this->updateGL();

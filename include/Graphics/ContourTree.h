@@ -35,7 +35,7 @@ struct LayerComp {
 		}
 		else
 		{
-			return a->area < b->area;
+			return fabs(a->area) < fabs(b->area);
 		}
 		return a < b;  // 指针地址作为第二排序键
 	}

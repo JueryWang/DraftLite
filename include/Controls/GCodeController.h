@@ -1,6 +1,6 @@
 #pragma once
 #include <QString>
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Graphics/DrawEntity.h"
 #include "glm/glm.hpp"
 #include "Path/Path.h"

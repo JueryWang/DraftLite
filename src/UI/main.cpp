@@ -8,7 +8,7 @@
 #include <thread>
 #include "Controls/ScadaScheduler.h"
 #include "Common/OpenGLContext.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "UI/GLWidget.h"
 #include "Graphics/Canvas.h"
 #include "Graphics/Primitives.h"
@@ -132,11 +132,8 @@ int main(int argc, char* argv[]){
 	TaskListWindow::GetInstance()->setParent(window);
 	TaskListWindow::GetInstance()->setWindowFlags(Qt::Tool | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 
-	GCodeParseHelper parser(g_mainWindow->sketchLists[0].get());
-	std::string filename = std::string(QString("C:/Users/Admin/Desktop/gear.cnc").toLocal8Bit());
-	parser.ParseFileToSketch(filename);
-
-	ScadaScheduler::GetInstance()->Start();
+	//ScadaScheduler::GetInstance()->Start();
+	AfterInitProgressContext();
 
 	return app.exec();
 }

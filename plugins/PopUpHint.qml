@@ -8,10 +8,30 @@ Rectangle {
     visible: true
     width: 380
     height: 220
-    //title: "未授权警告示例"
     color: "transparent"
-    //flags: Qt.Window | Qt.FramelessWindowHint
 
+    signal popUpClose() 
+    function onReload()
+    {
+        unauthorizedPopup.startWarning(5);
+    }
+    
+    function formatTime(totalSeconds) {
+        // 1. 确保输入是数字且非负
+        if (typeof totalSeconds !== 'number' || totalSeconds < 0) {
+            return "00:00";
+        }
+        
+        // 2. 核心算法：计算分钟和秒
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+    
+        var formattedMinutes = String(minutes).padStart(2, '0');
+        var formattedSeconds = String(seconds).padStart(2, '0');
+    
+        return formattedMinutes + ":" + formattedSeconds;
+        }
+        
     // --- 自定义警告 PopUp 组件 ---
     Popup {
         id: unauthorizedPopup
@@ -27,7 +47,6 @@ Rectangle {
         height: 220
         modal: true // 模态窗口，阻止用户操作背景
         closePolicy: Popup.NoAutoClose // 禁止手动关闭
-        visible: true
 
         // 自定义背景（深红色警示风格）
         background: Rectangle {
@@ -80,7 +99,8 @@ Rectangle {
                     // 确保数字在 ColumnLayout 中居中
                     Layout.alignment: Qt.AlignHCenter 
                     
-                    text: unauthorizedPopup.currentSeconds
+                    // 将毫秒转换为 "M:SS" 格式 (避免调用 remainTime() 函数)
+                    text: formatTime(countdownTimer.remainTime)
                     color: "white"
                     font.pixelSize: 80  // 加大
                     font.bold: true     // 加粗
@@ -110,9 +130,11 @@ Rectangle {
             id: countdownTimer
             interval: 1000 // 1秒间隔
             repeat: true
+            property int remainTime: counterDownManager.remainTime
+
             onTriggered: {
                 unauthorizedPopup.currentSeconds -= 1;
-                
+                remainTime -= 1;    
                 // 当倒计时只剩 1 秒时，开始执行渐隐动画
                 if (unauthorizedPopup.currentSeconds === 1) {
                     finalFadeOutAnim.start();
@@ -139,7 +161,8 @@ Rectangle {
             // 动画完成后执行退出软件
             ScriptAction {
                 script: {
-                    Qt.quit();
+                    mainWindow.visible = false
+                    mainWindow.popUpClose();
                 }
             }
         }
@@ -158,6 +181,12 @@ Rectangle {
             countdownTimer.start();
         }
     }
+
+    Connections {
+        target: countdownTimer // C++ 暴露的对象（必须全局可访问）
+        onReloadSignal: mainWindow.onReload();
+    }
+    
     Component.onCompleted: {
         unauthorizedPopup.startWarning(5);
     }

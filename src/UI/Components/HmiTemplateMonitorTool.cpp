@@ -1,4 +1,4 @@
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "UI/Components/HmiTemplateMonitorTool.h"
 #include "UI/Components/HmiTemplateMsgBox.h"
 #include "NetWork/OPClient.h"

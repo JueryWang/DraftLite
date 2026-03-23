@@ -1,5 +1,5 @@
 #include "Auth/CounterDownManager.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include <QCoreApplication>
 #include <QApplication>
 #include <QQmlContext>

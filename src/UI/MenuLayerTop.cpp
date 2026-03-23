@@ -246,9 +246,6 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 	if (!dxfFile.isEmpty())
 	{
 		auto sharedWrapper = std::shared_ptr<SketchGPU>(canvasWindow->attachedSketch, [](SketchGPU*) {});
-		auto find = std::find(g_mainWindow->sketchLists.begin(), g_mainWindow->sketchLists.end(), sharedWrapper);
-		int indexFind = (find - g_mainWindow->sketchLists.begin());
-		DataBaseCNC::GetInstance()->AddOpenDraftRecord(indexFind, dxfFile);
 
 		DXFProcessor processor(sharedWrapper);
 		editor->clear();
@@ -276,7 +273,17 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 					editor->setText(QString::fromStdString(NcProgram));
 				}
 			});
-		processor.read(file);
+
+		bool success = processor.read(file);
+		if (success)
+		{
+			PLC_TYPE_INT stationIndex = -999;
+			ReadPLC_OPCUA(g_ConfigableKeys["StationIndex"].c_str(), &stationIndex, AtomicVarType::INT);
+			if (stationIndex >=0 && stationIndex <= stationSize)
+			{
+				DataBaseCNC::GetInstance()->AddOpenDraftRecord(stationIndex,dxfFile);
+			}
+		}
 	}
 }
 

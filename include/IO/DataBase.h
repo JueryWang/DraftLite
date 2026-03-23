@@ -6,7 +6,9 @@
 #include <QSqlError>
 #include <QDateTime>
 #include <QFileInfo>
-#include "Common/ProgressInfo.h"
+#include <tuple>
+#include <vector>
+#include "Common/Program.h"
 
 #define DB_PATH "./db/runtime.db"
 
@@ -17,6 +19,7 @@ class DataBaseCNC : public QObject
 public:
 	static DataBaseCNC* GetInstance();
 	void AddOpenDraftRecord(int stationId,const QString& filePath);
+	std::vector<std::tuple<int, QString>> GetDraftOpenRecords();
 
 private:
 	DataBaseCNC();

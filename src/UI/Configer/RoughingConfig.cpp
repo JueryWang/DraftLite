@@ -1,7 +1,7 @@
 #include "UI/Configer/RoughingConfig.h"
 #include "UI/Configer/WorkBlankConfig.h"
 #include "UI/GCodeEditor.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Algorithm/RoughingAlgo.h"
 #include "Graphics/DrawEntity.h"
 #include "QGroupBox"

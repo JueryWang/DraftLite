@@ -6,7 +6,7 @@
 #include "UI/Components/HmiInterfaceDefines.h"
 #include "Controls/ScadaMessageHandler.h"
 #include "Controls/ScadaScheduler.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "NetWork/FtpClient.h"
 #include "NetWork/OPClient.h"
 #include <unordered_map>
@@ -304,6 +304,11 @@ int CheckAuth(bool popUpMsg)
 	}
 
 	return ret;
+}
+
+void AfterInitProgressContext()
+{
+	ScadaMessageHandler::GetInstance()->handleResoreHistory();
 }
 
 void SimulateStatus::SetToolRadius(PLC_TYPE_LREAL radius)

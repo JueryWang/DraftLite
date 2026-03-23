@@ -595,7 +595,7 @@ namespace CNCSYS
 		}
 	}
 
-	int DXFProcessor::read(const std::string& dxfFile)
+	bool DXFProcessor::read(const std::string& dxfFile)
 	{
 		psketchGPU.lock()->source = dxfFile;
 		QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -616,7 +616,7 @@ namespace CNCSYS
 		if (!dxf->in(dxfFile, dxfReader))
 		{
 			QApplication::restoreOverrideCursor();
-			return 1;
+			return false;
 		}
 
 		{//收尾工作
@@ -689,7 +689,7 @@ namespace CNCSYS
 		delete dxf;
 		delete dxfReader;
 		QApplication::restoreOverrideCursor();
-		return 0;
+		return true;
 	}
 	int DXFProcessor::write(const std::string& dxfFile)
 	{

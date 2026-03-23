@@ -1,6 +1,6 @@
 ﻿#include "UI/OverallWindow.h"
 #include "Graphics/Sketch.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include "Controls/GlobalPLCVars.h"
 #include "Controls/ScadaScheduler.h"
 #include "NetWork/OPClient.h"
@@ -13,7 +13,7 @@
 #include "UI/TaskListWindow.h"
 #include "Graphics/Anchor.h"
 #include "ModalEvent/EvCanvasSetNewScene.h"
-#include "Common/ProgressInfo.h"
+#include "Common/Program.h"
 #include <QApplication>
 #include <chrono> 
 #include <QVBoxLayout>
@@ -136,9 +136,10 @@ OverallWindow::OverallWindow()
 					}
 					monitorHeartBeat->lastValue.lastInt = curVal;
 					lastUpdateTime = now;
+
+					//WritePLC_OPCUA(g_ConfigableKeys["HeartbeatCountPC"].c_str(),&enterCount,AtomicVarType::DWORD);
+					//enterCount++;
 				}
-				WritePLC_OPCUA(g_ConfigableKeys["HeartbeatCountPC"].c_str(),&enterCount,AtomicVarType::DWORD);
-				enterCount++;
 			}
 		};
 	if (g_settings->value("Settings/Mode") != "Debug")
@@ -254,6 +255,8 @@ OverallWindow::OverallWindow()
 	ScadaScheduler::GetInstance()->AddNode(monitorStationIndex);
 	ScadaScheduler::GetInstance()->AddNode(monitorClearBuffer);
 	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
+
+
 }
 
 OverallWindow::~OverallWindow()
