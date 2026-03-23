@@ -57,6 +57,7 @@ void InitPLConfig()
 		{"PCFileFTPDone","gvlGlobalData.stIOGearChamferMachine.axPCFileFTPDone"},								//PC相应G代码上传FTP完成
 		{"PCFileFTP","gvlGlobalData.stIOGearChamferMachine.axPCFileFTP"},				//PLC请求G代码上传FTP
 		{"HeartbeatCount","gvlHMI.udiHeartbeatCount"},							//心跳包检测
+		{"HeartbeatCountPC","gvlHMI.udiHeartbeatCountPC"},
 		{"IndexSubArea","gvlHMI.stCommandGearChamferMachine.iIndexSubArea"},	//绘图区显示信号
 		{"PageInit","gvlHMI.stCommandGearChamferMachine.xPageInit"},			//初始化界面
 		{"ChangeSlice","gvlGlobalData.stIOGearChamferMachine.axPCChange"},				//PLC请求多计划切图
@@ -71,6 +72,7 @@ void InitPLConfig()
 		{"AnimatorBufferLengthQueueB","gvlHMI.stCNCVisualCADWork.iIndexCNCVisualB"},
 		{"AnimatorBufferQueueB","gvlHMI.stCNCVisualCADWork.astCNCQueueB"},
 		{"AnimatorCycleTime","gvlHMI.stConfigGearChamferMachine.dwIpoCycle"},
+		{"AnimatorCacheClear","gvlGlobalData.stIOGearChamferMachine.axClearPC"},
 		{"StationIndex","gvlHMI.stCommandGearChamferMachine.iIndexStation"}
 	};
 

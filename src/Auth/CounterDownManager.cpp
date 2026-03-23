@@ -9,6 +9,7 @@
 #include <QUrl>
 #include <QBuffer>
 #include <QQmlComponent>
+#include <QMessageBox>
 
 const QString PopUpHintQmlSource = R"(
 import QtQuick
@@ -282,6 +283,7 @@ Q_INVOKABLE void CounterDownManager::updateTime()
 	}
 	else
 	{
+        QMessageBox::critical(NULL, QStringLiteral("错误"), QStringLiteral("达到试用时间上限,请关闭后再尝试!"));
 		QApplication::exit();
 	}
 

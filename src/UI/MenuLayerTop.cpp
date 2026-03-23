@@ -7,9 +7,11 @@
 #include "UI/Configer/RoughingConfig.h"
 #include "UI/Configer/RegionPlannerConfig.h"
 #include "IO/DxfProcessor.h"
+#include "IO/Database.h"
 #include "IO/GCodeProcessor.h"
 #include "IO/XMLProcessor.h"
 #include "IO/Utils.h"
+#include "IO/Database.h"
 #include "Graphics/Sketch.h"
 #include "Graphics/Point2D.h"
 #include "Auth/WG_Authorization.h"
@@ -244,6 +246,10 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 	if (!dxfFile.isEmpty())
 	{
 		auto sharedWrapper = std::shared_ptr<SketchGPU>(canvasWindow->attachedSketch, [](SketchGPU*) {});
+		auto find = std::find(g_mainWindow->sketchLists.begin(), g_mainWindow->sketchLists.end(), sharedWrapper);
+		int indexFind = (find - g_mainWindow->sketchLists.begin());
+		DataBaseCNC::GetInstance()->AddOpenDraftRecord(indexFind, dxfFile);
+
 		DXFProcessor processor(sharedWrapper);
 		editor->clear();
 		std::string file = dxfFile.toLocal8Bit().constData();

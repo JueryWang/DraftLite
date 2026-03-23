@@ -48,6 +48,7 @@ OverallWindow::OverallWindow()
 	this->setLayout(hbox);
 	this->showMaximized();
 
+	//整个下位机通信交互逻辑在这里
 	monitorIndexPage = new ScadaNode();
 	monitorIndexPage->BindParam(g_ConfigableKeys["IndexTargetMainArea"]);
 	monitorIndexPage->updateCallback = [&]()
@@ -75,14 +76,13 @@ OverallWindow::OverallWindow()
 	monitorUploadFTP->BindParam(g_ConfigableKeys["PCFileFTP"]);
 	monitorUploadFTP->updateCallback = [&]()
 		{
-		
 			static std::array<bool, 10> oldRequest = g_stationPCFileFTP;
 			bool ifRequest = false;
 			for (int i = 0; i < stationSize;i++)
 			{
-				if (g_stationPCFileFTP[i] && (g_stationPCFileFTP[i] != oldRequest[i]))
+				if (g_stationPCFileFTP[i] && !oldRequest[i])
 				{
-					std::string ftpFilePath = "../FTP/" + extractFTPFileName(QString::fromLocal8Bit(g_mainWindow->sketchLists[i+1]->source.c_str()));
+ 					std::string ftpFilePath = "../FTP/" + extractFTPFileName(QString::fromLocal8Bit(g_mainWindow->sketchLists[i+1]->source.c_str()));
 					PLC_TYPE_STRING newSliceFileName = (PLC_TYPE_STRING)malloc(256);
 					strcpy_s(newSliceFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
 
@@ -95,10 +95,11 @@ OverallWindow::OverallWindow()
 			}
 			if(ifRequest)
 			{
-				static int enterCount = 0;
+				Anchor::GetInstance()->CleanCache();
+	
+				std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["PCFileFTPDone"].c_str()]);
 				for (int i = 0; i < stationSize; i++)
 				{
-					std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["PCFileFTPDone"].c_str()]);
 					if (writeArray)
 					{
 						writeArray->data()[i] = TRUE;
@@ -122,10 +123,11 @@ OverallWindow::OverallWindow()
 				now = std::chrono::system_clock::now();
 				auto duration = now - lastUpdateTime;
 				auto durationInMilisec = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+				static PLC_TYPE_DWORD enterCount = 1;
 
 				if (durationInMilisec > plcInfo->collectionInterval)
 				{
-					PLC_TYPE_INT curVal = monitorHeartBeat->GetInt();
+					PLC_TYPE_DWORD curVal = monitorHeartBeat->GetDword();
 					if (curVal == monitorHeartBeat->lastValue.lastInt)
 					{
 						QMetaObject::invokeMethod(ScadaMessageHandler::GetInstance(), "handleOpcDisconnected",
@@ -135,6 +137,8 @@ OverallWindow::OverallWindow()
 					monitorHeartBeat->lastValue.lastInt = curVal;
 					lastUpdateTime = now;
 				}
+				WritePLC_OPCUA(g_ConfigableKeys["HeartbeatCountPC"].c_str(),&enterCount,AtomicVarType::DWORD);
+				enterCount++;
 			}
 		};
 	if (g_settings->value("Settings/Mode") != "Debug")
@@ -177,23 +181,13 @@ OverallWindow::OverallWindow()
 		PLC_TYPE_BOOL startCNC = monitorAutoBusy->GetBool();
 		if (!(startCNC == monitorAutoBusy->lastValue.lastBool))
 		{
-			Anchor::GetInstance()->CleanCache();
-			monitorAutoBusy->lastValue.lastBool = startCNC;
 			if (startCNC)
 			{
-				QMetaObject::invokeMethod(g_mainWindow->infoPanel->statusInfo, "setStatus",
-					Qt::QueuedConnection,
-					Q_ARG(int, StatusBar::Status::Running),
-					Q_ARG(QString, "模拟运行中"));
+				Anchor::GetInstance()->CleanCache();
 			}
-			else
-			{
-				QMetaObject::invokeMethod(g_mainWindow->infoPanel->statusInfo, "setStatus",
-					Qt::QueuedConnection,
-					Q_ARG(int, StatusBar::Status::Finish),
-					Q_ARG(QString, "模拟完成"));
-			}
+			monitorAutoBusy->lastValue.lastBool = startCNC;
 		}
+
 	};
 
 	monitorStationIndex = new ScadaNode();
@@ -204,6 +198,7 @@ OverallWindow::OverallWindow()
 		PLC_TYPE_INT currentStationId = monitorStationIndex->GetInt();
 		if (!(currentStationId == monitorStationIndex->lastValue.lastInt))
 		{
+			Anchor::GetInstance()->CleanCache();
 			monitorStationIndex->lastValue.lastInt = currentStationId;
 			bool ok = QMetaObject::invokeMethod(
 				g_mainWindow->stationTab,
@@ -211,6 +206,33 @@ OverallWindow::OverallWindow()
 				Qt::QueuedConnection,
 				Q_ARG(int, currentStationId+1)
 			);
+		}
+	};
+
+	monitorClearBuffer = new ScadaNode();
+	monitorClearBuffer->BindParam(g_ConfigableKeys["AnimatorCacheClear"]);
+	monitorClearBuffer->updateCallback = [&]()
+	{
+		bool ifReset = false;
+		for (int i = 0; i < stationSize;i++)
+		{
+			if (g_stationClearPC[i])
+			{
+				Anchor::GetInstance()->CleanCache();
+				ifReset = true;
+			}
+		}
+		if (ifReset)
+		{
+			std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["AnimatorCacheClear"].c_str()]);
+			for (int i = 0; i < stationSize; i++)
+			{
+				if (writeArray)
+				{
+					writeArray->data()[i] = false;
+				}
+			}
+			WritePLC_OPCUA(g_ConfigableKeys["AnimatorCacheClear"].c_str(), nullptr, AtomicVarType::ARRAY_BOOL);
 		}
 	};
 
@@ -230,8 +252,8 @@ OverallWindow::OverallWindow()
 	ScadaScheduler::GetInstance()->AddNode(monitorToolDistance);
 	ScadaScheduler::GetInstance()->AddNode(monitorAutoBusy);
 	ScadaScheduler::GetInstance()->AddNode(monitorStationIndex);
+	ScadaScheduler::GetInstance()->AddNode(monitorClearBuffer);
 	ScadaScheduler::GetInstance()->RegisterReadBackVarKey(g_ConfigableKeys["AnimatorCycleTime"]);
-	
 }
 
 OverallWindow::~OverallWindow()
@@ -249,8 +271,8 @@ void OverallWindow::SetShow()
 
 void OverallWindow::SetHide()
 {
-	//if (g_settings->value("Settings/Mode") != "Debug")
-	//{
+	if (g_settings->value("Settings/Mode") != "Debug")
+	{
 		mainWindow->GetCanvasPanel()->hide();
-	//}
+	}
 }

@@ -22,7 +22,7 @@ Spline2DGPU::Spline2DGPU(const std::vector<glm::vec3>& controlPoints, const std:
 	}
 	else
 	{
-		this->splineSamples = MathUtils::CatmullRomSmooth(controlPoints,1);
+		this->splineSamples = MathUtils::CatmullRomSmooth(controlPoints,10);
 		for (int i = 0; i < splineSamples.size(); i++)
 		{
 			PathNode p;
@@ -429,7 +429,7 @@ void Spline2DGPU::SetParameter(const std::vector<glm::vec3>& controlpoints, cons
 	}
 	else
 	{
-		splineSamples = MathUtils::CatmullRomSmooth(controlPoints, 100);
+		splineSamples = MathUtils::CatmullRomSmooth(controlPoints, 10);
 		for (int i = 0; i < splineSamples.size(); i++)
 		{
 			PathNode p;
@@ -767,18 +767,13 @@ void Spline2DGPU::GenerateSplineSamplePoints(const std::vector<glm::vec3>& contr
 	samplesT.push_back(1.0f);
 	bbox.Union(lastPoint);
 
-	lastPoint = splineSamples[0];
 	for (int i = 0; i < splineSamples.size(); i++)
 	{
 		PathNode p;
 		p.Node = splineSamples[i];
 		p.Normal = this->Normal(samplesT[i]);
 		p.Tangent = this->Tangent(samplesT[i]);
-		if (i == 0 || lastPoint != splineSamples[i])
-		{
-			pathNodes.push_back(p);
-		}
-		lastPoint = splineSamples[i];
+		pathNodes.push_back(p);
 	}
 
 	indexRange = { 0,samples.size() - 1 };

@@ -80,31 +80,38 @@ void Anchor::UpdateNode()
 	auto now = std::chrono::steady_clock::now();
 	std::chrono::duration<double> diff = now - last_update_time;
 	long long diff_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
-
+	
 	queueLocker.lock();
-	for(int i = 0; i < ceil((float)diff_milliseconds/4);i++)
+	static int lastRow = 0;
+	int currentRowCNC = 0;
+
+	PLC_TYPE_DWORD cycleTime;
+	ReadPLC_OPCUA(g_ConfigableKeys["AnimatorCycleTime"].c_str(),&cycleTime,AtomicVarType::DWORD);
+	cycleTime /= 1000;
+
+	for(int i = 0; i < ceil((float)diff_milliseconds/ cycleTime);i++)
 	{
 		if (!pointQueue.empty())
 		{
-			
+			currentRowCNC = pointQueue.front().iCurrentRow;
 			animatorPath.push_back(glm::vec3(pointQueue.front().fX,pointQueue.front().fY,pointQueue.front().fZ));
 			pointQueue.pop();
 		}
 	}
-	if (pointQueue.size())
+
+	if (currentRowCNC != lastRow)
 	{
-		int currentRowCNC = pointQueue.front().iCurrentRow - 1;
-		if (currentRowCNC > 0)
-		{
-			QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine", Qt::QueuedConnection, Q_ARG(int, currentRowCNC));
-		}
+		QMetaObject::invokeMethod(GCodeEditor::GetInstance(), "SetMarkLine", Qt::QueuedConnection, Q_ARG(int, currentRowCNC));
+		lastRow = currentRowCNC;
 	}
+
 	queueLocker.unlock();
 	last_update_time = now;
 }
 
 void Anchor::ReadFromQueueBuffer(int index, int length)
 {
+	//读取到本地队列
 	static int lastReadIndex = index;
 	if (index != lastReadIndex)
 	{
@@ -186,5 +193,9 @@ void Anchor::Paint()
 
 void Anchor::CleanCache()
 {
+	while (pointQueue.size())
+	{
+		pointQueue.pop();
+	}
 	animatorPath.clear();
 }

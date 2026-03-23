@@ -15,9 +15,10 @@ std::mutex g_GCodeHandleMutex;
 std::vector<CNCSimulateRecord> g_simRecBufferA;
 std::vector<CNCSimulateRecord> g_simRecBufferB;
 std::array<bool, 10> g_stationPCChange;
-std::array<bool, 10>g_stationPCChangeDone;
+std::array<bool, 10> g_stationPCChangeDone;
 std::array<bool, 10> g_stationPCFileFTP;
 std::array<bool, 10> g_stationPCFileFTPDone;
+std::array<bool, 10> g_stationClearPC; //清除动画缓存
 int stationSize = 0;
 OPClient* g_opcuaClient = nullptr;
 
@@ -279,7 +280,7 @@ void PLCInitOpcInfo(PLCParam_ProtocalOpc* plcInfo, AtomicVarType type, const std
 		plcInfo->bindVar = new AtomicVar<PLC_TYPE_DWORD>(0);
 		plcInfo->ns = ns;
 		plcInfo->protocol = PLCProtocol::OPCUA;
-		strcpy_s(plcInfo->identifier, identifier);
+		strcpy_s(plcInfo->identifier, identifier);  
 		g_PLCVariables[tag] = plcInfo;
 		g_readPersistance[tag] = plcInfo->bindVar;
 		g_writePersistence[tag] = new AtomicVar<PLC_TYPE_DWORD>(0);
@@ -287,7 +288,7 @@ void PLCInitOpcInfo(PLCParam_ProtocalOpc* plcInfo, AtomicVarType type, const std
 	}
 	case AtomicVarType::LWORD:
 	{
-		plcInfo->dataType = AtomicVarType::LWORD;
+		plcInfo->dataType = AtomicVarType::LWORD;        
 		plcInfo->bindVar = new AtomicVar<PLC_TYPE_LWORD>(0);
 		plcInfo->ns = ns;
 		plcInfo->protocol = PLCProtocol::OPCUA;
@@ -425,6 +426,7 @@ void PLCInitOpcInfo(PLCParam_ProtocalOpc* plcInfo, AtomicVarType type, const std
 			plcInfo->bindVar = g_stationPCChangeDone.data();
 			g_PLCVariables[tag] = plcInfo;
 			g_readPersistance[tag] = plcInfo->bindVar;
+			g_writePersistence[tag] = new std::array<bool, 10>();
 		}
 		else if(strstr(plcInfo->identifier,"xPCFileFTPDone") != NULL)
 		{
@@ -446,6 +448,18 @@ void PLCInitOpcInfo(PLCParam_ProtocalOpc* plcInfo, AtomicVarType type, const std
 			plcInfo->bindVar = g_stationPCFileFTP.data();
 			g_PLCVariables[tag] = plcInfo;
 			g_readPersistance[tag] = plcInfo->bindVar;
+			g_writePersistence[tag] = new std::array<bool, 10>();
+		}
+		else if (strstr(plcInfo->identifier, "xClearPC"))
+		{
+			for (int i = 0; i < 10;i++)
+			{
+				g_stationClearPC[i] = false;
+			}
+			plcInfo->bindVar = g_stationClearPC.data();
+			g_PLCVariables[tag] = plcInfo;
+			g_readPersistance[tag] = plcInfo->bindVar;
+			g_writePersistence[tag] = new std::array<bool, 10>();
 		}
 		break;
 	}

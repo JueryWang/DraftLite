@@ -62,20 +62,26 @@ namespace CNCSYS
 	{
 		static std::mt19937 engine;
 		static std::random_device rd;
+		static std::map<int, glm::vec4> colorMap;
 		engine.seed(rd());
 
-		//std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 		entityGroups.push_back(group);
 
-		//double r = dist(engine);
-		//double g = dist(engine);
-		//double b = dist(engine);
+
+
 		for (EntRingConnection* ring : group->rings)
 		{
 			for (EntityVGPU* comp : ring->conponents)
 			{
-				//comp->color = glm::vec4(r, g, b, 1.0f);
+				//if (!colorMap.count(ring->depth)) {
+				//	colorMap[ring->depth] = glm::vec4(r, g, b, 1.0f);
+				//}
+				float r = dist(engine); // 用float更符合glm::vec4的类型
+				float g = dist(engine);
+				float b = dist(engine);
+				comp->color = glm::vec4(r,g,b,1.0f);
 				comp->ringParent = ring;
 				AddEntity(comp);
 			}
@@ -93,7 +99,6 @@ namespace CNCSYS
 		{
 			entities.erase(find);
 		}
-
 		try
 		{
 			if (e->ringParent != nullptr)

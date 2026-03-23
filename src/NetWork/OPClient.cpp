@@ -383,8 +383,16 @@ void OPClient::WriteOpcSingle(TaskWriteValueParam* param)
 
 			if (strstr(param->tag,"PCFileFTPDone"))
 			{
-				static int enterCount = 0;
 				std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["PCFileFTPDone"].c_str()]);
+				if (writeArray)
+				{
+					UA_Variant_setArray(&variant, writeArray, 5, &UA_TYPES[UA_TYPES_BOOLEAN]);
+					status = UA_Client_writeValueAttribute(client, nodeId, &variant);
+				}
+			}
+			if (strstr(param->tag, "xClearPC"))
+			{
+				std::array<bool, 10>* writeArray = static_cast<std::array<bool, 10>*>(g_writePersistence[g_ConfigableKeys["AnimatorCacheClear"].c_str()]);
 				if (writeArray)
 				{
 					UA_Variant_setArray(&variant, writeArray, 5, &UA_TYPES[UA_TYPES_BOOLEAN]);
@@ -614,52 +622,51 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 	//自定义结构体处理
 	if (UA_Variant_hasArrayType(&varOpc->value, &UA_TYPES[UA_TYPES_EXTENSIONOBJECT]))
 	{
+		static std::chrono::system_clock::time_point lastUpdateTime = std::chrono::system_clock::now();
+		auto now = std::chrono::system_clock::now();
+
+		//匹配动画缓冲区A
 		if (strstr(identifier,"astCNCQueueA") != NULL)
 		{
+
 			PLC_TYPE_INT bufferAlength;
 			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueA"].c_str(), &bufferAlength, AtomicVarType::INT);
 			static std::chrono::time_point last_update_time = std::chrono::steady_clock::now();
 			if (bufferAlength > 0)
 			{
+				auto duration = now - lastUpdateTime;
+				auto ellasped_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+				//读取结构体数据
 				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
 				int validCount = 0;
+				//
 				for (size_t i = 1; i < bufferAlength+1; i++)
 				{
 					if (eoArray[i].encoding == UA_EXTENSIONOBJECT_ENCODED_BYTESTRING) {
 						UA_ByteString* bs = &eoArray[i].content.encoded.body;
 						int structsize = sizeof(CNCSimulateRecord);
+						//拷贝结构体数据
 						if (bs->length == structsize) {
 							CNCSimulateRecord record;
 							memcpy(&record, bs->data, sizeof(CNCSimulateRecord));
-							if (record.fX != 0)
-							{
-								validCount++;
-							}
 							CNCSimulateRecord* pRecords = static_cast<CNCSimulateRecord*>(varBind);
 							pRecords[i] = record;
 						}
 					}
 				}
-				//if (bufferAlength != 50)
-				//{
-				//	std::cout << "BufferLength != 50" << std::endl;
-				//}
 				Anchor::GetInstance()->ReadFromQueueBuffer(0, bufferAlength);
 				bufferAlength = 0;
-				{
-					//缓冲区大小置0
-					UA_Int32 valueToWrite = 0;
-					UA_Variant variant;
-					UA_Variant_setScalar(&variant, &valueToWrite, &UA_TYPES[UA_TYPES_INT32]);
-					std::string bufferLenTag = g_ConfigableKeys["AnimatorBufferLengthQueueA"];
-					PLCParam_ProtocalOpc* info = (PLCParam_ProtocalOpc*)g_PLCVariables[bufferLenTag];
-					UA_NodeId nodeId = UA_NODEID_STRING(info->ns, info->identifier);
-					UA_StatusCode code = UA_Client_writeValueAttribute(client, nodeId, &variant);
-					if (code != UA_STATUSCODE_GOOD)
-					{
-						std::cout << "Write Buffer Length Error, Code: " << UA_StatusCode_name(code) << " (" << code << ")" << std::endl;
-					}
-				}
+				//缓冲区大小置0
+				UA_Int32 valueToWrite = 0;
+				UA_Variant variant;
+				UA_Variant_setScalar(&variant, &valueToWrite, &UA_TYPES[UA_TYPES_INT32]);
+				std::string bufferLenTag = g_ConfigableKeys["AnimatorBufferLengthQueueA"];
+				PLCParam_ProtocalOpc* info = (PLCParam_ProtocalOpc*)g_PLCVariables[bufferLenTag];
+				UA_NodeId nodeId = UA_NODEID_STRING(info->ns, info->identifier);
+				UA_StatusCode code = UA_Client_writeValueAttribute(client, nodeId, &variant);
+
+				lastUpdateTime = now;
 			}
 		}
 		if (strstr(identifier, "astCNCQueueB") != NULL)
@@ -668,6 +675,9 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 			ReadPLC_OPCUA(g_ConfigableKeys["AnimatorBufferLengthQueueB"].c_str(), &bufferBlength, AtomicVarType::INT);
 			if (bufferBlength > 0)
 			{
+				auto duration = now - lastUpdateTime;
+				auto ellasped_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
 				int validCount = 0;
 				UA_ExtensionObject* eoArray = (UA_ExtensionObject*)varOpc->value.data;
 				for (size_t i = 1; i < bufferBlength+1; i++)
@@ -687,10 +697,6 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 						}
 					}
 				}
-				//if (bufferBlength != 50)
-				//{
-				//	std::cout << "BufferLength != 50" << std::endl;
-				//}
 				Anchor::GetInstance()->ReadFromQueueBuffer(1, bufferBlength);
 				bufferBlength = 0;
 				//缓冲区大小置0
@@ -701,6 +707,7 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 				PLCParam_ProtocalOpc* info = (PLCParam_ProtocalOpc*)g_PLCVariables[bufferLenTag];
 				UA_NodeId nodeId = UA_NODEID_STRING(info->ns, info->identifier);
 				UA_StatusCode code = UA_Client_writeValueAttribute(client, nodeId, &variant);
+				lastUpdateTime = now;
 			}
 		}
 	}
@@ -810,6 +817,14 @@ void OPClient::UpdateBindValue(UA_DataValue* varOpc, void* varBind, AtomicVarTyp
 			for (int i = 0; i < stationSize;i++)
 			{
 				g_stationPCFileFTP[i] = array[i];
+			}
+		}
+		else if (strstr(identifier, "xClearPC"))
+		{
+			UA_Boolean* array = (UA_Boolean*)varOpc->value.data;
+			for (int i = 0; i < stationSize;i++)
+			{
+				g_stationClearPC[i] = array[i];
 			}
 		}
 		else

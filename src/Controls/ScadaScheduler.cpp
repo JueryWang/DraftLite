@@ -192,14 +192,14 @@ void ScadaScheduler::LoopTask()
 		{
 			if (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_OPC_CONNECT_POS))
 			{
+
 				g_varHandleMutex.lock();
 				//前后处理一次写请求
 				if (mtx.try_lock())
 				{
-					handleTaskRequest();
+ 					handleTaskRequest();
 					mtx.unlock();
 				}
-
 				std::vector<PLCParam_ProtocalOpc*> opcAddresses;
 				for (const std::string& tag : regTags)
 				{
@@ -222,10 +222,6 @@ void ScadaScheduler::LoopTask()
 						node->UpdateNode();
 					}
 				}
-			}
-			else
-			{
-				opcClient->Reconnect();
 			}
 		}
 		//auto end = std::chrono::system_clock::now();

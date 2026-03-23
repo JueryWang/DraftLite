@@ -21,7 +21,6 @@ TaskFlowGuide::TaskFlowGuide(QWidget* parent) : QWidget(parent)
 		}
 	)");
 	this->setFixedSize(45, 85);
-	this->setGeometry(0, (screen_resolution_y - this->height()) / 2, this->width(), this->height());
 
 	QVBoxLayout* layout = new QVBoxLayout();
 	QLabel* labelFolder = new QLabel();
@@ -63,20 +62,20 @@ bool TaskFlowGuide::eventFilter(QObject* obj, QEvent* event)
 		event->accept();
 		return true;
 	}
-	case QEvent::MouseMove:
-	{
-		auto e = static_cast<QMouseEvent*>(event);
-		if (isDragging) {
-			QPoint curGlobalMousePos = e->globalPos();
-			QPoint offset = curGlobalMousePos - lastGlobalMousePos;
-			QPoint newWidgetPos = this->pos() + offset;
-			newWidgetPos.setX(0);
-			this->move(newWidgetPos);
-			lastGlobalMousePos = curGlobalMousePos;
-		}
-		event->accept();
-		return true;
-	}
+	//case QEvent::MouseMove:
+	//{
+	//	auto e = static_cast<QMouseEvent*>(event);
+	//	if (isDragging) {
+	//		QPoint curGlobalMousePos = e->globalPos();
+	//		QPoint offset = curGlobalMousePos - lastGlobalMousePos;
+	//		QPoint newWidgetPos = this->pos() + offset;
+	//		newWidgetPos.setX(hoverAnchorX);
+	//		this->move(newWidgetPos);
+	//		lastGlobalMousePos = curGlobalMousePos;
+	//	}
+	//	event->accept();
+	//	return true;
+	//}
 	case QEvent::MouseButtonRelease:
 	{
 		auto e = static_cast<QMouseEvent*>(event);

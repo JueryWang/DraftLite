@@ -32,4 +32,5 @@ private:
 	ScadaNode* monitorToolDistance = nullptr;
 	ScadaNode* monitorAutoBusy = nullptr;
 	ScadaNode* monitorStationIndex = nullptr;
+	ScadaNode* monitorClearBuffer = nullptr;
 };

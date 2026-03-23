@@ -18,6 +18,7 @@
 #include "UI/GCodeEditor.h"
 #include "UI/SizeDefines.h"
 #include "UI/MenuLayerTop.h"
+#include "UI/TaskFlowGuide.h"
 #include "UI/Components/HmiTemplateWebViewer.h"
 #include "UI/CanvasGuide.h"
 #include "Graphics/OCS.h"
@@ -143,7 +144,6 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 		//canvasOperationPanel->setMaximumSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(1.0f));
 		mSketchGPU.get()->GetCanvas()->SetCaptureMode(CaptureMode::Point);
 		this->show();
-
 	}
 	else
 	{

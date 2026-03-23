@@ -382,7 +382,6 @@ void TaskListWindow::OnDeleteItem()
 		{
 			ToDoListItemWidget* itemWidget = items[i]->attachedWidget;
 			bool checked = itemWidget->checked->isChecked();
-			std::cout << items[i]->attachedWidget->ocsSys << std::endl;
 			if (itemWidget && checked)
 			{
 				QListWidgetItem* listItem = taskLists->takeItem(taskLists->row(items[i]));
@@ -391,6 +390,21 @@ void TaskListWindow::OnDeleteItem()
 				std::swap(items[i], items[items.size() - 1]);
 				items.erase(items.end() - 1);
 				i--;
+			}
+		}
+
+		auto currentItem = taskLists->currentItem();
+		if (currentItem)
+		{
+			auto find = std::find(items.begin(), items.end(), currentItem);
+			if (find!=items.end())
+			{
+				int index = find - items.begin();
+				QListWidgetItem* listItem = taskLists->takeItem(taskLists->row(currentItem));
+				delete items[index]->attachedWidget;
+				delete listItem;
+				std::swap(items[index], items[items.size() - 1]);
+				items.erase(items.end() - 1);
 			}
 		}
 

@@ -1,6 +1,7 @@
 #include "IO/DxfProcessor.h"
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Primitives.h"
+#include "Graphics/ContourTree.h"
 #include "Common/MathUtils.h"
 #include "Graphics/Sketch.h"
 #include "Algorithm/RingDetector.h"
@@ -648,8 +649,10 @@ namespace CNCSYS
 
 		if (openRingDetect)
 		{
+
 			std::vector<EntRingConnection*> rings = RingDetector::RingDetect(entityStorage);
 			PartClassifier classifier(rings);
+			//ContourTree tree(rings, 999999, 999999);
 			std::vector<EntGroup*> groups = classifier.Execute();
 			int ringsize = 0;
 

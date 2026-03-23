@@ -18,9 +18,8 @@
 #include "UI/ToDoListItem.h"
 #include "UI/TaskListWindow.h"
 #include "UI/DigitalHUD.h"
-#include "UI/TaskFlowGuide.h"
 #include "UI/CanvasGuide.h"
-#include "UI/Components/HmiTemplateMonitorTool.h"
+#include "IO/Database.h"
 #include "Controls/GlobalPLCVars.h"
 #include "Controls/GCodeParseHelper.h"
 #include "NetWork/OPClient.h"
@@ -133,8 +132,9 @@ int main(int argc, char* argv[]){
 	TaskListWindow::GetInstance()->setParent(window);
 	TaskListWindow::GetInstance()->setWindowFlags(Qt::Tool | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 
-	TaskFlowGuide* guide = new TaskFlowGuide(window);
-	guide->show();
+	GCodeParseHelper parser(g_mainWindow->sketchLists[0].get());
+	std::string filename = std::string(QString("C:/Users/Admin/Desktop/gear.cnc").toLocal8Bit());
+	parser.ParseFileToSketch(filename);
 
 	ScadaScheduler::GetInstance()->Start();
 

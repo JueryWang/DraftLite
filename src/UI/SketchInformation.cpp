@@ -2,6 +2,7 @@
 #include "Graphics/Sketch.h"
 #include <QGraphicsDropShadowEffect>
 #include <qgroupbox.h>
+#include "UI/TaskFlowGuide.h"
 
 int calculateRequiredWidth(const QString& maxTitle, const QString& maxValue, const QString& maxUnit, const QFont& font) {
     QFontMetrics fm(font);
@@ -38,7 +39,7 @@ void SketchInfoPanel::updateStats(CNCSYS::SketchGPU* sketch)
 {
     static QList<QLabel*> label = { labelEntities,labelContours,labelTotalPath ,labelIdlePath,labelDimension };
     labelEntities->setText(QString::number(sketch->keyparams.entitySize));
-    labelContours->setText(QString::number(sketch->keyparams.entitySize));
+    labelContours->setText(QString::number(sketch->keyparams.contourSize));
     labelTotalPath->setText(QString::asprintf("%.2f", sketch->keyparams.pathLength));
     labelIdlePath->setText(QString::asprintf("%.2f", sketch->keyparams.idleLength));
     labelDimension->setText(QString::asprintf("%d x %d", sketch->keyparams.dimensionWidth, sketch->keyparams.dimensionHeight));
@@ -139,7 +140,12 @@ void SketchInfoPanel::setupUI()
 
     QVBoxLayout* layout2 = new QVBoxLayout(this);
     layout2->addWidget(groupBox);
-    layout2->addWidget(statusInfo);
+    //layout2->addWidget(statusInfo);
+    QWidget* wrapper = new QWidget();
+    wrapper->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    layout2->addWidget(new QWidget());
+    TaskFlowGuide* guide = new TaskFlowGuide(this);
+    layout2->addWidget(guide,Qt::AlignBottom);
     layout2->setContentsMargins(0, 10, 0, 10);
     this->setLayout(layout2);
 }

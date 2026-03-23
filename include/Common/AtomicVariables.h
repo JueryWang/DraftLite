@@ -23,7 +23,7 @@ typedef float   PLC_TYPE_REAL;
 typedef double PLC_TYPE_LREAL;
 typedef char* PLC_TYPE_STRING;
 
-
+//和PLC内存对齐
 #pragma pack(push, 1)
 struct CNCSimulateRecord
 {

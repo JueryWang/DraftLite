@@ -255,6 +255,7 @@ namespace CNCSYS
 		double area = 0.0f;
 		EntGroup* groupParent = nullptr;
 		int processOrder = 0;
+		int depth = 0;
 		GeomDirection direction;
 
 		std::pair<EntityPoint, EntityPoint> processBoundary;

@@ -335,7 +335,7 @@ namespace CNCSYS
 		static inline double ComputeArea(const std::vector<glm::vec3> polypoints)
 		{
 			if (polypoints.size() < 3) return 0.0; // 至少3个顶点才构成多边形
-			int64_t sum = 0;
+			double sum = 0;
 			size_t n = polypoints.size();
 			for (size_t i = 0; i < n; ++i) {
 				size_t j = (i + 1) % n; // 下一个顶点索引（最后一个顶点的下一个是第一个）
