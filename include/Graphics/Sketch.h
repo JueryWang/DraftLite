@@ -76,6 +76,8 @@ namespace CNCSYS
 		CraftConfigItems attachedConfig;
 		OCSGPU* attachedOCS = nullptr;
 		SketchKeyParams keyparams;
+		int cncLineCount = -1;
+		std::vector<EntRingConnection*> rings;
 
 	private:
 		bgi::rtree<rtree_entry, bgi::quadratic<16>> rtree;

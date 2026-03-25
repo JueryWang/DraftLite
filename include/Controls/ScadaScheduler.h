@@ -5,6 +5,7 @@
 #include <mutex>
 #include <set>
 #include <unordered_set>
+#include <QTimer>
 #include "Controls/SchedulerTask.h"
 
 class ScadaNode;
@@ -14,16 +15,20 @@ class PLCParam_ProtocalOpc;
 enum class DISPACTH_FLAG_BIT : uint64_t
 {
 	RUNNING = 1ULL,	//thread run flag
-	OPC_CONNECT = 1ULL << 1, //if opc client connecting
+	OPC_CONNECT = 1ULL << 1,   //if opc client connecting
+	THREAD_CRASHED = 1ULL << 2,  //thread destroyed
+	REBOOT_THREAD = 1ULL << 3,
 };
 
 enum DISPACTH_FLAG_BIT_POS
 {
 	BIT_RUN_POS = 0,
 	BIT_OPC_CONNECT_POS = 1,
+	BIT_THREAD_CRASHED = 2,
+	BIT_REBOOT_THREAD = 3
 };
 
-class ScadaScheduler 
+class ScadaScheduler
 {
 public:
 	static ScadaScheduler* GetInstance();
@@ -48,7 +53,6 @@ private:
 	~ScadaScheduler();
 	void handleTaskRequest();
 	void LoopTask();
-
 
 private:
 	static ScadaScheduler* instance;

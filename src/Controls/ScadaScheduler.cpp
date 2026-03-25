@@ -5,14 +5,17 @@
 #include "Controls/ScadaNode.h"
 #include "UI/GCodeEditor.h"
 #include "Controls/ScadaScheduler.h"
+#include "Controls/ScadaMessageHandler.h"
 #include "NetWork/OPClient.h"
 #include "NetWork/FtpClient.h"
 #include "Controls/GlobalPLCVars.h"
 #include <iostream>
 #include <Common/Program.h>
+#include <QObject>
 
 ScadaScheduler* ScadaScheduler::instance = nullptr;
 std::mutex ScadaScheduler::mtx;
+std::atomic<long long> heartBeat = 0;
 
 ScadaScheduler* ScadaScheduler::GetInstance()
 {
@@ -105,12 +108,11 @@ inline bool ScadaScheduler::GetFlag(DISPACTH_FLAG_BIT_POS pos)
 
 ScadaScheduler::ScadaScheduler()
 {
-
 }
 
 ScadaScheduler::~ScadaScheduler()
 {
-
+	
 }
 
 void ScadaScheduler::handleTaskRequest()
@@ -183,51 +185,55 @@ void ScadaScheduler::EraseNode(ScadaNode* node)
 	}
 }
 
+using namespace std::chrono;
 void ScadaScheduler::LoopTask()
 {
-	while (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_RUN_POS))
+	system_clock::time_point lastUpdateTime = system_clock::now();
+	while (true)
 	{
-		//auto start = std::chrono::system_clock::now();
-		if (opcClient->client)
+		while (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_RUN_POS))
 		{
 			if (GetFlag(DISPACTH_FLAG_BIT_POS::BIT_OPC_CONNECT_POS))
 			{
-
-				g_varHandleMutex.lock();
-				//前后处理一次写请求
-				if (mtx.try_lock())
+				//auto start = std::chrono::system_clock::now();
+				if (opcClient->client)
 				{
- 					handleTaskRequest();
-					mtx.unlock();
-				}
-				std::vector<PLCParam_ProtocalOpc*> opcAddresses;
-				for (const std::string& tag : regTags)
-				{
-					if (g_PLCVariables[tag] != NULL)
+					g_varHandleMutex.lock();
+					//前后处理一次写请求
+					if (mtx.try_lock())
 					{
-						opcAddresses.push_back((PLCParam_ProtocalOpc*)g_PLCVariables[tag]);
+ 						handleTaskRequest();
+						mtx.unlock();
 					}
-					else
+					std::vector<PLCParam_ProtocalOpc*> opcAddresses;
+					for (const std::string& tag : regTags)
 					{
-						/*std::cout << "unread: " << tag << std::endl;*/
+						if (g_PLCVariables[tag] != NULL)
+						{
+							opcAddresses.push_back((PLCParam_ProtocalOpc*)g_PLCVariables[tag]);
+						}
+						else
+						{
+							/*std::cout << "unread: " << tag << std::endl;*/
+						}
 					}
-				}
-				opcClient->ReadBackPLC_ProtoOpcUA(opcAddresses);
-				g_varHandleMutex.unlock();
+					opcClient->ReadBackPLC_ProtoOpcUA(opcAddresses);
+					g_varHandleMutex.unlock();
 
-				for (ScadaNode* node : nodesInControl)
-				{
-					if (node)
+					for (int i = 0; i < nodesInControl.size();i++)
 					{
-						node->UpdateNode();
+						if (nodesInControl[i])
+						{
+							nodesInControl[i]->UpdateNode();
+						}
 					}
 				}
 			}
+			//auto end = std::chrono::system_clock::now();
+			//auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
-		//auto end = std::chrono::system_clock::now();
-		//auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
 

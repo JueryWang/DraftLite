@@ -41,7 +41,6 @@ struct LayerComp {
 	}
 };
 
-
 class ContourTree
 {
 public:

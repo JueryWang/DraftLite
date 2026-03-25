@@ -52,6 +52,7 @@ extern std::array<bool, 10> g_stationPCFileFTP;
 extern std::array<bool, 10> g_stationPCFileFTPDone;
 extern std::array<bool, 10> g_stationClearPC;
 extern int stationSize;
+
 void ClearPLCVariablesOpcUA();
 void WritePLC_OPCUA(const char* tag,void* newValue, AtomicVarType type);
 void ReadPLC_OPCUA(const char* tag,void* storeValue, AtomicVarType type);

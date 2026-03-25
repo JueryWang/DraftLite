@@ -3,6 +3,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <qgroupbox.h>
 #include "UI/TaskFlowGuide.h"
+#include "Controls/ScadaScheduler.h"
 
 int calculateRequiredWidth(const QString& maxTitle, const QString& maxValue, const QString& maxUnit, const QFont& font) {
     QFontMetrics fm(font);
@@ -135,15 +136,16 @@ void SketchInfoPanel::setupUI()
     addInfoRow(QStringLiteral("空走长度"), labelIdlePath, "mm", 4);
     addInfoRow(QStringLiteral("空走占比"), labelIdleRatio, "%", 5);
     addInfoRow(QStringLiteral("来源"),labelSource,"", 6);
-
-    statusInfo = new StatusBar();
-
+   
     QVBoxLayout* layout2 = new QVBoxLayout(this);
     layout2->addWidget(groupBox);
+    if (g_settings->value("Settings/DebugAssist").toInt())
+    {
+        btnOpenComm = new QPushButton("断开通信连接");
+        connect(btnOpenComm, &QPushButton::clicked, this, &SketchInfoPanel::CommDisconnect);
+        layout2->addWidget(btnOpenComm);
+    }
     //layout2->addWidget(statusInfo);
-    QWidget* wrapper = new QWidget();
-    wrapper->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    layout2->addWidget(new QWidget());
     TaskFlowGuide* guide = new TaskFlowGuide(this);
     layout2->addWidget(guide,Qt::AlignBottom);
     layout2->setContentsMargins(0, 10, 0, 10);
@@ -181,58 +183,17 @@ void SketchInfoPanel::applyStyle()
 )");
 }
 
-StatusBar::StatusBar(QWidget* parent) : QWidget(parent)
+void SketchInfoPanel::CommDisconnect()
 {
-    setMinimumWidth(70);
-
-    m_label = new QLabel(this);
-    m_label->setAlignment(Qt::AlignCenter);
-    m_label->setStyleSheet(R"(
-        font-size: 24px;
-        font-weight: bold;
-    )");
-
-    QHBoxLayout* layout = new QHBoxLayout(this);
-    layout->addWidget(m_label);
-    layout->setContentsMargins(20,10,20,10);
-    setLayout(layout);
-
-    setStatus(Idle,"系统空闲");
+    ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::RUNNING, false);
+    btnOpenComm->disconnect();
+    btnOpenComm->setText("连接通信");
+    connect(btnOpenComm,&QPushButton::clicked,this,&SketchInfoPanel::CommConnect);
 }
-
-void StatusBar::setStatus(Status status, const QString& text)
+void SketchInfoPanel::CommConnect()
 {
-    m_currentStatus = status;
-    m_label->setText(text);
-
-    QString bgColor;
-    QString textColor = "#FFFFFF";
-
-    switch (status) {
-    case Idle:
-        bgColor = "#555555";
-        break;
-    case Running:
-        bgColor = "#2E8B57";
-        break;
-    case Pause:
-        bgColor = "#CC8800";
-        break;
-    case Finish:
-        bgColor = "#1E90FF";
-        break;
-    case Error:
-        bgColor = "#CC0000";
-        break;
-    default:
-        bgColor = "#FFFFFF";
-    }
-
-    setStyleSheet(QString(R"(
-        QWidget{
-            background-color: %1;
-            color: %2;
-            border-radius: 10px;
-        }
-    )").arg(bgColor).arg(textColor));
+    ScadaScheduler::GetInstance()->SetStatus(DISPACTH_FLAG_BIT::RUNNING, true);
+    btnOpenComm->disconnect();
+    btnOpenComm->setText("断开通信连接");
+    connect(btnOpenComm, &QPushButton::clicked, this, &SketchInfoPanel::CommDisconnect);
 }

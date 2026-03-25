@@ -241,7 +241,6 @@ void OPClient::ReadOpcBatch(TaskReadOpcUABatchParam* param)
 {
 	std::vector<UA_NodeId> nodeIds;
 
-
 	for (int i = 0; i < param->count; i++)
 	{
 		std::string tag(param->tags[i]);
@@ -406,14 +405,6 @@ void OPClient::WriteOpcSingle(TaskWriteValueParam* param)
 		{
 			const char* description = UA_StatusCode_name(status);
 			std::string errorStr;
-
-			QMetaObject::invokeMethod(messageHandler, "handleOpcWriteFailed",
-				Qt::QueuedConnection,
-				Q_ARG(OPClient*, this),
-				Q_ARG(QString, QString::fromLocal8Bit(info->identifier),
-					Q_ARG(QString, hintValueStr),
-					Q_ARG(QString, QString::fromLocal8Bit(description))
-				));
 			g_file_logger->critical("写入节点{}失败:{},error code:{}  ||调用函数{}", param->tag, UA_StatusCode_name(status), __FUNCTION__);
 		}
 		curStatus = status;
@@ -602,6 +593,7 @@ void OPClient::ReconnectWithHint()
 		{
 			UploadFileToFTP(sketch->source, sketch->ToNcProgram());
 		}
+		std::cout << "Reconnect Success!" << std::endl;
 	}
 	else
 	{

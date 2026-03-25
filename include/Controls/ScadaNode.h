@@ -120,7 +120,6 @@ protected:
 	void BindParam(AtomicVar<PLC_TYPE_STRING>* address);
 
 public:
-	std::chrono::system_clock::time_point lastExecTime;
 	std::string bindTag;
 	std::function<void(void*)> valueChangedCallback = nullptr;
 	std::function<void()> updateCallback = nullptr;

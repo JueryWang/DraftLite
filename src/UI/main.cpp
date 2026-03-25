@@ -109,8 +109,6 @@ int main(int argc, char* argv[]){
 
 	qputenv("QTWEBENGINE_RESOURCES_PATH", webEngineResPath.toUtf8());
 
-	qDebug() << "QTWEBENGINE_RESOURCES_PATH:" << webEngineResPath;
-
 	QByteArray qmlPath = "./plugins/qml";
 	if (qgetenv("QML2_IMPORT_PATH").isDetached()) {
 		qmlPath = qgetenv("QML2_IMPORT_PATH") + ";" + qmlPath;
@@ -123,7 +121,6 @@ int main(int argc, char* argv[]){
 		QMessageBox::critical(NULL, QStringLiteral("错误"), QStringLiteral("检测到中文路径,程序运行可能失败,请手动修改为英文"));
 	}
 
-
 	InitUIEnvironment();
 	InitProgressContext();
 
@@ -132,7 +129,7 @@ int main(int argc, char* argv[]){
 	TaskListWindow::GetInstance()->setParent(window);
 	TaskListWindow::GetInstance()->setWindowFlags(Qt::Tool | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 
-	//ScadaScheduler::GetInstance()->Start();
+	ScadaScheduler::GetInstance()->Start();
 	AfterInitProgressContext();
 
 	return app.exec();

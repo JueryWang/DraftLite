@@ -19,6 +19,7 @@ public slots:
 	void handleOpcDisconnected(OPClient* client);
 	void handleOpcConnectSuccess(OPClient* client);
 	void handleOpcConnectFailed(OPClient* client);
+	void handleOpcServerReboot();
 	void handleOpcReconnectFailed(OPClient* client);
 	void handleOpcWriteFailed(OPClient* client,const QString& targetNode,const QString& targetValue,const QString& errorCode);
 	void handleDogPullOut();

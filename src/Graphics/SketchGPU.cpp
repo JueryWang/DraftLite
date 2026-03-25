@@ -68,8 +68,9 @@ namespace CNCSYS
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 		entityGroups.push_back(group);
-
-
+		//float r = dist(engine); // 用float更符合glm::vec4的类型
+		//float g = dist(engine);
+		//float b = dist(engine);
 
 		for (EntRingConnection* ring : group->rings)
 		{
@@ -78,10 +79,7 @@ namespace CNCSYS
 				//if (!colorMap.count(ring->depth)) {
 				//	colorMap[ring->depth] = glm::vec4(r, g, b, 1.0f);
 				//}
-				float r = dist(engine); // 用float更符合glm::vec4的类型
-				float g = dist(engine);
-				float b = dist(engine);
-				comp->color = glm::vec4(r,g,b,1.0f);
+				//comp->color = glm::vec4(r,g,b,1.0f);
 				comp->ringParent = ring;
 				AddEntity(comp);
 			}
@@ -345,6 +343,15 @@ namespace CNCSYS
 				}
 			}
 		}
+		//if (groups.size())
+		//{
+		//	std::sort(rings.begin(), rings.end(), [&](EntRingConnection* r1, EntRingConnection* r2) {return r1->processOrder < r2->processOrder;});
+		//	for (EntRingConnection* ring : rings)
+		//	{
+		//		content += ring->ToNcInstruction(&g_MScontext,true,this);
+		//	}
+		//}
+		cncLineCount = 1 + count(content.begin(), content.end(), '\n');
 		keyparams.dimensionWidth = attachedOCS->objectRange->XRange();
 		keyparams.dimensionHeight = attachedOCS->objectRange->YRange();
 		keyparams.pathLength = g_MScontext.totalPath;

@@ -68,6 +68,7 @@ ScadaMessageHandler::~ScadaMessageHandler()
 
 void ScadaMessageHandler::handleOpcDisconnected(OPClient* client)
 {
+	g_mainWindow->GetCanvasPanel()->hide();
 	std::vector<std::function<void(void)>> callbacks;
 	callbacks.push_back(nullptr);
 	callbacks.push_back([&]() {
@@ -92,6 +93,10 @@ void ScadaMessageHandler::handleOpcConnectFailed(OPClient* client)
 		});
 	callbacks.push_back(nullptr);
 	HmiTemplateMsgBox::warning(nullptr, QString("警告"), QString("无法与OPC UA服务器创建连接"), { "","重新连接","确定" }, callbacks);
+}
+void ScadaMessageHandler::handleOpcServerReboot()
+{
+
 }
 void ScadaMessageHandler::handleOpcReconnectFailed(OPClient* client)
 {
@@ -148,6 +153,7 @@ void ScadaMessageHandler::handleResoreHistory()
 	std::vector<std::function<void(void)>> callbacks;
 	callbacks.push_back(nullptr);
 	callbacks.push_back([&]() {
+		std::vector<std::tuple<int, QString>> records = DataBaseCNC::GetInstance()->GetDraftOpenRecords();
 		for (std::tuple<int, QString>& rec : records)
 		{
 			auto [stationId, filePath] = rec;

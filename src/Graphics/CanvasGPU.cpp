@@ -930,7 +930,7 @@ namespace CNCSYS
 	{
 		glm::vec3 capturePos = ocsSys->GetOCSPosWithPixelPos(glm::vec2(mousePos.x(), mousePos.y()));
 
-		float precision = ocsSys->canvasRange->MinRange() * 0.05f;
+		float precision = ocsSys->canvasRange->MaxRange() * 0.05f;
 		if (captureType == CaptureMode::Entity)
 		{
 			EntityVGPU* ent = m_currentSketch.get()->QueryNearsetEntity(capturePos, precision);

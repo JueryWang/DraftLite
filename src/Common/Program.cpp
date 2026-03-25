@@ -54,6 +54,11 @@ void InitPLConfig()
 		{"WorkFileStation2","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[2].sWorkFileName"},	//工位2文件名
 		{"WorkFileStation3","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[3].sWorkFileName"},	//工位4文件名
 		{"WorkFileStation4","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[4].sWorkFileName"},	//工位5文件名
+		{"WorkFileRow0","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[0].iWorkRow"},
+		{"WorkFileRow1","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[1].iWorkRow"},
+		{"WorkFileRow2","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[2].iWorkRow"},
+		{"WorkFileRow3","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[3].iWorkRow"},
+		{"WorkFileRow4","gvlHMI.stParameterGearChamferMachine.astParameterCADWork[4].iWorkRow"},
 		{"PCFileFTPDone","gvlGlobalData.stIOGearChamferMachine.axPCFileFTPDone"},								//PC相应G代码上传FTP完成
 		{"PCFileFTP","gvlGlobalData.stIOGearChamferMachine.axPCFileFTP"},				//PLC请求G代码上传FTP
 		{"HeartbeatCount","gvlHMI.udiHeartbeatCount"},							//心跳包检测

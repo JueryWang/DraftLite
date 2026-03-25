@@ -5,7 +5,6 @@
 
 ScadaNode::ScadaNode()
 {
-	lastExecTime = std::chrono::system_clock::now();
 }
 
 ScadaNode::~ScadaNode()

@@ -7,6 +7,7 @@
 #include "Algorithm/RingDetector.h"
 #include "Algorithm/PathOptimizer.h"
 #include "Algorithm/PartClassifier.h"
+#include "Algorithm/AntColonyOptimize.h"
 #include <QMessageBox>
 #include <boost/unordered_set.hpp>
 #include <QApplication>
@@ -652,6 +653,7 @@ namespace CNCSYS
 
 			std::vector<EntRingConnection*> rings = RingDetector::RingDetect(entityStorage);
 			PartClassifier classifier(rings);
+			psketchGPU.lock()->rings = rings;
 			//ContourTree tree(rings, 999999, 999999);
 			std::vector<EntGroup*> groups = classifier.Execute();
 			int ringsize = 0;
@@ -662,14 +664,17 @@ namespace CNCSYS
 				ringsize += group->rings.size();
 			}
 
-			entityStorage.clear();
 			psketchGPU.lock()->UpdateSketch();
+			psketchGPU.lock()->SetOrigin(psketchGPU.lock()->attachedOCS->objectRange->getMin());
+			entityStorage.clear();
 
 			psketchGPU.lock()->keyparams.entitySize += psketchGPU.lock()->GetEntities().size();
 			psketchGPU.lock()->keyparams.contourSize += ringsize;
 			//路径优化算法
 			PathOptimizer optimizer(groups);
 			optimizer.Run();
+			//AntColonyPathOptimize optimizer(rings, -psketchGPU.lock()->attachedOCS->translationToZero);
+			//optimizer.Execute();
 		}
 
 

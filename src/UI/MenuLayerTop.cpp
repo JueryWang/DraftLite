@@ -266,7 +266,6 @@ void MenuLayerTop::ImportDxf(const QString& dxfFile)
 							}
 						}
 					}
-					canvasWindow->attachedSketch->SetOrigin(canvasWindow->attachedSketch->attachedOCS->objectRange->getMin());
 					this->setWindowTitle(dxfFile);
 					std::string NcProgram = canvasWindow->attachedSketch->ToNcProgram();
 					g_mainWindow->infoPanel->updateStats(canvasWindow->attachedSketch);
