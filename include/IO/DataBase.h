@@ -20,7 +20,7 @@ public:
 	static DataBaseCNC* GetInstance();
 	void AddOpenDraftRecord(int stationId,const QString& filePath);
 	std::vector<std::tuple<int, QString>> GetDraftOpenRecords();
-
+	void ClearDraftRecord();
 private:
 	DataBaseCNC();
 	~DataBaseCNC();

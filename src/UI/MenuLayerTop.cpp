@@ -40,8 +40,8 @@ MenuLayerTop::MenuLayerTop(GLWidget* window, QsciScintilla* editor) : canvasWind
 	fileMenu = topMenus->addMenu(tr("文件"));
 	QAction* actImportDxf = fileMenu->addAction(tr("导入dxf"));
 	connect(actImportDxf, &QAction::triggered, this, &MenuLayerTop::OnImportDxf);
-	QAction* actImportDwg = fileMenu->addAction(tr("导入dwg"));
-	connect(actImportDwg, &QAction::triggered, this, &MenuLayerTop::OnImportDwg);
+	//QAction* actImportDwg = fileMenu->addAction(tr("导入dwg"));
+	//connect(actImportDwg, &QAction::triggered, this, &MenuLayerTop::OnImportDwg);
 	QAction* actExportNC = fileMenu->addAction(tr("导出为NC"));
 	connect(actExportNC, &QAction::triggered, this, &MenuLayerTop::OnExportNC);
 	QAction* actExportScene = fileMenu->addAction(tr("导出工程"));

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(WG250035019V2.1ZH)
+project(DraftLite)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,6 +19,7 @@ list(APPEND CMAKE_PREFIX_PATH  "C:/Users/Admin/Documents/lib/open62541/lib/cmake
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/QXslx/Debug/lib/cmake/QXlsxQt6")
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/libcurl/lib/cmake/CURL")
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/Eigen3/cmake")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/Admin/Documents/lib/hiredis/share/hiredis")
 
 set(BOOST_ROOT "C:/Users/Admin/Documents/lib/boost_1_82_0")
 set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib64-msvc-14.3")
@@ -35,6 +36,7 @@ find_package(QT NAMES Qt5 Qt6 COMPONENTS OpenGL Core Gui Widgets QuickWidgets Op
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets QuickWidgets OpenGL Network Qml Quick WebEngineQuick QuickControls2 QuickLayouts Xml Sql)
 find_package(OpenMP REQUIRED)
+find_package(Hiredis CONFIG REQUIRED)
 
 include_directories(include)
 include_directories(${Qt${QT_VERSION_MAJOR}_INCLUDE_DIRS})
@@ -329,6 +331,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Debug>:${BOOST_LIBRARYDIR}/libboost_serialization-vc143-mt-gd-x64-1_82.lib>
     $<$<CONFIG:Release>:${BOOST_LIBRARYDIR}/libboost_serialization-vc143-mt-x64-1_82.lib>
     open62541::open62541
+    hiredis::hiredis
     CURL::libcurl
     Eigen3::Eigen
     OpenMP::OpenMP_CXX

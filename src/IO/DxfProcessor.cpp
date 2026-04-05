@@ -654,7 +654,7 @@ namespace CNCSYS
 			std::vector<EntRingConnection*> rings = RingDetector::RingDetect(entityStorage);
 			PartClassifier classifier(rings);
 			psketchGPU.lock()->rings = rings;
-			//ContourTree tree(rings, 999999, 999999);
+			ContourTree tree(rings, 999999, 999999);
 			std::vector<EntGroup*> groups = classifier.Execute();
 			int ringsize = 0;
 

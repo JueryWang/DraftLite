@@ -185,7 +185,9 @@ void ScadaMessageHandler::handleResoreHistory()
 			bool success = processor.read(file);
 		}
 	});
-	callbacks.push_back(nullptr);
+	callbacks.push_back([&]() {
+		DataBaseCNC::GetInstance()->ClearDraftRecord();
+	});
 	if (records.size())
 	{
 		HmiTemplateMsgBox::question(nullptr, QString("提示"), QString("检测到上次关闭的工程,是否恢复打开?"), { "","确定","取消" }, callbacks);

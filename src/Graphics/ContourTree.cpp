@@ -48,6 +48,7 @@ ContourTree::ContourTree(std::vector<EntRingConnection*>& inputs, int drawingWid
 		ContourTreeNode* node = new ContourTreeNode(contour);
 		InsertConour(node);
 	}
+	sortedNodes;
 }
 
 ContourTree::~ContourTree()

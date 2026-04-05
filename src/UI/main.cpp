@@ -28,6 +28,7 @@
 #include "IO/DxfProcessor.h"
 #include "UI/SketchInformation.h"
 #include "Controls/GCodeController.h"
+#include "NetWork/RedisClient.h"
 #include <QMessageBox>
 #include <QFile>
 #include <QHboxLayout>
@@ -98,6 +99,8 @@ int generateRandomNumber0To300() {
 }
 
 int main(int argc, char* argv[]){
+	RedisExample();
+
 	SetUnhandledExceptionFilter(CrashHandler);
 	QtWebEngineQuick::initialize();
 

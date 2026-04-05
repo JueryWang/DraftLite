@@ -59,4 +59,6 @@ public:
     std::vector<float> knots;
     bool isPassthrough = false;
     const int degree = 3;
+
+    float maxSectionRatio = FLT_MIN;
 };

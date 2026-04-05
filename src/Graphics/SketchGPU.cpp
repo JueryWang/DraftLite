@@ -68,18 +68,18 @@ namespace CNCSYS
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 		entityGroups.push_back(group);
-		//float r = dist(engine); // 用float更符合glm::vec4的类型
-		//float g = dist(engine);
-		//float b = dist(engine);
 
 		for (EntRingConnection* ring : group->rings)
 		{
+			float r = dist(engine); // 用float更符合glm::vec4的类型
+			float g = dist(engine);
+			float b = dist(engine);
+			if (!colorMap.count(ring->depth)) {
+				colorMap[ring->depth] = glm::vec4(r, g, b, 1.0f);
+			}
 			for (EntityVGPU* comp : ring->conponents)
 			{
-				//if (!colorMap.count(ring->depth)) {
-				//	colorMap[ring->depth] = glm::vec4(r, g, b, 1.0f);
-				//}
-				//comp->color = glm::vec4(r,g,b,1.0f);
+				comp->color = colorMap[ring->depth];
 				comp->ringParent = ring;
 				AddEntity(comp);
 			}
@@ -325,7 +325,7 @@ namespace CNCSYS
 
 	std::string SketchGPU::ToNcProgram()
 	{
-		std::string content;
+		this->content = "";
 		auto groups = GetEntityGroups();
 		g_MScontext.totalPath = 0;
 		g_MScontext.idlePath = 0;

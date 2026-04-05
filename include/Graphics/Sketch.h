@@ -78,7 +78,7 @@ namespace CNCSYS
 		SketchKeyParams keyparams;
 		int cncLineCount = -1;
 		std::vector<EntRingConnection*> rings;
-
+		std::string content;
 	private:
 		bgi::rtree<rtree_entry, bgi::quadratic<16>> rtree;
 		EntityType entType;

@@ -524,6 +524,19 @@ float Spline2DGPU::cumulativeLength(double t0, double t1, double eps)
 	return res;
 }
 
+void replaceLastG01ToG05(std::string& str)
+{
+    // 1. 找最后一次出现 "G01" 的位置
+    size_t lastPos = str.rfind("G01");
+
+    // 2. 如果找到了
+    if (lastPos != std::string::npos)
+    {
+        // 3. 替换 3 个字符：G01 → G05
+        str.replace(lastPos, 3, "G05");
+    }
+}
+
 std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRecord, SketchGPU* sketch)
 {
 	std::string s = "";
@@ -578,10 +591,9 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 		}
 
 		glm::vec3 transformed;
-		int step = 10;
 
 		transformed = transformedMatrix * glm::vec4(splineSamples[0], 1.0f);
-		std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+		std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
 		s += buffer;
 
 		if (createRecord)
@@ -593,13 +605,20 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 		const int compensation = 2;
 		const float cornerThreadshold = 1e2; //30度夹角余弦值
 		glm::vec3 nodePre = transformedMatrix * glm::vec4(pathNodes[0].Node, 1.0f);
+		glm::vec3 lastPos = start;
+
+		int step = 1;
 
 		for (int i = 1; i < pathNodes.size(); i += step)
 		{
 			transformed = transformedMatrix * glm::vec4(pathNodes[i].Node, 1.0f);
+			std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
+			lastPos = transformed;
+
+			transformed = transformedMatrix * glm::vec4(pathNodes[i].Node, 1.0f);
 			if (glm::distance(nodePre, transformed) > 0.001)
 			{
-				std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
+				std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
 				s += buffer;
 				if (createRecord)
 				{
@@ -634,6 +653,8 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 			}
 			nodePre = transformed;
 		}
+
+
 		transformed = transformedMatrix * glm::vec4(splineSamples[splineSamples.size() - 1], 1.0f);
 		std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
 		s += buffer;
@@ -653,6 +674,8 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 	std::string section = "";
 	if (createGCode)
 	{
+		maxSectionRatio;
+
 		char buffer[256];
 		glm::mat4 transformedMatrix = MathUtils::scaledMatrix(this->worldModelMatrix, { Mstatus->zoom,Mstatus->zoom,Mstatus->zoom }, Mstatus->wcsAnchor);
 		transformedMatrix = MathUtils::tranlatedMatrix(transformedMatrix, -Mstatus->wcsAnchor);
@@ -673,10 +696,10 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 			Mstatus->idlePath += glm::distance(start, Mstatus->toolPos);
 		}
 		glm::vec3 transformed;
-		int step = 10;
+		int step = 1;
 
 		transformed = transformedMatrix * glm::vec4(splineSamples[0], 1.0f);
-		std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
+		std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
 		section += buffer;
 
 		if (createRecord)
@@ -687,17 +710,20 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 
 		const int compensation = 2;
 		const float cornerThreadshold = 1e2; //30度夹角余弦值
+		glm::vec3 lastPos = start;
 
 		for (int i = 1; i < pathNodes.size(); i += step)
 		{
 			transformed = transformedMatrix * glm::vec4(pathNodes[i].Node, 1.0f);
-			std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
+			std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
+
 			section += buffer;
 			if (createRecord)
 			{
 				GCodeRecord rec(std::string(buffer), this, i, transformedMatrix, Mstatus->ncstep);
 				GCodeController::GetController()->AddRecord(rec);
 			}
+			lastPos = transformed;
 
 			//拐角前后采样compensation个点
 			for (int j = 0; j < step && (i + j + compensation) < pathNodes.size(); j++)
@@ -711,7 +737,7 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 					{
 						int index = std::clamp(i + j + k, i, i + step);
 						transformed = transformedMatrix * glm::vec4(pathNodes[index].Node, 1.0f);
-						std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
+						std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
 						section += buffer;
 						if (createRecord)
 						{
@@ -723,8 +749,10 @@ std::string Spline2DGPU::GenNcSection(SimulateStatus* Mstatus, bool createRecord
 				}
 			}
 		}
+
+		
 		transformed = transformedMatrix * glm::vec4(splineSamples[splineSamples.size() - 1], 1.0f);
-		std::sprintf(buffer, "N%03d G05 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
+		std::sprintf(buffer, "N%03d G01 X%f Y%f\n", Mstatus->ncstep++, transformed.x, transformed.y);
 		section += buffer;
 
 		if (createRecord)

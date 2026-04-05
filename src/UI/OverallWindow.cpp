@@ -86,11 +86,14 @@ OverallWindow::OverallWindow()
 					PLC_TYPE_STRING newSliceFileName = (PLC_TYPE_STRING)malloc(256);
 					strcpy_s(newSliceFileName, ftpFilePath.length() + 1, ftpFilePath.c_str());
 
+					UploadFileToFTP(std::string(newSliceFileName), g_mainWindow->sketchLists[i + 1]->content);
+
 					WritePLC_OPCUA(g_ConfigableKeys[QString("WorkFileStation%1").arg(i).toStdString()].c_str(), (void*)ftpFilePath.c_str(), AtomicVarType::STRING);
 					free(newSliceFileName);
 
 					PLC_TYPE_DINT CNCLines = g_mainWindow->sketchLists[i+1]->cncLineCount;
 					WritePLC_OPCUA(g_ConfigableKeys[QString("WorkFileRow%1").arg(i).toStdString()].c_str(), &CNCLines, AtomicVarType::DINT);
+					
 					ifRequest = true;
 				}
 				oldRequest[i] = g_stationPCFileFTP[i];
