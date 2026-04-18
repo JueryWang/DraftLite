@@ -160,7 +160,7 @@ MainLayer::MainLayer(OverallWindow* ovWindow)
 			canvasOperationPanel->show();
 		}
 		//canvasOperationPanel->setMaximumSize(ScreenSizeHintX(1.0f), ScreenSizeHintY(1.0f));
-		g_canvasInstance->SetCaptureMode(CaptureMode::Point);
+		g_canvasInstance->SetCaptureMode(CaptureMode::Entity);
 		this->show();
 	}
 	else

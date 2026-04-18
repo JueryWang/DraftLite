@@ -55,7 +55,7 @@ MenuLayerTop::MenuLayerTop(GLWidget* window, QsciScintilla* editor) : canvasWind
 	actEntityCapture->setCheckable(true);
 	actPointCapture = captureMenu->addAction(tr("开启点捕捉"));
 	actPointCapture->setCheckable(true);
-	actPointCapture->setChecked(true);
+	actEntityCapture->setChecked(true);
 	connect(actEntityCapture, &QAction::triggered, [&]() {
 		actPointCapture->setChecked(false);
 		canvasWindow->GetCanvas()->SetCaptureMode(CaptureMode::Entity);

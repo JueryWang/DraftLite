@@ -245,7 +245,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
             }
             else if (toolInited)
             {
-                int collisionLayer = pair.second[i].clippingLayer+1;
+                int collisionLayer = pair.second[i].clippingLayer;
                 Path64 marchingline;
                 glm::vec3 lineS = lastEnd;
                 glm::vec3 lineEd = start;
@@ -253,6 +253,7 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
                 marchingline.emplace_back(lineEd.x* RoughingAlgo::percision, lineEd.y* RoughingAlgo::percision);
                 auto intersectPaths = GetIntersections(marchingline, involute_sequence[collisionLayer]);
 
+                //需要修改判断为两个多边形相距半径是否小于刀具半径
                 if (intersectPaths.size() && intersectPaths[0].size() >= 2)
                 {
 					Point64 nearestPt;
@@ -273,24 +274,51 @@ std::string RoughingAlgo::GetRoughingPath(EntRingConnection* shape, AABB& workbl
      //               g_canvasInstance->GetSketchShared()->AddEntity(intersectPoint);
 
                     double nearestDist = DBL_MAX;
-                    for (Point64& pt : involute_sequence[std::max(collisionLayer-1,0)])
+                    int nearestStartIndex = 0;
+                    int nearestEndIndex = 0;
+                    for (int i = 0; i < involute_sequence[std::max(collisionLayer - 1, 0)].size(); i++)
                     {
-                        //匹配最外层与起始点最匹配的点
-                        double dist = GetDistance(marchingline[0], pt);
-                        if(dist < nearestDist)
+                        double dist = GetDistance(marchingline[0], involute_sequence[std::max(collisionLayer - 1, 0)][i]);
+                        if (dist < nearestDist)
                         {
+                            nearestStartIndex = i;
                             nearestDist = dist;
-                            nearestPt = pt;
-						}
+                            nearestPt = involute_sequence[std::max(collisionLayer - 1, 0)][i];
+                        }
+                    }
+
+                    nearestDist = DBL_MAX;
+                    for (int i = involute_sequence[std::max(collisionLayer - 1, 0)].size()-1; i >= 0 ; i--)
+                    {
+                        double dist = GetDistance(marchingline[1], involute_sequence[std::max(collisionLayer - 1, 0)][i]);
+                        if (dist < nearestDist)
+                        {
+                            nearestEndIndex = i;
+                            nearestDist = dist;
+                            nearestPt = involute_sequence[std::max(collisionLayer - 1, 0)][i];
+                        }
                     }
 
 					std::vector<glm::vec3> probePts;
                     std::vector<Point64> probePtsPoint64;
                     probePts.push_back(lineS);
-                    probePts.push_back({ (float)nearestPt.x/ RoughingAlgo::percision,(float)nearestPt.y/ RoughingAlgo::percision,0.0f});
                     int depth = 0;
-                    ProbePath(nearestPt,marchingline[1], involute_sequence[collisionLayer], setting.stepover * RoughingAlgo::percision, probePtsPoint64,depth);
-                    TrimPath(probePtsPoint64, involute_sequence[collisionLayer]);
+                    if (nearestStartIndex < nearestEndIndex)
+                    {
+                        for (int i = nearestStartIndex; i <= nearestEndIndex;i++)
+                        {
+                            probePtsPoint64.push_back(involute_sequence[std::max(collisionLayer - 1, 0)][i]);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = nearestEndIndex; i <= nearestEndIndex;i++)
+                        {
+                            probePtsPoint64.push_back(involute_sequence[std::max(collisionLayer - 1, 0)][i]);
+                        }
+                    }
+
+                    TrimPath(probePtsPoint64, involute_sequence[collisionLayer-1]);
                     for (Point64& pt : probePtsPoint64)
                     {
                         probePts.push_back({(float)pt.x/ RoughingAlgo::percision,(float)pt.y/ RoughingAlgo::percision ,0.0f});

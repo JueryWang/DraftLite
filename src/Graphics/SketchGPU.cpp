@@ -326,6 +326,8 @@ namespace CNCSYS
 	std::string SketchGPU::ToNcProgram()
 	{
 		this->content = "";
+		this->content += "G90\n";
+
 		auto groups = GetEntityGroups();
 		g_MScontext.totalPath = 0;
 		g_MScontext.idlePath = 0;
