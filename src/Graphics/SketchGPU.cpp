@@ -341,8 +341,15 @@ namespace CNCSYS
 				std::sort(group->rings.begin(), group->rings.end(), [&](EntRingConnection* r1, EntRingConnection* r2) { return r1->processOrder < r2->processOrder; });
 				for (EntRingConnection* ring : group->rings)
 				{
-					content += ring->ToNcInstruction(&g_MScontext, true, this);
+					content += ring->ToNcInstruction(&g_MScontext, false, this);
 				}
+			}
+		}
+		else
+		{
+			for (EntityVGPU* ent : entities)
+			{
+				content += ent->ToNcInstruction(&g_MScontext, false, this);
 			}
 		}
 		//if (groups.size())
@@ -376,16 +383,26 @@ namespace CNCSYS
 		//筛选完成后再基于线做相交性判断
 		for (EntityVGPU* ent : filteredItems)
 		{
-			if (ent && ent->isVisible)
+			if (ent && ent->isVisible && ent->GetType() != EntityType::Text)
 			{
 				std::vector<glm::vec3> nodes = ent->GetTransformedNodes();
-				for (int i = 0; i < nodes.size() - 1; i++)
+				if (nodes.size())
 				{
-					if (box.Intersect(nodes[i], nodes[i + 1]))
+					for (int i = 0; i < nodes.size() - 1; i++)
 					{
-						res.push_back(ent);
-						break;
+						if (box.Intersect(nodes[i], nodes[i + 1]))
+						{
+							res.push_back(ent);
+							break;
+						}
 					}
+				}
+			}
+			else if (ent->GetType() == EntityType::Text)
+			{
+				if (box.Intersect(ent->bbox))
+				{
+					res.push_back(ent);
 				}
 			}
 		}
@@ -407,6 +424,11 @@ namespace CNCSYS
 
 		for (int i = 0; i < filteredEntity.size(); i++)
 		{
+			//跳过字体
+			if (filteredEntity[i]->GetType() == EntityType::Text)
+			{
+				continue;
+			}
 			double d = distance_to_polygon_boundary(BoostPoint(center.x, center.y), filteredEntity[i]->boostPath);
 
 			if (d < minDistance)

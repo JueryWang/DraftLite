@@ -61,7 +61,7 @@ namespace CNCSYS
 			max.z = std::max(max.z, other.max.z);
 		}
 
-		bool Intersect(const AABB& other)
+       bool Intersect(const AABB& other) const
 		{
 			bool xOverlap = (min.x <= other.max.x) && (max.x >= other.min.x);
 			bool yOverlap = (min.y <= other.max.y) && (max.y >= other.min.y);

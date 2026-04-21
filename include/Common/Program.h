@@ -51,6 +51,7 @@ struct SimulateStatus
 	double QAxisStart = 0.0;
 	double totalPath = 0.0;
 	double idlePath = 0.0;
+	bool openZ = false;  //开启Z轴
 	// 默认构造函数
 	SimulateStatus()
 		: toolPos(0.0f),

@@ -270,7 +270,6 @@ void Polyline2DGPU::UpdatePaintData()
 		glBufferData(GL_ARRAY_BUFFER, polylineBulgedSamples.size() * sizeof(glm::vec3), polylineBulgedSamples.data(), GL_STATIC_DRAW);
 	}
 
-	int i = 0;
 	for (int i = 0; i < nodes.size(); i++)
 	{
 		glm::vec3 transformed = worldModelMatrix * glm::vec4(nodes[i], 1.0f);

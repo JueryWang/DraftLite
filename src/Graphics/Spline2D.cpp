@@ -563,12 +563,15 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 
 		if (glm::distance(start, Mstatus->toolPos) > CONNECT_EPSILON)
 		{
-			std::sprintf(buffer, "N%03d G00 Z%f\n", Mstatus->ncstep++, Mstatus->Zup);
-			s += buffer;
-			if (createRecord)
+			if (Mstatus->openZ)
 			{
-				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
-				GCodeController::GetController()->AddRecord(rec);
+				std::sprintf(buffer, "N%03d G00 Z%f\n", Mstatus->ncstep++, Mstatus->Zup);
+				s += buffer;
+				if (createRecord)
+				{
+					GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+					GCodeController::GetController()->AddRecord(rec);
+				}
 			}
 			std::sprintf(buffer, "N%03d G00 X%f Y%f\n", Mstatus->ncstep++, start.x, start.y);
 			s += buffer;
@@ -581,12 +584,15 @@ std::string Spline2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 				//rec.attachedPath = path;
 				//GCodeController::GetController()->AddRecord(rec);
 			}
-			std::sprintf(buffer, "N%03d G01 Z%f\n", Mstatus->ncstep++, Mstatus->Zdown);
-			s += buffer;
-			if (createRecord)
+			if (Mstatus->openZ)
 			{
-				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
-				GCodeController::GetController()->AddRecord(rec);
+				std::sprintf(buffer, "N%03d G01 Z%f\n", Mstatus->ncstep++, Mstatus->Zdown);
+				s += buffer;
+				if (createRecord)
+				{
+					GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+					GCodeController::GetController()->AddRecord(rec);
+				}
 			}
 		}
 

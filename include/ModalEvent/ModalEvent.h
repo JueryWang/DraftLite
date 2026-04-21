@@ -31,7 +31,8 @@ namespace CNCSYS
 		EntityRotate = 1ULL << 11,
 		EntityScale = 1ULL << 12,
 		EntityShift = 1ULL << 13,
-		MeasureDimension = 1ULL << 14
+		MeasureDimension = 1ULL << 14,
+		CreateText = 1ULL << 15
 	};
 
 	union ModalEventDrawFunc

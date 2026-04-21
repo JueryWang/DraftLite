@@ -99,8 +99,6 @@ QPushButton {
     border-radius: 4px;
     color: #212121;
     padding: 4px 8px;
-    min-width: 70px;
-    min-height: 24px;
     font-family: "Microsoft YaHei";
     font-size: 9pt;
 }

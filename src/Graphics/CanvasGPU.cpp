@@ -2,10 +2,12 @@
 #include "Graphics/Canvas.h"
 #include "Graphics/OCS.h"
 #include "Graphics/Sketch.h"
+#include "Graphics/Text.h"
 #include "UI/GLWidget.h"
 #include "UI/TransformBaseHint.h"
 #include "UI/MainLayer.h"
 #include "UI/GCodeEditor.h"
+#include "UI/Configer/FontAttributePanel.h"
 #include "Graphics/DrawEntity.h"
 #include "Graphics/Primitives.h"
 #include "Graphics/Anchor.h"
@@ -168,14 +170,6 @@ namespace CNCSYS
 		modalCallbacks[ModalState::EntityMirror] = std::bind(&CanvasGPU::handleEventEntityMirror, this, std::placeholders::_1, std::placeholders::_2);
 		modalCallbacks[ModalState::MeasureDimension] = std::bind(&CanvasGPU::handleEventMeasureDimension, this, std::placeholders::_1, std::placeholders::_2);
 		HistoryRecorder::GetInstance()->SetSketch(m_currentSketch.get());
-
-		//guide = CanvasGuide::GetInstance();
-		//connect(guide->longPressTimerViewLeft, &QTimer::timeout, this, &CanvasGPU::OnPaceLeft);
-		//connect(guide->longPressTimerViewRight, &QTimer::timeout, this, &CanvasGPU::OnPaceRight);
-		//connect(guide->longPressTimerViewUp, &QTimer::timeout, this, &CanvasGPU::OnPaceUp);
-		//connect(guide->longPressTimerViewDown, &QTimer::timeout, this, &CanvasGPU::OnPaceDown);
-		//connect(guide->longPressTimerZoomIn, &QTimer::timeout, this, &CanvasGPU::OnZoomIn);
-		//connect(guide->longPressTimerZoomOut, &QTimer::timeout, this, &CanvasGPU::OnZoomOut);
 
 		toolAnchor = Anchor::GetInstance();
 		toolAnchor->SetCoordinateSystem(ocsSys);
@@ -1029,6 +1023,12 @@ namespace CNCSYS
 				for (EntityVGPU* ent : selectedItems)
 				{
 					ent->Move(currentCanvasPos - lastCanvasPos);
+
+					if (ent->GetType() == EntityType::Text)
+					{
+						Text* textEnt = dynamic_cast<Text*>(ent);
+						FontAttributePanel::GetInstance()->SetAttachedText(textEnt);
+					}
 				}
 			}
 			break;
@@ -1395,9 +1395,13 @@ namespace CNCSYS
 			std::vector<OperationCommand> opCmds;
 			for (EntityVGPU* ent : selectedItems)
 			{
-				std::string s = serilize_to_string(ent);
-				OperationCommand cmd = std::make_pair(ent, s);
-				opCmds.push_back(cmd);
+				//ToDo 添加Text序列化支持
+				if (ent->GetType() != EntityType::Text)
+				{
+					std::string s = serilize_to_string(ent);
+					OperationCommand cmd = std::make_pair(ent, s);
+					opCmds.push_back(cmd);
+				}
 			}
 			rec.commands = opCmds;
 			rec.cleanFunc = [&](HistoryRecorder* recorder) {
@@ -1801,54 +1805,6 @@ namespace CNCSYS
 		return image.scaled(imageWidth, imageHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 	}
 
-	void CanvasGPU::RenderText(std::string& text, float x, float y, float scale, const glm::vec3& color)
-	{
-		size_t dotPos = text.find('.');
-		if (dotPos != std::string::npos) {
-			if (text.size() > dotPos + 5) {
-				text = text.substr(0, dotPos + 5); // 保留小数点后两位
-			}
-		}
-
-		tickerTextRenderShader->use();
-		glUniform3f(glGetUniformLocation(tickerTextRenderShader->ID, "textColor"), color.x, color.y, color.z);
-		glActiveTexture(GL_TEXTURE0);
-		glBindVertexArray(textRenderVAO);
-
-		std::string::const_iterator c;
-		for (c = text.begin(); c != text.end(); c++)
-		{
-			Character ch = Characters[*c];
-			float xpos = x + ch.Bearing.x * scale;
-			float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-
-			float w = ch.Size.x * scale;
-			float h = ch.Size.y * scale;
-
-			float vertices[6][4] =
-			{
-				{ xpos,     ypos + h,   0.0f, 0.0f },
-				{ xpos,     ypos,       0.0f, 1.0f },
-				{ xpos + w, ypos,       1.0f, 1.0f },
-
-				{ xpos,     ypos + h,   0.0f, 0.0f },
-				{ xpos + w, ypos,       1.0f, 1.0f },
-				{ xpos + w, ypos + h,   1.0f, 0.0f }
-			};
-
-			glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-			glBindBuffer(GL_ARRAY_BUFFER, textRenderVBO);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			x += (ch.Advance >> 6) * scale;
-		}
-
-		glBindVertexArray(0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
 	void CanvasGPU::OnComfirmCreateElements()
 	{
 		switch (operationState)
@@ -2020,33 +1976,33 @@ namespace CNCSYS
 			}
 
 			//绘制空走路径
-			for (Path2D* path : m_currentSketch.get()->paths)
-			{
-				if (path->visiable)
-				{
-					dashedLineRenderShader->use();
-					dashedLineRenderShader->setMat4("model", glm::mat4(1.0f));
-					dashedLineRenderShader->setVec4("PaintColor", g_yellowColor);
-					dashedLineRenderShader->setFloat("minVisibleLength", 1.0f);
-					std::vector<glm::vec3> nodes = path->GetTransformedNodes();
-					glBindVertexArray(0);
-					glBindBuffer(GL_ARRAY_BUFFER, 0);
-					glEnableClientState(GL_VERTEX_ARRAY);
-					glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), nodes.data());
-					glDrawArrays(GL_LINES, 0, 2);
+			//for (Path2D* path : m_currentSketch.get()->paths)
+			//{
+			//	if (path->visiable)
+			//	{
+			//		dashedLineRenderShader->use();
+			//		dashedLineRenderShader->setMat4("model", glm::mat4(1.0f));
+			//		dashedLineRenderShader->setVec4("PaintColor", g_yellowColor);
+			//		dashedLineRenderShader->setFloat("minVisibleLength", 1.0f);
+			//		std::vector<glm::vec3> nodes = path->GetTransformedNodes();
+			//		glBindVertexArray(0);
+			//		glBindBuffer(GL_ARRAY_BUFFER, 0);
+			//		glEnableClientState(GL_VERTEX_ARRAY);
+			//		glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), nodes.data());
+			//		glDrawArrays(GL_LINES, 0, 2);
 
-					g_showArrowShader->use();
-					glm::vec3 dir = nodes[1] - nodes[0];
-					glm::vec3 center = (nodes[0] + nodes[1]) / 2.0f;
-					std::vector<glm::vec3> arrowPos = { center,center + 0.01f * dir };
-					g_showArrowShader->setMat4("projection", ortho);
-					g_showArrowShader->setMat4("model", glm::mat4(1.0f));
-					g_showArrowShader->setVec4("PaintColor", g_yellowColor);
-					glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), arrowPos.data());
-					glDrawArrays(GL_LINES, 0, 2);
-					glDisableClientState(GL_VERTEX_ARRAY);
-				}
-			}
+			//		g_showArrowShader->use();
+			//		glm::vec3 dir = nodes[1] - nodes[0];
+			//		glm::vec3 center = (nodes[0] + nodes[1]) / 2.0f;
+			//		std::vector<glm::vec3> arrowPos = { center,center + 0.01f * dir };
+			//		g_showArrowShader->setMat4("projection", ortho);
+			//		g_showArrowShader->setMat4("model", glm::mat4(1.0f));
+			//		g_showArrowShader->setVec4("PaintColor", g_yellowColor);
+			//		glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), arrowPos.data());
+			//		glDrawArrays(GL_LINES, 0, 2);
+			//		glDisableClientState(GL_VERTEX_ARRAY);
+			//	}
+			//}
 			//绘制捕捉点
 			if (captureType == CaptureMode::Point)
 			{

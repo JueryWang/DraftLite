@@ -49,8 +49,6 @@ namespace CNCSYS
 		static std::random_device rd;
 		static std::mt19937 gen(rd());
 
-		// 2. ����ֲ���Χ [0.0, 1.0)
-		// �����Ҫ���� 1.0������ʹ�� std::nextafter(1.0, 2.0)
 		std::uniform_real_distribution<double> dis(0.0, 1.0);
 
 		return glm::vec4(dis(gen), dis(gen), dis(gen), 1.0f);

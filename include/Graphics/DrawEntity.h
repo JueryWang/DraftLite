@@ -40,6 +40,7 @@ namespace CNCSYS
 		Polyline,
 		Arc,
 		Spline,
+		Text,
 	};
 
 	class Shader;

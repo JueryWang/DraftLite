@@ -47,6 +47,7 @@ private:
 	QAction* actConfiExport = nullptr;
 	QAction* actAuthInformation = nullptr;
 	QAction* actShowInnerPoint = nullptr;
+	QAction* actCreateFont = nullptr;
 
 	bool m_isDraging = false;
 	QPoint m_offsetPoint = QPoint(0, 0);

@@ -6,6 +6,7 @@
 #include "UI/Configer/WorkBlankConfig.h"
 #include "UI/Configer/RoughingConfig.h"
 #include "UI/Configer/RegionPlannerConfig.h"
+#include "UI/Configer/FontAttributePanel.h"
 #include "IO/DxfProcessor.h"
 #include "IO/Database.h"
 #include "IO/GCodeProcessor.h"
@@ -87,36 +88,41 @@ MenuLayerTop::MenuLayerTop(GLWidget* window, QsciScintilla* editor) : canvasWind
 		canvasWindow->GetCanvas()->showInnerPoint = checked;
 	});
 
+	actCreateFont = topMenus->addAction(tr("文字"));
+	connect(actCreateFont, &QAction::triggered, [&]()
+		{
+			FontAttributePanel* panel = FontAttributePanel::GetInstance();
+			panel->show();
+		});
 	//QAction* measureAct = settingMenu->addAction(tr("测量"));
 	//connect(measureAct, &QAction::triggered, [&]() {
 	//		ovWindow->mainWindow->mSketchGPU.get()->GetCanvas()->EnterModal(ModalState::MeasureDimension);
 	//	});
 
-	QMenu* addMenu = topMenus->addMenu(tr("添加"));
-	QAction* addWorkBlance = addMenu->addAction(tr("毛坯"));
+	//QMenu* addMenu = topMenus->addMenu(tr("添加"));
+	//QAction* addWorkBlance = addMenu->addAction(tr("毛坯"));
 
-	QMenu* CamMenu = topMenus->addMenu(tr("CAM"));
-	QAction* addRoughting = CamMenu->addAction(tr("开粗"));
-	connect(addRoughting, &QAction::triggered, [&]() {
-		RoughingConfigPage::GetInstance()->show();
-	});
-	QAction* addRegionPlanner = CamMenu->addAction(tr("开粗区域规划"));
-	connect(addRegionPlanner, &QAction::triggered, [&]() {
-		std::map<int, std::vector<PointClusterNode>>&& pointSet = RoughingAlgo::GetRegionResult();
-		RegionPlannerConfigPage::GetInstance()->preSetPage->SetRegionCount(pointSet.size());
-		RegionPlannerConfigPage::GetInstance()->show();
-	});
+	//QMenu* CamMenu = topMenus->addMenu(tr("CAM"));
+	//QAction* addRoughting = CamMenu->addAction(tr("开粗"));
+	//connect(addRoughting, &QAction::triggered, [&]() {
+	//	RoughingConfigPage::GetInstance()->show();
+	//});
+	//QAction* addRegionPlanner = CamMenu->addAction(tr("开粗区域规划"));
+	//connect(addRegionPlanner, &QAction::triggered, [&]() {
+	//	std::map<int, std::vector<PointClusterNode>>&& pointSet = RoughingAlgo::GetRegionResult();
+	//	RegionPlannerConfigPage::GetInstance()->preSetPage->SetRegionCount(pointSet.size());
+	//	RegionPlannerConfigPage::GetInstance()->show();
+	//});
 
-
-	connect(addWorkBlance, &QAction::triggered, [&]() {
-		if (g_canvasInstance->GetSelectedEntitys().size())
-		{
-			CNCSYS::EntRingConnection* ring = g_canvasInstance->GetSelectedEntitys()[0]->ringParent;
-			WorkBlankConfigPage::BindRing(ring);
-			
-		}
-		WorkBlankConfigPage::GetInstance()->show();
-	});
+	//connect(addWorkBlance, &QAction::triggered, [&]() {
+	//	if (g_canvasInstance->GetSelectedEntitys().size())
+	//	{
+	//		CNCSYS::EntRingConnection* ring = g_canvasInstance->GetSelectedEntitys()[0]->ringParent;
+	//		WorkBlankConfigPage::BindRing(ring);
+	//		
+	//	}
+	//	WorkBlankConfigPage::GetInstance()->show();
+	//});
 
 	QMenu* AuthMenu = topMenus->addMenu(tr("用户"));
 	actAuthInformation = AuthMenu->addAction(tr("授权信息"));

@@ -317,13 +317,16 @@ std::string Circle2DGPU::ToNcInstruction(SimulateStatus* Mstatus, bool createRec
 				rec.attachedPath = path;
 				GCodeController::GetController()->AddRecord(rec);
 			}
-			std::sprintf(buffer, "N%03d G01 Z%f\n", Mstatus->ncstep++, Mstatus->Zdown);
-			if (createRecord)
+			if (Mstatus->openZ)
 			{
-				GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
-				GCodeController::GetController()->AddRecord(rec);
+				std::sprintf(buffer, "N%03d G01 Z%f\n", Mstatus->ncstep++, Mstatus->Zdown);
+				if (createRecord)
+				{
+					GCodeRecord rec(std::string(buffer), nullptr, -1, transformedMatrix, Mstatus->ncstep);
+					GCodeController::GetController()->AddRecord(rec);
+				}
+				s += buffer;
 			}
-			s += buffer;
 		}
 		std::sprintf(buffer, "N%03d G02 X%f Y%f I%f J%f\n", Mstatus->ncstep++, end.x, end.y, I, J);
 		s += buffer;

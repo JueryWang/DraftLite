@@ -3,6 +3,8 @@
 #include <QGraphicsDropShadowEffect>
 #include <qgroupbox.h>
 #include "UI/TaskFlowGuide.h"
+#include "UI/Configer/FontAttributePanel.h"
+#include "UI/SizeDefines.h"
 #include "Controls/ScadaScheduler.h"
 
 int calculateRequiredWidth(const QString& maxTitle, const QString& maxValue, const QString& maxUnit, const QFont& font) {
@@ -149,6 +151,11 @@ void SketchInfoPanel::setupUI()
     TaskFlowGuide* guide = new TaskFlowGuide(this);
     layout2->addWidget(guide,Qt::AlignBottom);
     layout2->setContentsMargins(0, 10, 0, 10);
+
+    FontAttributePanel* fontPanel = FontAttributePanel::GetInstance();
+    fontPanel->setFixedHeight(screen_resolution_y * 0.36);
+    layout2->addWidget(fontPanel);
+
     this->setLayout(layout2);
 }
 

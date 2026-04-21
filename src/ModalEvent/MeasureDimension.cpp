@@ -80,11 +80,6 @@ namespace CNCSYS
 			modal->lineHorizontal->Paint(dashedShader, canvas->ocsSys, RenderMode::DashedLine);
 			modal->line->color = g_yellowColor;
 			modal->line->Paint(dashedShader, canvas->ocsSys, RenderMode::DashedLine);
-
-			canvas->RenderText(horizontalText, horizontalTextPos.x, horizontalTextPos.y, 0.12f * scale, g_whiteColor);
-			canvas->RenderText(verticalText, verticalTextPos.x, verticalTextPos.y, 0.12f * scale, g_whiteColor);
-			canvas->RenderText(diagonalText, diagonalTextPos.x, diagonalTextPos.y, 0.12f * scale, g_whiteColor);
-			canvas->RenderText(angleText, modal->point2.x, modal->point2.y, 0.12f * scale, g_whiteColor);
 		}
 	}
 }
