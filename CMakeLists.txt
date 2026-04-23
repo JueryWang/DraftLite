@@ -250,7 +250,6 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/Auth"
             FILES ${AuthSources}
 )
 
-
 file(GLOB DLL_DEPENDS "${CMAKE_SOURCE_DIR}/bin/*.dll")
 file(GLOB EXE_DEPENDS "${CMAKE_SOURCE_DIR}/bin/*.exe")
 

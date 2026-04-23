@@ -136,19 +136,19 @@ int main(int argc, char* argv[]){
 	ScadaScheduler::GetInstance()->Start();
 	AfterInitProgressContext();
 
-	FontConfig config;
-	config.x = 0;
-	config.y = 0;
-	config.fontpath = "C:/Windows/Fonts/msyh.ttc";
-	config.spacing = 2;
-	config.xDimension = 48;
-	config.yDimension = 48;
-	QString s = "测试文字";
-	QByteArray byteArray = s.toLocal8Bit();
-	config.content = byteArray.data();
-	Text* font = new Text(config);
-	g_canvasInstance->GetSketchShared()->AddEntity(font);
-	g_canvasInstance->GetSketchShared()->UpdateGCode();
+	//FontConfig config;
+	//config.x = 0;
+	//config.y = 0;
+	//config.fontpath = "C:/Windows/Fonts/msyh.ttc";
+	//config.spacing = 2;
+	//config.xDimension = 48;
+	//config.yDimension = 48;
+	//QString s = "测试文字";
+	//QByteArray byteArray = s.toLocal8Bit();
+	//config.content = byteArray.data();
+	//Text* font = new Text(config);
+	//g_canvasInstance->GetSketchShared()->AddEntity(font);
+	//g_canvasInstance->GetSketchShared()->UpdateGCode();
 
 	return app.exec();
 }

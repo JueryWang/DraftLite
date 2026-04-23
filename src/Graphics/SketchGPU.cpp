@@ -331,6 +331,7 @@ namespace CNCSYS
 		auto groups = GetEntityGroups();
 		g_MScontext.totalPath = 0;
 		g_MScontext.idlePath = 0;
+		g_MScontext.ncstep = 0;
 		if (groups.size())
 		{
 			std::sort(entityGroups.begin(), entityGroups.end(), [&](EntGroup* g1, EntGroup* g2) {return g1->processOrder < g2->processOrder; });

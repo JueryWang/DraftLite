@@ -9,20 +9,22 @@ typedef std::vector<glm::vec3> CharacterNodes;
 
 enum FontMode
 {
-	Fill,
-	OutLine,
-	Array
+	TrueType = 0,
+	SHX,
+	PointArray
 };
 
 struct FontConfig
 {
-	double x;
-	double y;
-	double xDimension;
-	double yDimension;
-	std::string fontpath;
-	std::string content;
-	int spacing;
+	double x;					//初始x位置
+	double y;					//初始y位置
+	double xDimension;			//字号
+	double yDimension;			//字体高度
+	std::string fontpath;		//字体文件路径
+	std::string content;		//文本内容
+	int spacing;				//字间距
+	int linespacing;			//行间距
+	FontMode mode;				//字形				
 };
 
 using namespace CNCSYS;
@@ -32,7 +34,8 @@ class Text : public EntityVGPU
 public:
 	Text(FontConfig fconfig);
 	~Text();
-
+	void ClearFonts();
+	void SetConfig(FontConfig fconfig) { this->config = fconfig;}
 	virtual EntityType GetType() const { return EntityType::Text; }
 	virtual void UpdatePaintData() override;
 	virtual glm::vec3 GetStart() override;
@@ -61,7 +64,8 @@ public:
 	virtual QString Description() override;
 	virtual EntityVGPU* Offset(float value, int precision);
 
-public:
+private:
+	void CreateText(FontConfig config);
 	void LoadCharacter(unsigned int codepoint);
 	void LoadText(const std::wstring& text);
 public:

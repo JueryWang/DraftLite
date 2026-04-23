@@ -1031,6 +1031,7 @@ namespace CNCSYS
 					}
 				}
 			}
+			m_currentSketch.get()->UpdateGCode(false);
 			break;
 		}
 		case QEvent::MouseButtonRelease:

@@ -2,13 +2,87 @@
 #include "Common/MathUtils.h"
 #include "Common/Program.h"
 #include "Graphics/Primitives.h"
+#include "Graphics/Canvas.h"
+#include "Graphics/Sketch.h"
 #include "UI/GCodeEditor.h"
 #include <fstream>
 #include <glm/glm.hpp>
 #include <algorithm>
+#include <QProcess>
+#include <QMessageBox>
+#include <regex>
+using namespace std;
 
 FT_Library library;
 FT_Face face;
+
+struct ViewBoxSize {
+	double w = 0.0;
+	double h = 0.0;
+};
+
+static std::optional<ViewBoxSize> tryParseViewBoxSize(const std::string& svg) {
+	const std::regex width_re(
+		R"re(\bwidth\s*=\s*["']\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*["'])re",
+		std::regex::icase);
+
+	const std::regex height_re(
+		R"re(\bheight\s*=\s*["']\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*["'])re",
+		std::regex::icase);
+
+	std::smatch m;
+	try {
+		ViewBoxSize vb;
+		if (std::regex_search(svg, m, width_re)) vb.w = std::stod(m[1].str());
+		if (std::regex_search(svg, m, height_re)) vb.h = std::stod(m[1].str());
+		if (vb.w <= 0.0 || vb.h <= 0.0) return std::nullopt;
+		return vb;
+	}
+	catch (...) {
+		return std::nullopt;
+	}
+}
+
+std::vector<Polyline2DGPU*> ParseSVGPath(const std::string& svgPath)
+{
+	std::vector<Polyline2DGPU*> polylines;
+
+	std::ifstream in(svgPath, std::ios::binary);
+	if (!in.good()) return {};
+	in.seekg(0, std::ios::end);
+	const std::streamoff n = in.tellg();
+	in.seekg(0, std::ios::beg);
+	std::string s;
+	s.resize(static_cast<std::size_t>((std::max<std::streamoff>)(0, n)));
+	if (!s.empty()) in.read(&s[0], static_cast<std::streamsize>(s.size()));
+
+	std::optional<ViewBoxSize> vbSize = tryParseViewBoxSize(s);
+	if (!vbSize.has_value()) {
+		return {};
+	}
+	const std::regex polylineRe("<polyline\\b[^>]*\\bpoints=\\\"([^\\\"]*)\\\"\\s*/?>", std::regex::icase);
+	const std::regex pointReg(R"((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?))");
+	smatch match;
+	std::string::const_iterator searchStart = s.cbegin();
+
+	while (std::regex_search(searchStart, s.cend(), match, polylineRe)) {
+		string pointStr = match[1].str();
+
+		vector<glm::vec3> points;
+		for (std::sregex_iterator it(pointStr.begin(), pointStr.end(), pointReg), end; it != end; ++it) {
+			glm::vec3 p;
+			p.x = std::stod((*it)[1].str());
+			p.y = vbSize->h - std::stod((*it)[2].str());
+			p.z = 0;
+			points.push_back(p);
+		}
+		Polyline2DGPU* polyline = new Polyline2DGPU(points, false);
+		polylines.push_back(polyline);
+		searchStart = match.suffix().first;
+	}
+
+	return polylines;
+}
 
 struct Character {
 	unsigned int TextureID;
@@ -27,65 +101,8 @@ unsigned int next_utf8_codepoint(const std::string& str, size_t& pos);
 
 Text::Text(FontConfig fconfig) : config(fconfig)
 {
-	if (FT_Init_FreeType(&library))
-	{
-		std::cerr << "FreeType 初始化失败" << std::endl;
-	}
-
-	if (FT_New_Face(library, fconfig.fontpath.c_str(), 0, &face))
-	{
-		std::cerr << "无法加载字体:" << std::endl;
-		FT_Done_FreeType(library);
-	}
-
-	if (FT_Set_Pixel_Sizes(face, 48, 48)) {
-		std::cerr << "设置字体尺寸失败" << std::endl;
-		FT_Done_Face(face);
-		FT_Done_FreeType(library);
-	}
-
-	int width = 0;
-	int max_ascent = 0;
-	int max_descent = 0;
-
-	FT_UInt previous = 0;
-	for (const char* p = fconfig.content.c_str(); *p != '\0';++p) {
-		FT_UInt glyph_index = FT_Get_Char_Index(face, (FT_ULong)*p);
-
-		if (previous && glyph_index) {
-			FT_Vector delta = { 0, 0 };
-			FT_Get_Kerning(face, previous, glyph_index, FT_KERNING_DEFAULT, &delta);
-			width += (int)(delta.x >> 6);
-		}
-
-		if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) == 0) {
-			FT_Glyph_Metrics& metrics = face->glyph->metrics;
-
-			width += (int)(metrics.horiAdvance >> 6);
-
-			int ascent = (int)(metrics.horiBearingY >> 6);
-			int glyph_height = (int)(metrics.height >> 6);
-			int descent = ascent - glyph_height;   // 通常 ≤ 0
-
-			max_ascent = std::max(max_ascent, ascent);
-			max_descent = std::max(max_descent, -descent);  // 把负的 descent 转成正的距离
-		}
-		previous = glyph_index;
-	}
-
-	boostPath.clear();
-	int height = max_ascent + max_descent;
-	float font_shift = 0;
-	currentXOffset = 0;
-	penPosition = glm::vec3(config.x,config.y,0.0f);
-	bbox = AABB(penPosition,penPosition);
-	content = config.content;
-	std::wstring wstr = QString::fromLocal8Bit(config.content.c_str()).toStdWString();
-	LoadText(wstr);
-	config.xDimension = currentXOffset - config.spacing;
-
-	FT_Done_Face(face);
-	FT_Done_FreeType(library);
+	this->content = config.content;
+	CreateText(config);
 }
 
 Text::~Text()
@@ -93,23 +110,152 @@ Text::~Text()
 
 }
 
+void Text::CreateText(FontConfig config)
+{
+	switch (config.mode)
+	{
+		case FontMode::TrueType:
+		{
+			try
+			{
+				if (FT_Init_FreeType(&library))
+				{
+					std::cerr << "FreeType 初始化失败" << std::endl;
+				}
+
+				if (FT_New_Face(library, config.fontpath.c_str(), 0, &face))
+				{
+					std::cerr << "无法加载字体:" << std::endl;
+					FT_Done_FreeType(library);
+				}
+
+				if (FT_Set_Pixel_Sizes(face, 48, 48)) {
+					std::cerr << "设置字体尺寸失败" << std::endl;
+					FT_Done_Face(face);
+					FT_Done_FreeType(library);
+				}
+
+				int width = 0;
+				int max_ascent = 0;
+				int max_descent = 0;
+
+				FT_UInt previous = 0;
+				for (const char* p = config.content.c_str(); *p != '\0';++p) {
+					FT_UInt glyph_index = FT_Get_Char_Index(face, (FT_ULong)*p);
+
+					if (previous && glyph_index) {
+						FT_Vector delta = { 0, 0 };
+						FT_Get_Kerning(face, previous, glyph_index, FT_KERNING_DEFAULT, &delta);
+						width += (int)(delta.x >> 6);
+					}
+
+					if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) == 0) {
+						FT_Glyph_Metrics& metrics = face->glyph->metrics;
+
+						width += (int)(metrics.horiAdvance >> 6);
+
+						int ascent = (int)(metrics.horiBearingY >> 6);
+						int glyph_height = (int)(metrics.height >> 6);
+						int descent = ascent - glyph_height;   // 通常 ≤ 0
+
+						max_ascent = std::max(max_ascent, ascent);
+						max_descent = std::max(max_descent, -descent);
+					}
+					previous = glyph_index;
+				}
+
+				boostPath.clear();
+				int height = max_ascent + max_descent;
+				float font_shift = 0;
+				currentXOffset = 0;
+				penPosition = glm::vec3(config.x, config.y, 0.0f);
+				bbox = AABB(penPosition, penPosition);
+				content = config.content;
+				std::wstring wstr = QString::fromLocal8Bit(config.content.c_str()).toStdWString();
+				LoadText(wstr);
+				config.xDimension = currentXOffset - config.spacing;
+
+				FT_Done_Face(face);
+				FT_Done_FreeType(library);
+			}
+			catch(std::exception e)
+			{
+				QMessageBox::critical(
+					nullptr,
+					"错误",
+					QString::fromLocal8Bit(e.what())
+				);
+			}
+		}break;
+		case FontMode::SHX:
+		{
+			QProcess process;
+			QObject::connect(&process, &QProcess::readyReadStandardOutput, [&]() {
+				QString output = process.readAllStandardOutput();
+				std::cout << output.toStdString() << std::endl;
+			});
+			QObject::connect(&process, &QProcess::readyReadStandardError, [&]() {
+				QString errorOutput = process.readAllStandardError();
+				std::cerr << errorOutput.toStdString() << std::endl;
+				});
+
+			QString toolPath = QString("./Resources/Tools/shxText2svg.exe");
+			QStringList args;
+
+			args << "-f" << QString::fromLocal8Bit(config.fontpath.c_str())
+				<< "-t" << QString::fromLocal8Bit(config.content.c_str())
+				<< "-s" << QString::number(config.xDimension)
+				<< "-lh" << QString::number(config.yDimension)
+				<< "-ls" << QString::number(config.linespacing)
+				<< "-ws" << QString::number(config.spacing)
+				<< "-o" << QString("./temp/Text.svg");
+
+			process.start(toolPath, args);
+			if (!process.waitForStarted()) {
+				std::cout << "执行失败:"<< std::endl;
+			}
+
+			std::vector<Polyline2DGPU*> textPaths = ParseSVGPath("./temp/Text.svg");
+			for (Polyline2DGPU* path : textPaths)
+			{
+				outlinePath.push_back(path);
+			}
+			this->UpdatePaintData();
+		}break;
+	}
+}
+
+void Text::ClearFonts()
+{
+	nodes.clear();
+	for (EntityVGPU* outline : outlinePath)
+	{
+		g_canvasInstance->GetSketchShared()->EraseEntity(outline);
+	}
+	outlinePath.clear();
+}
+
 void Text::UpdatePaintData()
 {
 	if (content != config.content)
 	{
-		for (EntityVGPU* section : outlinePath)
-		{
-			delete section;
-		}
-		//重新解析字形
-		LoadText(QString::fromLocal8Bit(config.content.c_str()).toStdWString());
+		ClearFonts();
+		CreateText(config);
+		return;
 	}
-	
+
+	nodes.clear();
+
+	for (EntityVGPU* path : outlinePath)
+	{
+		std::vector<glm::vec3> transformedNodes = path->GetTransformedNodes();
+		nodes.insert(nodes.end(),transformedNodes.begin(),transformedNodes.end());
+	}
+	boostPath.clear();
 	for (int i = 0; i < nodes.size(); i++)
 	{
 		glm::vec3 transformed = worldModelMatrix * glm::vec4(nodes[i], 1.0f);
-		bg::set<0>(boostPath[i], transformed.x);
-		bg::set<1>(boostPath[i], transformed.y);
+		boostPath.push_back(BoostPoint(transformed.x, transformed.y));
 	}
 
 	BoostBox boostBox;
@@ -287,8 +433,6 @@ int FontOutLineLineTo(const FT_Vector* to, void* user)
 		float finalX = ((float)to->x / 64.0f) + fontEntity->currentXOffset;
 		float finalY = (float)to->y / 64.0f;
 
-		char buffer[256];
-		sprintf(buffer, "G01 X%.4f Y%.4f\n", finalX, finalY);
 		Line2DGPU* line = new Line2DGPU({ fontEntity->penPosition,glm::vec3(finalX,finalY,0.0) });
 		line->UpdatePaintData();
 		fontEntity->outlinePath.push_back(line);
@@ -327,8 +471,6 @@ int FontOutLineConicTo(const FT_Vector* control, const FT_Vector* to, void* user
 
 		for (const glm::vec3& pt : interpPoints)
 		{
-			char buffer[256];
-			sprintf(buffer, "G01 X%.4f Y%.4f\n", pt.x, pt.y);
 			Line2DGPU* line = new Line2DGPU({currentPos,glm::vec3(pt.x,pt.y,0.0)});
 			line->Move(glm::vec3(fontEntity->config.x, fontEntity->config.x, 0.0));
 			line->UpdatePaintData();
@@ -384,8 +526,6 @@ int FontOutLineCubicTo(const FT_Vector* control1, const FT_Vector* control2, con
 
 		for (const glm::vec3& pt : interpPoints)
 		{
-			char buffer[256];
-			sprintf(buffer, "G01 X%.4f Y%.4f\n", pt.x, pt.y);
 			Line2DGPU* line = new Line2DGPU({ currentPos,glm::vec3(pt.x,pt.y,0.0) });
 			line->Move(glm::vec3(fontEntity->config.x, fontEntity->config.x, 0.0));
 			line->UpdatePaintData();
